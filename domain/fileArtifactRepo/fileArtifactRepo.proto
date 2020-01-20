@@ -1,0 +1,24 @@
+syntax = "proto3";
+package file.artifact.repo;
+
+message ArtifactCreated {
+    string version = 2;
+    string name = 1;
+    string url = 3;
+    string description = 4;
+}
+
+message ArtifactDeprecated {}
+
+message ArtifactUnDeprecated {}
+
+message ArtifactDescriptionUpdated {
+    string description = 1;
+}
+
+message CreateArtifact{
+    string version = 2;
+    string name = 1;
+    string url = 3;
+    string description = 4;
+}
