@@ -2,7 +2,7 @@ package main
 
 import (
 	far "awesomeProject/domain/fileArtifactRepo/generated/pb"
-	evented "awesomeProject/framework/generated/pb/evented"
+	evented "awesomeProject/framework/generated/pb"
 	"context"
 	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
