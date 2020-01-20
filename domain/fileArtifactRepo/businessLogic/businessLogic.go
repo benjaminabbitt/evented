@@ -4,7 +4,7 @@ package businessLogic
 
 import (
 	far "awesomeProject/domain/fileArtifactRepo/generated/pb"
-	evented "awesomeProject/framework/generated/pb/evented"
+	evented "awesomeProject/framework/generated/pb"
 	"context"
 	"flag"
 	"fmt"

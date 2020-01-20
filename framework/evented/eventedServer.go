@@ -1,7 +1,7 @@
 package main
 
 import (
-	"awesomeProject/framework/generated/pb/evented"
+	"awesomeProject/framework/generated/pb"
 	"context"
 	"flag"
 	"fmt"
