@@ -50,8 +50,8 @@ func (s *server) Handle(ctx context.Context, in *evented.Command)(*evented.Event
 		Command:  in,
 	}
 
-	businssResponse, err := c.Handle(ctx, pc)
-	return businssResponse.Events, err
+	businessResponse, err := c.Handle(ctx, pc)
+	return businessResponse.Events, err
 }
 
 func (s *server) Record(ctx context.Context, in *evented.Events)(*evented.Empty, error){
