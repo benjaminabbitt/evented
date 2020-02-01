@@ -59,3 +59,5 @@ message BusinessResponse {
 service BusinessLogic {
     rpc Handle (BusinessCommand) returns (BusinessResponse) {}
 }
+
+message EmptyMessage{}
