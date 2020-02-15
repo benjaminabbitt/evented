@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/benjaminabbitt/evented/protobuf"
-	"github.com/benjaminabbitt/evented/repository"
+	"github.com/benjaminabbitt/evented/proto/business"
+	"github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/transport"
 	"google.golang.org/grpc"
 	"log"
@@ -13,12 +13,12 @@ import (
 	"time"
 )
 
-func NewServer(eventRepos repository.EventRepository, transport transport.EventTransportSender, port uint16, businessAddress string) {
+func NewServer(eventRepos EventRepository, transport transport.EventTransportSender, port uint16, businessAddress string) {
 	lis := createListener(port)
 	client, conn := createBusinessClient(businessAddress)
 	defer conn.Close()
 	grpcServer := grpc.NewServer()
-	protobuf.RegisterCommandHandlerServer(grpcServer, &server{
+	evented_core.RegisterCommandHandlerServer(grpcServer, &server{
 		eventRepository:      eventRepos,
 		eventTransportSender: transport,
 		businessClient: client,
@@ -26,12 +26,12 @@ func NewServer(eventRepos repository.EventRepository, transport transport.EventT
 	grpcServer.Serve(lis)
 }
 
-func createBusinessClient(address string) (protobuf.BusinessLogicClient, *grpc.ClientConn){
+func createBusinessClient(address string) (evented_business.BusinessLogicClient, *grpc.ClientConn){
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	client := protobuf.NewBusinessLogicClient(conn)
+	client := evented_business.NewBusinessLogicClient(conn)
 	return client, conn
 }
 
@@ -46,20 +46,25 @@ func createListener(port uint16) net.Listener {
 
 
 type server struct{
-	protobuf.UnimplementedCommandHandlerServer
-	eventRepository repository.EventRepository
+	evented_core.UnimplementedCommandHandlerServer
+	eventRepository      EventRepository
 	eventTransportSender transport.EventTransportSender
-	businessClient protobuf.BusinessLogicClient
+	businessClient       evented_business.BusinessLogicClient
 }
 
-func (s *server) Handle(ctx context.Context, in *protobuf.Command)(*protobuf.Events, error){
-	s.eventRepository.Get(in.Id)
+func (s *server) Handle(ctx context.Context, in *evented_core.CommandBook)(*evented_core.EventBook, error){
+	commands := CommandBookToCommand(in)
+	for _, command := range commands {
+		_, err := s.eventRepository.Get(command.Id)
+		if(err != nil){
 
-	log.Print("In Handle...")
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	defer cancel()
 
-	pc := &protobuf.BusinessCommand{
+	pc := &evented_business.BusinessCommand{
 		Snapshot: nil,
 		Events:   nil,
 		Command:  in,
@@ -74,6 +79,7 @@ func (s *server) Handle(ctx context.Context, in *protobuf.Command)(*protobuf.Eve
 	return businessResponse.Events, err
 }
 
-func (s *server) Record(ctx context.Context, in *protobuf.Events)(*protobuf.Empty, error){
+
+func (s *server) Record(ctx context.Context, in *evented_core.EventBook)(*evented_core.Empty, error){
 	return nil, nil
 }

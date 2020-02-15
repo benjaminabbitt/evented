@@ -1,0 +1,50 @@
+syntax = "proto3";
+package evented.core;
+option go_package = "github.com/benjaminabbitt/evented/proto/core";
+
+import "google/protobuf/any.proto";
+
+message EventBook{
+    Cover cover = 1;
+    repeated EventPage pages = 2;
+}
+
+message CommandBook{
+    Cover cover = 1;
+    repeated CommandPage pages = 2;
+}
+
+message Cover{
+    string id = 1;
+    string ts = 2;
+}
+
+message EventPage {
+    uint32 sequence = 1;
+    google.protobuf.Any Event = 2;
+}
+
+message CommandPage {
+    uint32 sequence = 1;
+    google.protobuf.Any command = 2;
+}
+
+message Empty {}
+
+service CommandHandler {
+    rpc Handle(CommandBook) returns (EventBook) {}
+    rpc Record(EventBook) returns (Empty) {}
+}
+
+service EventQuery {
+    rpc Get(Query) returns (EventBook){}
+}
+
+message Query{
+    string id = 1;
+    uint32 lowerBound = 2;
+    uint32 upperBound = 3;
+}
+
+
+

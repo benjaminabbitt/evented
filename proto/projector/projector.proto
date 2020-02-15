@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package evented.projector;
+option go_package = "evented-projector";
+
+import "core/evented.proto";
+
+service Projector {
+    rpc Project(evented.core.EventBook) returns (evented.core.Empty) {}
+}

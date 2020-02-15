@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package evented.saga;
+option go_package = "evented-saga";
+
+import "core/evented.proto";
+
+service Saga {
+    rpc Handle(evented.core.EventBook) returns (evented.core.EventBook) {}
+}
