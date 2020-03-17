@@ -4,7 +4,6 @@ import (
 	"context"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
-	"github.com/benjaminabbitt/evented/transport"
 	"google.golang.org/grpc"
 	"log"
 )
@@ -21,15 +20,7 @@ func (client GRPCSagaClient) SendSync(evts evented_core.EventBook)(responseEvent
 	return responseEvents, nil
 }
 
-func (client GRPCSagaClient) Send (evts evented_core.EventBook)(err error){
-	_, err  = client.client.Handle(context.Background(), &evts)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
-}
-
-func NewGRPCSagaClient() transport.Saga {
+func NewGRPCSagaClient() GRPCSagaClient {
 	client := evented_saga.NewSagaClient(&grpc.ClientConn{})
 	return GRPCSagaClient{client: client}
 }

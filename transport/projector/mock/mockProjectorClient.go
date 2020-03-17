@@ -2,7 +2,6 @@ package mock
 
 import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	"github.com/benjaminabbitt/evented/transport"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -34,6 +33,6 @@ func (c *ProjectorClient) updateSequence(eb *evented_core.EventBook){
 	}
 }
 
-func NewProjectorClient() transport.Projection {
+func NewProjectorClient() *ProjectorClient {
 	return &ProjectorClient{}
 }

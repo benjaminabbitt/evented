@@ -5,6 +5,9 @@ import (
 )
 
 type Saga interface {
-	SendSync(evts *evented_core.EventBook)(responseEvents *evented_core.EventBook, err error)
 	Send(evts *evented_core.EventBook)(err error)
+}
+
+type SyncSaga interface{
+	SendSync(evts *evented_core.EventBook)(responseEvents *evented_core.EventBook, err error)
 }

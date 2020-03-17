@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func NewServer(eventBookRepository eventBook.Repository, syncSagas []transport.Saga, syncProjections []transport.Projection, asyncSagas []transport.Saga, asyncProjections []transport.Projection, businessClient evented_business.BusinessLogicClient) Server {
+func NewServer(eventBookRepository eventBook.Repository, syncSagas []transport.SyncSaga, syncProjections []transport.SyncProjection, asyncSagas []transport.Saga, asyncProjections []transport.Projection, businessClient evented_business.BusinessLogicClient) Server {
 	return Server{
 		eventBookRepository: eventBookRepository,
 		syncSagas:           syncSagas,
@@ -57,27 +57,16 @@ func createListener(port uint16) net.Listener {
 type Server struct {
 	evented_core.UnimplementedCommandHandlerServer
 	eventBookRepository eventBook.Repository
-	syncSagas           []transport.Saga
-	syncProjectors      []transport.Projection
+	syncSagas           []transport.SyncSaga
+	syncProjectors      []transport.SyncProjection
 	asyncSagas          []transport.Saga
 	asyncProjectors     []transport.Projection
 	businessClient      evented_business.BusinessLogicClient
 }
 
-func MakeCommandHandlerResponse(sagas int, projections int)*evented_core.CommandHandlerResponse{
-	response := &evented_core.CommandHandlerResponse{
-		Books:       nil,
-		Projections: nil,
-	}
-
-	response.Books = make([]*evented_core.EventBook, sagas)
-	response.Projections = make([]*evented_core.Projection, projections)
-}
-
 func (s Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.CommandHandlerResponse, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	priorState, err := s.eventBookRepository.Get(in.Cover.Root)
-	result = MakeCommandHandlerResponse(len(s.syncSagas), len(s.syncProjectors))
 
 	defer cancel()
 
@@ -99,30 +88,31 @@ func (s Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 	sync, async := s.extractSynchronous(*businessResponse)
 
 	for _, saga := range s.syncSagas{
-		book := saga.SendSync(sync)
-		result.Books = append(result.Books, &book)
+		book, _ := saga.SendSync(&sync)
+		result.Books = append(result.Books, book)
 	}
 
 	for _, projector := range s.syncProjectors {
-		projection := projector.SendSync(sync)
-		result.Projections = append(result.Projections, &projection)
+		projection, _ := projector.ProjectSync(&sync)
+		result.Projections = append(result.Projections, projection)
 	}
 
 	for _, saga := range s.syncSagas {
-		saga.Send(async)
+		saga.SendSync(&async)
 	}
 
 	for _, projector := range s.syncProjectors {
-		projector.Send(async)
+		projector.ProjectSync(&async)
 	}
 
 	for _, saga := range s.asyncSagas {
-		saga.Send(*businessResponse)
+		saga.Send(businessResponse)
 	}
 
 	for _, projector := range s.asyncProjectors {
-		projector.Send(*businessResponse)
+		projector.Project(businessResponse)
 	}
+	return nil, nil
 }
 
 

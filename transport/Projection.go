@@ -5,6 +5,9 @@ import (
 )
 
 type Projection interface{
-	ProjectSync(evts *evented_core.EventBook)(projection *evented_core.Projection, err error)
 	Project(evts *evented_core.EventBook) (err error)
+}
+
+type SyncProjection interface{
+	ProjectSync(evts *evented_core.EventBook)(projection *evented_core.Projection, err error)
 }

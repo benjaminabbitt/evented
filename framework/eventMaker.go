@@ -19,7 +19,7 @@ func NewEventBook(id string, domain string, events []*evented_core.EventPage, sn
 	return &evented_core.EventBook{
 		Cover:    &evented_core.Cover{
 			Domain: domain,
-			Id:     id,
+			Root:     id,
 		},
 		Pages:    events,
 		Snapshot: snapshot,
