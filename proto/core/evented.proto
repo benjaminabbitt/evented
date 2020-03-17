@@ -1,50 +1,63 @@
 syntax = "proto3";
 package evented.core;
-option go_package = "github.com/benjaminabbitt/evented/proto/core";
 
 import "google/protobuf/any.proto";
 
-message EventBook{
-    Cover cover = 1;
-    repeated EventPage pages = 2;
-}
-
-message CommandBook{
-    Cover cover = 1;
-    repeated CommandPage pages = 2;
-}
-
-message Cover{
-    string id = 1;
-    string ts = 2;
+message Cover {
+    string domain = 2;
+    string root = 1;
 }
 
 message EventPage {
     uint32 sequence = 1;
-    google.protobuf.Any Event = 2;
+    string createdAt = 2;
+    google.protobuf.Any Event = 3;
+    bool synchronous = 4;
 }
+
+message Snapshot {
+    uint32 sequence = 2;
+    google.protobuf.Any state = 3;
+}
+
+message EventBook {
+    Cover cover = 1;
+    repeated EventPage pages = 2;
+    Snapshot snapshot = 3;
+}
+
+message Projection {
+    Cover cover = 1;
+    string projector = 2;
+    uint32 sequence = 3;
+    google.protobuf.Any projection = 4;
+}
+
+message CommandHandlerResponse {
+    repeated EventBook books = 1;
+    repeated Projection projections = 3;
+}
+
 
 message CommandPage {
     uint32 sequence = 1;
-    google.protobuf.Any command = 2;
+    bool synchronous = 2;
+    google.protobuf.Any command = 3;
 }
 
-message Empty {}
+message CommandBook {
+    Cover cover = 1;
+    repeated CommandPage pages = 2;
+}
+
+
+message ContextualCommand {
+    EventBook events = 1;
+    CommandBook command = 2;
+}
+
 
 service CommandHandler {
-    rpc Handle(CommandBook) returns (EventBook) {}
-    rpc Record(EventBook) returns (Empty) {}
+    rpc Handle (CommandBook) returns (CommandHandlerResponse){}
+    rpc Record (EventBook) returns (CommandHandlerResponse){}
 }
-
-service EventQuery {
-    rpc Get(Query) returns (EventBook){}
-}
-
-message Query{
-    string id = 1;
-    uint32 lowerBound = 2;
-    uint32 upperBound = 3;
-}
-
-
-

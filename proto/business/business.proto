@@ -1,28 +1,9 @@
 syntax = "proto3";
 package evented.business;
-option go_package = "evented-business";
 
 import "core/evented.proto";
-import "google/protobuf/any.proto";
-
-message BusinessCommand {
-    Snapshot snapshot = 1;
-    evented.core.EventBook events = 2;
-    evented.core.CommandBook command = 3;
-}
-
-message BusinessResponse {
-    Snapshot snapshot = 1;
-    evented.core.EventBook syncEvents = 2;
-    evented.core.EventBook events = 3;
-}
-
-message Snapshot {
-    string id = 1;
-    uint32 sequence = 2;
-    google.protobuf.Any details = 3;
-}
 
 service BusinessLogic {
-    rpc Handle (BusinessCommand) returns (BusinessResponse) {}
+    rpc Handle (evented.core.ContextualCommand) returns (evented.core.EventBook) {
+    }
 }
