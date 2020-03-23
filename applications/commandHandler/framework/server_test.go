@@ -2,13 +2,14 @@ package framework
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/applications/commandHandler/business/server/businessLogic"
+	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
+	projectormock "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/projector/mock"
+	sagamock "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/saga/mock"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/repository/eventBook"
 	event_memory "github.com/benjaminabbitt/evented/repository/events/event-memory"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
-	async2 "github.com/benjaminabbitt/evented/transport/async"
-	async "github.com/benjaminabbitt/evented/transport/projector/console"
-	sync "github.com/benjaminabbitt/evented/transport/sync/projector/console"
-	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/suite"
@@ -24,14 +25,25 @@ type ServerSuite struct {
 
 func (s *ServerSuite) Test_Handle(){
 	ctx := context.Background()
-	eventRepo := event_memory.NewMemoryRepository()
-	ssRepo := snapshot_memory.NewSSMemoryRepository()
-	asyncSenders := []async2.EventSender{&async.Sender{}}
-	syncSender := []saga.SyncSaga{&sync.Sender{}}
+	eventBookRepo := eventBook.Repository{
+		EventRepo:    event_memory.NewMemoryRepository(),
+		SnapshotRepo: snapshot_memory.NewSSMemoryRepository(),
+	}
+
+	syncSagas := []transport.SyncSaga{sagamock.NewSagaClient()}
+
+	syncProjections := []transport.SyncProjection{projectormock.NewProjectorClient()}
+
+	sagas := []transport.Saga{sagamock.NewSagaClient()}
+
+	projections := []transport.Projection{projectormock.NewProjectorClient()}
+
+	business := &businessLogic.MockBusinessLogicClient{}
 
 	domain := "test"
 
-	server := NewServer(eventRepo, ssRepo, asyncSenders, syncSender, &BusinessLogicMock{})
+	server := NewServer(eventBookRepo, syncSagas, syncProjections, sagas, projections, business)
+
 	id, _ := uuid.NewRandom()
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
 	page := &evented_core.CommandPage{
@@ -66,7 +78,7 @@ type BusinessLogicMock struct{}
 func (bl *BusinessLogicMock) Handle(ctx context.Context, in *evented_core.ContextualCommand, opts ...grpc.CallOption) (*evented_core.EventBook, error){
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
 	return NewEventBook(
-		in.Command.Cover.Id,
+		in.Command.Cover.Root,
 		in.Command.Cover.Domain,
 		[]*evented_core.EventPage{
 			NewEventPage(0, false, *anyEmpty),

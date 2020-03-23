@@ -2,8 +2,8 @@ package console
 
 import (
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
 	"github.com/benjaminabbitt/evented/proto/core"
-	"github.com/benjaminabbitt/evented/transport"
 )
 
 type Sender struct {

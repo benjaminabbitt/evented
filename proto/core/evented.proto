@@ -3,9 +3,13 @@ package evented.core;
 
 import "google/protobuf/any.proto";
 
+message UUID {
+    bytes value = 1;
+}
+
 message Cover {
     string domain = 2;
-    string root = 1;
+    UUID root = 1;
 }
 
 message EventPage {
@@ -38,7 +42,6 @@ message CommandHandlerResponse {
     repeated Projection projections = 3;
 }
 
-
 message CommandPage {
     uint32 sequence = 1;
     bool synchronous = 2;
@@ -50,12 +53,10 @@ message CommandBook {
     repeated CommandPage pages = 2;
 }
 
-
 message ContextualCommand {
     EventBook events = 1;
     CommandBook command = 2;
 }
-
 
 service CommandHandler {
     rpc Handle (CommandBook) returns (CommandHandlerResponse){}

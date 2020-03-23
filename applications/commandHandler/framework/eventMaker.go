@@ -1,9 +1,11 @@
 package framework
 
 import (
-evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_proto "github.com/benjaminabbitt/evented/proto"
+	evented_core "github.com/benjaminabbitt/evented/proto/core"
 "github.com/golang/protobuf/ptypes/any"
-"time"
+	"github.com/google/uuid"
+	"time"
 )
 
 func NewEventPage(sequence uint32, sync bool, eventDetails any.Any) *evented_core.EventPage {
@@ -15,11 +17,12 @@ func NewEventPage(sequence uint32, sync bool, eventDetails any.Any) *evented_cor
 	}
 }
 
-func NewEventBook(id string, domain string, events []*evented_core.EventPage, snapshot *evented_core.Snapshot) *evented_core.EventBook{
+func NewEventBook(id uuid.UUID, domain string, events []*evented_core.EventPage, snapshot *evented_core.Snapshot) *evented_core.EventBook{
+	protoUUID := evented_proto.UUIDToProto(id)
 	return &evented_core.EventBook{
 		Cover:    &evented_core.Cover{
 			Domain: domain,
-			Root:     id,
+			Root:     &protoUUID,
 		},
 		Pages:    events,
 		Snapshot: snapshot,
