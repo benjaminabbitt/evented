@@ -5,16 +5,18 @@ import (
 	"github.com/benjaminabbitt/evented"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/transport/async/amqp"
-	mockProjector "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/projector/mock"
-	mockSaga "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/saga/mock"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	memoryRepository "github.com/benjaminabbitt/evented/repository/events/event-memory"
 	"github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
+	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/transport"
+	"github.com/benjaminabbitt/evented/transport/async/evented_amqp"
+	mockProjector "github.com/benjaminabbitt/evented/transport/sync/projector/mock"
+	mockSaga "github.com/benjaminabbitt/evented/transport/sync/saga/mock"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -27,17 +29,15 @@ var log *zap.SugaredLogger
 var errh *evented.ErrLogger
 
 func main() {
-	setupConfig()
+	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
+	var configPath *string = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
+	flag.Parse()
 
-	logger, _ := zap.NewDevelopment(zap.AddCaller())
-	log = logger.Sugar()
-
+	err := support.SetupConfig(name, configPath, flag.CommandLine)
+	log, errh = support.Log()
 	defer log.Sync()
-	log.Infow("Logger Configured")
+	errh.LogIfErr(err, "Error configuring application.")
 
-	errh = &evented.ErrLogger{log}
-
-	log.Infow("Configuration Read")
 
 	businessAddress := viper.GetString("business.address")
 	commandHandlerPort := uint16(viper.GetUint("port"))
@@ -68,26 +68,6 @@ func main() {
 		errh,
 	)
 	server.Listen(commandHandlerPort)
-}
-
-func setupConfig() {
-	viper.SetConfigName(NAME)
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("c:/temp/")
-
-	viper.SetEnvPrefix(NAME)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-			log.Warn(err)
-		} else {
-			log.Fatal(err)
-		}
-	}
 }
 
 func setupEventRepo()(repo events.EventRepository){
@@ -130,7 +110,7 @@ func setupServiceBus(domain string)(transport transport.Transport){
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := amqp.NewAMQPClient(url, "evented_"+exchange, log, errh)
+		client := evented_amqp.NewAMQPClient(url, "evented_"+exchange, log, errh)
 		return client
 	}
 	return nil

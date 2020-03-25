@@ -3,12 +3,8 @@ syntax = "proto3";
 package evented.projector;
 
 import "core/evented.proto";
-import "google/protobuf/empty.proto";
-
-
 
 service Projector {
-    rpc ProjectSync (evented.core.EventBook) returns (evented.core.Projection) {}
-    rpc Project (evented.core.EventBook) returns (google.protobuf.Empty) {}
+    rpc HandleSync (evented.core.EventBook) returns (evented.core.Projection) {}
 }
 

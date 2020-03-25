@@ -1,6 +1,7 @@
-package amqp
+package evented_amqp
 
 import (
+	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/golang/protobuf/jsonpb"
@@ -19,7 +20,6 @@ type Client struct {
 
 func (client *Client) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
-	//body, err := client.marshaller.MarshalToString(evts)
 	client.errh.LogIfErr(err, "Failed to serialize Event Book")
 	err = client.ch.Publish(
 		client.exchangeName,
@@ -27,7 +27,7 @@ func (client *Client) Handle(evts *evented_core.EventBook) (err error) {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/json",
+			ContentType: fmt.Sprintf("application/protobuf;proto=%T", *evts),
 			Body:        []byte(body),
 		})
 	return nil

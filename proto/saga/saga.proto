@@ -3,12 +3,8 @@ syntax = "proto3";
 package evented.saga;
 
 import "core/evented.proto";
-import "google/protobuf/empty.proto";
 
 service Saga {
-    rpc HandleSync (evented.core.EventBook) returns (evented.core.EventBook) {
-    }
-    rpc Handle (evented.core.EventBook) returns (google.protobuf.Empty) {
-    }
+    rpc HandleSync (evented.core.EventBook) returns (evented.core.EventBook) {}
 }
 

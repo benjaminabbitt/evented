@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
+	"github.com/benjaminabbitt/evented/transport"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
@@ -48,8 +48,8 @@ func (server *Server) createListener(port uint16) net.Listener {
 
 type Server struct {
 	evented_core.UnimplementedCommandHandlerServer
-	errh *evented.ErrLogger
-	log *zap.SugaredLogger
+	errh                *evented.ErrLogger
+	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Repository
 	transports          transport.Holder
 	businessClient      client.Client

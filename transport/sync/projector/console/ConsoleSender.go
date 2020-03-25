@@ -2,7 +2,7 @@ package console
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
+	"github.com/benjaminabbitt/evented/transport"
 	"github.com/benjaminabbitt/evented/proto/core"
 )
 

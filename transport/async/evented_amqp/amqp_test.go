@@ -1,4 +1,4 @@
-package amqp
+package evented_amqp
 
 import (
 	"github.com/google/uuid"

@@ -2,14 +2,14 @@ package framework
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/business/server/businessLogic"
-	"github.com/benjaminabbitt/evented/applications/commandHandler/transport"
-	projectormock "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/projector/mock"
-	sagamock "github.com/benjaminabbitt/evented/applications/commandHandler/transport/sync/saga/mock"
+	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/businessLogic"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	event_memory "github.com/benjaminabbitt/evented/repository/events/event-memory"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
+	"github.com/benjaminabbitt/evented/transport"
+	projectormock "github.com/benjaminabbitt/evented/transport/sync/projector/mock"
+	sagamock "github.com/benjaminabbitt/evented/transport/sync/saga/mock"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/suite"
