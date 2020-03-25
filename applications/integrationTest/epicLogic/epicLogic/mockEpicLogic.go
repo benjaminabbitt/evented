@@ -1,16 +1,15 @@
 package epicLogic
 
 import (
-	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
+	"github.com/benjaminabbitt/evented/support"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"net"
 )
 
 func NewMockEpicLogic(log *zap.SugaredLogger, errh *evented.ErrLogger) MockEpicLogicServer {
@@ -43,7 +42,7 @@ func (c *MockEpicLogicServer) Handle(ctx context.Context, in *eventedcore.EventB
 }
 
 func (c *MockEpicLogicServer) Listen(port uint16){
-	lis := c.createListener(port)
+	lis := support.CreateListener(port, c.errh)
 	grpcServer := grpc.NewServer()
 
 	evented_eventHandler.RegisterEventHandlerServer(grpcServer, c)
@@ -51,8 +50,3 @@ func (c *MockEpicLogicServer) Listen(port uint16){
 	c.errh.LogIfErr(err, "Failed starting server")
 }
 
-func (c *MockEpicLogicServer) createListener(port uint16) net.Listener {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	c.errh.LogIfErr(err, "Failed to Listen")
-	return lis
-}

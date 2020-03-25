@@ -6,32 +6,33 @@ import (
 	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/support"
 	"github.com/google/uuid"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-)
-
-const (
-	NAME = "int"
 )
 
 var log *zap.SugaredLogger
 var errh *evented.ErrLogger
 
 func main() {
-	setupConfig()
+	log, errh := support.Log()
+	defer log.Sync()
 
-	logger, _ := zap.NewDevelopment(zap.AddCaller())
-	log = logger.Sugar()
+	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
+	var configPath *string = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
+	flag.Parse()
 
-	errh = &evented.ErrLogger{log}
+	err := support.SetupConfig(name, configPath, flag.CommandLine)
+	errh.LogIfErr(err, "Error configuring application.")
 
 	log.Info("Starting...")
-	target := "localhost:8080" //viper.GetString("commandHandler")
+	target := viper.GetString("commandHandlerURL")
 	log.Info(target)
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
-	log.Info(fmt.Sprintf("Connected to remote %s", target))
+	log.Infof("Connected to remote %s", target)
 	errh.LogIfErr(err, fmt.Sprintf("Error dialing %s", target))
 	ch := evented_core.NewCommandHandlerClient(conn)
 	log.Info("Client Created...")
@@ -44,7 +45,7 @@ func main() {
 	}}
 	commandBook := &evented_core.CommandBook{
 		Cover: &evented_core.Cover{
-			Domain: "test",
+			Domain: viper.GetString("domain"),
 			Root:   &protoId,
 		},
 		Pages: pages,
@@ -53,22 +54,3 @@ func main() {
 	log.Info("Done!")
 }
 
-func setupConfig() {
-	viper.SetConfigName(NAME)
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("c:/temp/")
-
-	viper.SetEnvPrefix(NAME)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-			log.Warn(err)
-		} else {
-			log.Fatal(err)
-		}
-	}
-}

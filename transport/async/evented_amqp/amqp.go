@@ -21,6 +21,7 @@ type Client struct {
 func (client *Client) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	client.errh.LogIfErr(err, "Failed to serialize Event Book")
+	client.log.Infow("Publishing ", "eventBook", evts, "exchange", client.exchangeName)
 	err = client.ch.Publish(
 		client.exchangeName,
 		"",

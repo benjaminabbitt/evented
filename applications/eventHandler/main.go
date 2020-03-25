@@ -38,13 +38,13 @@ func main() {
 }
 
 func makeRabbitReceiver(ch evented_eventHandler.EventHandlerClient) rabbitmq.RabbitMQReceiver {
-	return rabbitmq.RabbitMQReceiver{
+	receiver :=  rabbitmq.RabbitMQReceiver{
 		SourceURL: viper.GetString("transport.source.amqp.url"),
-		SourceExhangeName: viper.GetString("transport.source.amqp.exchangeName"),
-		SourceQueueName:   viper.GetString("transport.source.amqp.queueName"),
+		SourceExhangeName: viper.GetString("transport.source.amqp.exchange"),
+		SourceQueueName:   viper.GetString("transport.source.amqp.queue"),
 		Sender: evented_amqp.NewAMQPClient(
 			viper.GetString("transport.target.amqp.url"),
-			viper.GetString("transport.target.amqp.exchangeName"),
+			viper.GetString("transport.target.amqp.exchange"),
 			log,
 			errh,
 		),
@@ -52,6 +52,8 @@ func makeRabbitReceiver(ch evented_eventHandler.EventHandlerClient) rabbitmq.Rab
 		Errh:         errh,
 		EventHandler: ch,
 	}
+	log.Infow("Created RabbitMQ Receiver", "url", receiver.SourceURL, "queue", receiver.SourceQueueName)
+	return receiver
 }
 
 func makeEventHandlerClient(err error) evented_eventHandler.EventHandlerClient {

@@ -2,7 +2,6 @@ package mock
 
 import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	log "github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -12,7 +11,7 @@ type ProjectorClient struct{
 }
 
 func (c *ProjectorClient) HandleSync(in *evented_core.EventBook)(*evented_core.Projection, error){
-	log.WithFields(log.Fields{"EventBook": in}).Info("ProjectSync")
+	c.log.Infow("HandleSync", "eventBook", in)
 	c.updateSequence(in)
 	projection := &evented_core.Projection{
 		Cover:      in.Cover,
@@ -20,12 +19,12 @@ func (c *ProjectorClient) HandleSync(in *evented_core.EventBook)(*evented_core.P
 		Sequence:   c.Sequence,
 		Projection: nil,
 	}
-	log.WithFields(log.Fields{"Projection": projection}).Info("ProjectSync - End")
+	c.log.Infow("ProjectSync - End", "projection", projection)
 	return projection, nil
 }
 
 func (c *ProjectorClient) Handle(in *evented_core.EventBook) error {
-	log.WithFields(log.Fields{"EventBook": in}).Info("Project")
+	c.log.Infow("Handle", "eventBook", in)
 	c.updateSequence(in)
 	return nil
 }

@@ -2,7 +2,6 @@ package framework
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
@@ -40,7 +39,6 @@ func (server *Server) Listen(port uint16) {
 }
 
 func (server *Server) createListener(port uint16) net.Listener {
-	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	server.errh.LogIfErr(err, "Failed to Listen")
 	return lis

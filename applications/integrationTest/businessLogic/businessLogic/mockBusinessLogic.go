@@ -1,16 +1,13 @@
 package businessLogic
 
 import (
-	"flag"
-	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_business "github.com/benjaminabbitt/evented/proto/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
-	log "github.com/sirupsen/logrus"
+	"github.com/benjaminabbitt/evented/support"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"net"
 	"time"
 )
 
@@ -28,7 +25,7 @@ type MockBusinessLogicServer struct {
 }
 
 func (c *MockBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error){
-	log.WithFields(log.Fields{"contextualCommand": in}).Info("Business Logic Handle")
+	c.log.Infow("Business Logic Handle", "contextualCommand", in)
 	var eventPages []*eventedcore.EventPage
 	for _, commandPage := range in.Command.Pages{
 		eventPage := &eventedcore.EventPage{
@@ -47,13 +44,13 @@ func (c *MockBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.Co
 		Snapshot: nil,
 	}
 
-	log.WithFields(log.Fields{"eventBook": eventBook}).Info("Business Logic Handle")
+	c.log.Infow("Business Logic Handle", "eventBook", eventBook)
 
 	return eventBook, nil
 }
 
 func (c *MockBusinessLogicServer) Listen(port uint16){
-	lis := c.createListener(port)
+	lis := support.CreateListener(port, c.errh)
 	grpcServer := grpc.NewServer()
 
 	evented_business.RegisterBusinessLogicServer(grpcServer, c)
@@ -61,9 +58,3 @@ func (c *MockBusinessLogicServer) Listen(port uint16){
 	c.errh.LogIfErr(err, "Failed starting server")
 }
 
-func (c *MockBusinessLogicServer) createListener(port uint16) net.Listener {
-	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	c.errh.LogIfErr(err, "Failed to Listen")
-	return lis
-}

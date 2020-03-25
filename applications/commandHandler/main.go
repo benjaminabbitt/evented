@@ -110,7 +110,7 @@ func setupServiceBus(domain string)(transport transport.Transport){
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := evented_amqp.NewAMQPClient(url, "evented_"+exchange, log, errh)
+		client := evented_amqp.NewAMQPClient(url, exchange, log, errh)
 		return client
 	}
 	return nil
