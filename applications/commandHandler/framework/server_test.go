@@ -153,6 +153,9 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	holder.On("GetTransports").Return([]async.Transport{mockTransport})
 
 	server.Handle(context.Background(), commandBook)
+	mockProjector.AssertExpectations(s.T())
+	mockSaga.AssertExpectations(s.T())
+	mockTransport.AssertExpectations(s.T())
 	holder.AssertExpectations(s.T())
 	businessClient.AssertExpectations(s.T())
 	eventBookRepo.AssertExpectations(s.T())
