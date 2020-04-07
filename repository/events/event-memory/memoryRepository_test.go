@@ -18,25 +18,25 @@ type MemoryRepoSuite struct {
 func (s *MemoryRepoSuite) SetupTest() {
 	s.id = "a"
 	s.mr = NewMemoryRepository()
-		se0 := evented_core.EventPage{
-			Sequence: 0,
-			CreatedAt: time.Now().Format(time.RFC3339),
-			Event: nil,
-			Synchronous: false,
-		}
-		se1 := evented_core.EventPage{
-			Sequence: 1,
-			CreatedAt: time.Now().Format(time.RFC3339),
-			Event: nil,
-			Synchronous: false,
-		}
-		se2 := evented_core.EventPage{
-			Sequence: 2,
-			CreatedAt: time.Now().Format(time.RFC3339),
-			Event: nil,
-			Synchronous: false,
-		}
-		s.mr.Add(s.id, []*evented_core.EventPage{&se0, &se1, &se2})
+	se0 := evented_core.EventPage{
+		Sequence:    0,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+		Event:       nil,
+		Synchronous: false,
+	}
+	se1 := evented_core.EventPage{
+		Sequence:    1,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+		Event:       nil,
+		Synchronous: false,
+	}
+	se2 := evented_core.EventPage{
+		Sequence:    2,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+		Event:       nil,
+		Synchronous: false,
+	}
+	s.mr.Add(s.id, []*evented_core.EventPage{&se0, &se1, &se2})
 }
 
 func (s *MemoryRepoSuite) TestGetEventsTo() {

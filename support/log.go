@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Log() (*zap.SugaredLogger, *evented.ErrLogger){
+func Log() (*zap.SugaredLogger, *evented.ErrLogger) {
 	logger, _ := zap.NewDevelopment(zap.AddCaller())
 	log := logger.Sugar()
 	errh := &evented.ErrLogger{log}

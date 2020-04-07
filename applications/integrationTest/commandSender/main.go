@@ -38,19 +38,22 @@ func main() {
 	log.Info("Client Created...")
 	id, err := uuid.NewRandom()
 	protoId := evented_proto.UUIDToProto(id)
-	pages := []*evented_core.CommandPage{&evented_core.CommandPage{
-		Sequence:    0,
-		Synchronous: false,
-		Command:     nil,
-	}}
-	commandBook := &evented_core.CommandBook{
-		Cover: &evented_core.Cover{
-			Domain: viper.GetString("domain"),
-			Root:   &protoId,
-		},
-		Pages: pages,
+
+	for i := 0; i <= 1; i++ {
+		pages := []*evented_core.CommandPage{&evented_core.CommandPage{
+			Sequence:    uint32(i),
+			Synchronous: false,
+			Command:     nil,
+		}}
+		commandBook := &evented_core.CommandBook{
+			Cover: &evented_core.Cover{
+				Domain: viper.GetString("domain"),
+				Root:   &protoId,
+			},
+			Pages: pages,
+		}
+		_, _ = ch.Handle(context.Background(), commandBook)
 	}
-	_, _ = ch.Handle(context.Background(), commandBook)
+
 	log.Info("Done!")
 }
-

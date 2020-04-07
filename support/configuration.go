@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func SetupConfig(name *string, configpath *string, cmdLine *flag.FlagSet)(err error) {
+func SetupConfig(name *string, configpath *string, cmdLine *flag.FlagSet) (err error) {
 	err = viper.BindPFlags(cmdLine)
 	if err != nil {
 		return err

@@ -1,9 +1,10 @@
-package evented_amqp
+package amqp
 
 import (
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
@@ -11,17 +12,17 @@ import (
 )
 
 type Client struct {
-	errh 	evented.ErrLogger
-	log			*zap.SugaredLogger
-	ch           amqp.Channel
-	marshaller   jsonpb.Marshaler
+	errh         *evented.ErrLogger
+	log          *zap.SugaredLogger
+	ch           *amqp.Channel
+	marshaller   *jsonpb.Marshaler
 	exchangeName string
 }
 
-func (client *Client) Handle(evts *evented_core.EventBook) (err error) {
+func (client Client) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	client.errh.LogIfErr(err, "Failed to serialize Event Book")
-	client.log.Infow("Publishing ", "eventBook", evts, "exchange", client.exchangeName)
+	client.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", client.exchangeName)
 	err = client.ch.Publish(
 		client.exchangeName,
 		"",
@@ -53,10 +54,10 @@ func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger, errh
 	log.Info("Exchange Declared")
 	errh.LogIfErr(err, "Failed to declare exchange")
 	client := &Client{
-		log: log,
+		log:          log,
 		exchangeName: exchangeName,
-		ch:           *ch,
-		marshaller:   jsonpb.Marshaler{},
+		ch:           ch,
+		marshaller:   &jsonpb.Marshaler{},
 	}
 	return client
 }

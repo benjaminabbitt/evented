@@ -6,6 +6,6 @@ import (
 )
 
 type SnapshotRepo interface {
-	Get(id uuid.UUID)(snap *evented_core.Snapshot, err error)
-	Put(id uuid.UUID, snap *evented_core.Snapshot)(err error)
+	Get(id uuid.UUID) (snap *evented_core.Snapshot, err error)
+	Put(id uuid.UUID, snap *evented_core.Snapshot) (err error)
 }

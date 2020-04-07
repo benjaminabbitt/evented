@@ -185,3 +185,6 @@ $RECYCLE.BIN/
 *.pb.go
 
 .idea/
+
+
+config/

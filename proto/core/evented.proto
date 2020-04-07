@@ -2,6 +2,7 @@ syntax = "proto3";
 package evented.core;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 message UUID {
     bytes value = 1;
@@ -12,11 +13,18 @@ message Cover {
     UUID root = 1;
 }
 
+message ForceSequence {
+    EventPage page = 1;
+}
+
 message EventPage {
-    uint32 sequence = 1;
-    string createdAt = 2;
-    google.protobuf.Any Event = 3;
-    bool synchronous = 4;
+    oneof sequence {
+        uint32 num = 1;
+        bool force = 2;
+    }
+    google.protobuf.Timestamp createdAt = 3;
+    google.protobuf.Any Event = 4;
+    bool synchronous = 5;
 }
 
 message Snapshot {

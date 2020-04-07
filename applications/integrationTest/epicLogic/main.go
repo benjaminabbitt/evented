@@ -33,4 +33,3 @@ func main() {
 	log.Infow("Starting Epic Server...", "port", port)
 	server.Listen(port)
 }
-

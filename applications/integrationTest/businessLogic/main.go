@@ -17,11 +17,9 @@ func main() {
 
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
 	errh.LogIfErr(err, "Error configuring application.")
-	server := businessLogic.NewMockBusinessLogic(log, errh)
+	server := businessLogic.NewSimpleBusinessLogicServer(log, errh)
 
 	port := uint16(viper.GetUint("port"))
 	log.Infow("Starting Business Server...", "port", port)
 	server.Listen(port)
 }
-
-

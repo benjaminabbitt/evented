@@ -5,38 +5,40 @@ import (
 	evented_business "github.com/benjaminabbitt/evented/proto/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"time"
 )
 
-func NewMockBusinessLogic(log *zap.SugaredLogger, errh *evented.ErrLogger) MockBusinessLogicServer {
-	return MockBusinessLogicServer{
-		log: log,
+func NewSimpleBusinessLogicServer(log *zap.SugaredLogger, errh *evented.ErrLogger) SimpleBusinessLogicServer {
+	return SimpleBusinessLogicServer{
+		log:  log,
 		errh: errh,
 	}
 }
 
-type MockBusinessLogicServer struct {
+type SimpleBusinessLogicServer struct {
 	evented_business.UnimplementedBusinessLogicServer
-	log *zap.SugaredLogger
+	log  *zap.SugaredLogger
 	errh *evented.ErrLogger
 }
 
-func (c *MockBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error){
+func (c *SimpleBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error) {
 	c.log.Infow("Business Logic Handle", "contextualCommand", in)
 	var eventPages []*eventedcore.EventPage
-	for _, commandPage := range in.Command.Pages{
+	//TODO: harden
+	ts, _ := ptypes.TimestampProto(time.Now())
+	for _, commandPage := range in.Command.Pages {
 		eventPage := &eventedcore.EventPage{
-			Sequence:    commandPage.Sequence,
-			CreatedAt:   time.Now().Format(time.RFC3339),
+			Sequence:    &eventedcore.EventPage_Num{Num: commandPage.Sequence},
+			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: false,
 		}
 		eventPages = append(eventPages, eventPage)
 	}
-
 
 	eventBook := &eventedcore.EventBook{
 		Cover:    in.Command.Cover,
@@ -44,12 +46,12 @@ func (c *MockBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.Co
 		Snapshot: nil,
 	}
 
-	c.log.Infow("Business Logic Handle", "eventBook", eventBook)
+	c.log.Infow("Business Logic Handle", "eventBook", support.StringifyEventBook(eventBook))
 
 	return eventBook, nil
 }
 
-func (c *MockBusinessLogicServer) Listen(port uint16){
+func (c *SimpleBusinessLogicServer) Listen(port uint16) {
 	lis := support.CreateListener(port, c.errh)
 	grpcServer := grpc.NewServer()
 
@@ -57,4 +59,3 @@ func (c *MockBusinessLogicServer) Listen(port uint16){
 	err := grpcServer.Serve(lis)
 	c.errh.LogIfErr(err, "Failed starting server")
 }
-

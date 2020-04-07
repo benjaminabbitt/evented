@@ -12,4 +12,3 @@ type EventRepository interface {
 	GetFrom(id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error)
 	GetFromTo(id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error)
 }
-

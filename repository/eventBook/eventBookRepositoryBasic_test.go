@@ -10,16 +10,15 @@ import (
 	"time"
 )
 
-
 type EventBookRepositorySuite struct {
 	suite.Suite
 	domain string
-	id string
-	repos Repository
-	book evented_core.EventBook
+	id     string
+	repos  RepositoryBasic
+	book   evented_core.EventBook
 }
 
-func (s *EventBookRepositorySuite) SetupTest(){
+func (s *EventBookRepositorySuite) SetupTest() {
 	id, _ := uuid.NewRandom()
 	s.id = id.String()
 	s.domain = "test"
@@ -49,7 +48,7 @@ func (s *EventBookRepositorySuite) SetupTest(){
 		Snapshot: snapshot,
 	}
 
-	s.repos = Repository{
+	s.repos = RepositoryBasic{
 		EventRepo:    memoryRepository.NewMemoryRepository(),
 		SnapshotRepo: snapshot_memory.NewSSMemoryRepository(),
 		Domain:       "test",
@@ -58,7 +57,7 @@ func (s *EventBookRepositorySuite) SetupTest(){
 	_ = s.repos.Put(s.book)
 }
 
-func (s *EventBookRepositorySuite) Test_Put(){
+func (s *EventBookRepositorySuite) Test_Put() {
 	id, _ := uuid.NewRandom()
 
 	cover := &evented_core.Cover{
@@ -86,7 +85,7 @@ func (s *EventBookRepositorySuite) Test_Put(){
 		Snapshot: snapshot,
 	}
 
-	ebr := &Repository{
+	ebr := &RepositoryBasic{
 		EventRepo:    memoryRepository.NewMemoryRepository(),
 		SnapshotRepo: snapshot_memory.NewSSMemoryRepository(),
 		Domain:       s.domain,
@@ -97,14 +96,12 @@ func (s *EventBookRepositorySuite) Test_Put(){
 	s.Assert().NoError(err)
 }
 
-func (s *EventBookRepositorySuite) Test_Get(){
+func (s *EventBookRepositorySuite) Test_Get() {
 	book, err := s.repos.Get(s.id)
 	s.Assert().NoError(err)
 	s.Assert().EqualValues(s.book, book)
 }
 
-
 func TestServerSuite(t *testing.T) {
 	suite.Run(t, new(EventBookRepositorySuite))
 }
-

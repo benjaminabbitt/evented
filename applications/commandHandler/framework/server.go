@@ -14,10 +14,10 @@ import (
 	"net"
 )
 
-func NewServer(eventBookRepository eventBook.Repository, transports transport.Holder, businessClient client.Client, log *zap.SugaredLogger, errh *evented.ErrLogger) Server {
+func NewServer(eventBookRepository eventBook.Repository, transports transport.Holder, businessClient client.BusinessClient, log *zap.SugaredLogger, errh *evented.ErrLogger) Server {
 	return Server{
-		errh: errh,
-		log: log,
+		errh:                errh,
+		log:                 log,
 		eventBookRepository: eventBookRepository,
 		transports:          transports,
 		businessClient:      businessClient,
@@ -50,7 +50,7 @@ type Server struct {
 	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Repository
 	transports          transport.Holder
-	businessClient      client.Client
+	businessClient      client.BusinessClient
 }
 
 func (server Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.CommandHandlerResponse, err error) {
@@ -74,7 +74,7 @@ func (server Server) handleEventBook(eb *evented_core.EventBook) (result evented
 	err = server.eventBookRepository.Put(*eb)
 	server.errh.LogIfErr(err, "")
 
-	sync, async := server.extractSynchronous(*eb)
+	sync, _ := server.extractSynchronous(*eb)
 	var eventBooks []*evented_core.EventBook
 	var projections []*evented_core.Projection
 
@@ -88,16 +88,10 @@ func (server Server) handleEventBook(eb *evented_core.EventBook) (result evented
 		response, err := syncSaga.HandleSync(&sync)
 		server.errh.LogIfErr(err, "")
 		eventBooks = append(eventBooks, response)
-
 	}
 
 	for _, t := range server.transports.GetTransports() {
-		err = t.Handle(&sync)
-		server.errh.LogIfErr(err, "")
-	}
-
-	for _, t := range server.transports.GetTransports() {
-		err := t.Handle(&async)
+		err := t.Handle(eb)
 		server.errh.LogIfErr(err, "")
 	}
 
@@ -124,6 +118,5 @@ func (server Server) extractSynchronous(originalBook evented_core.EventBook) (sy
 
 func (server Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.CommandHandlerResponse, err error) {
 	r, err := server.handleEventBook(in)
-	response = &r
-	return response, err
+	return &r, err
 }

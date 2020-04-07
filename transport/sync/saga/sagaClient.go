@@ -1,4 +1,4 @@
-package grpcSagaClient
+package saga
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"log"
 )
 
-type GRPCSagaClient struct{
+type GRPCSagaClient struct {
 	client evented_saga.SagaClient
 }
 
-func (client GRPCSagaClient) SendSync(evts evented_core.EventBook)(responseEvents evented_core.EventBook, err error){
+func (client GRPCSagaClient) SendSync(evts evented_core.EventBook) (responseEvents *evented_core.EventBook, err error) {
 	responseEvents, err = client.client.HandleSync(context.Background(), &evts)
 	if err != nil {
 		log.Fatal(err)

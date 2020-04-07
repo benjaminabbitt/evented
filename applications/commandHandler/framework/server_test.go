@@ -2,89 +2,128 @@ package framework
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/businessLogic"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented"
+	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
+	evented_proto "github.com/benjaminabbitt/evented/proto"
+	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
-	event_memory "github.com/benjaminabbitt/evented/repository/events/event-memory"
-	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
+	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport"
-	projectormock "github.com/benjaminabbitt/evented/transport/sync/projector/mock"
-	sagamock "github.com/benjaminabbitt/evented/transport/sync/saga/mock"
+	"github.com/benjaminabbitt/evented/transport/async"
+	"github.com/benjaminabbitt/evented/transport/sync/projector"
+	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
+	"go.uber.org/zap"
 	"testing"
 )
 
-import "github.com/google/uuid"
-
 type ServerSuite struct {
 	suite.Suite
+	log     *zap.SugaredLogger
+	errh    *evented.ErrLogger
+	domainA string
+	domainB string
 }
 
-func (s *ServerSuite) Test_Handle(){
-	ctx := context.Background()
-	eventBookRepo := eventBook.Repository{
-		EventRepo:    event_memory.NewMemoryRepository(),
-		SnapshotRepo: snapshot_memory.NewSSMemoryRepository(),
+func (s *ServerSuite) SetupTest() {
+	s.log, s.errh = support.Log()
+	defer s.log.Sync()
+	s.domainA = "testA"
+	s.domainB = "testB"
+}
+
+func (s ServerSuite) Test_Handle() {
+	eventBookRepo := new(eventBook.MockEventBookRepository)
+	holder := new(transport.MockHolder)
+	businessClient := new(client.MockClient)
+	server := NewServer(eventBookRepo, holder, businessClient, s.log, s.errh)
+
+	commandBook := s.produceCommandBook()
+
+	id, _ := evented_proto.ProtoToUUID(*commandBook.Cover.Root)
+	eventBookRepo.On("Get", id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
+
+	contextualCommand := &eventedcore.ContextualCommand{
+		Events:  s.produceHistoricalEventBook(*commandBook),
+		Command: commandBook,
 	}
 
-	syncSagas := []transport.SyncSaga{sagamock.NewSagaClient()}
+	businessClient.On("Handle", contextualCommand).Return(s.produceBusinessResponse(*commandBook), nil)
+	eventBookRepo.On("Put", *s.produceBusinessResponse(*commandBook)).Return(nil)
 
-	syncProjections := []transport.SyncProjection{projectormock.NewProjectorClient()}
+	holder.On("GetProjections").Return([]projector.SyncProjection{})
+	holder.On("GetSaga").Return([]saga.SyncSaga{})
+	holder.On("GetTransports").Return([]async.Transport{})
+	server.Handle(context.Background(), commandBook)
+}
 
-	sagas := []transport.Saga{sagamock.NewSagaClient()}
+func (s ServerSuite) produceBusinessResponse(commandBook eventedcore.CommandBook) *eventedcore.EventBook {
+	var businessReturnEventPages []*eventedcore.EventPage
 
-	projections := []transport.Projection{projectormock.NewProjectorClient()}
+	businessReturnEventPages = append(businessReturnEventPages, &eventedcore.EventPage{
+		Sequence:    &eventedcore.EventPage_Num{Num: 0},
+		CreatedAt:   nil,
+		Event:       nil,
+		Synchronous: false,
+	}, &eventedcore.EventPage{
+		Sequence:    &eventedcore.EventPage_Num{Num: 1},
+		CreatedAt:   nil,
+		Event:       nil,
+		Synchronous: false,
+	})
 
-	business := &businessLogic.MockBusinessLogicClient{}
+	businessReturnEventBook := &eventedcore.EventBook{
+		Cover:    commandBook.Cover,
+		Pages:    businessReturnEventPages,
+		Snapshot: nil,
+	}
 
-	domain := "test"
+	return businessReturnEventBook
+}
 
-	server := NewServer(eventBookRepo, syncSagas, syncProjections, sagas, projections, business)
-
-	id, _ := uuid.NewRandom()
+func (s ServerSuite) produceHistoricalEventBook(commandBook eventedcore.CommandBook) *eventedcore.EventBook {
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
-	page := &evented_core.CommandPage{
+	eventPage := NewEventPage(0, false, *anyEmpty)
+	priorStateEventPages := []*eventedcore.EventPage{
+		eventPage,
+	}
+
+	eb := &eventedcore.EventBook{
+		Cover:    commandBook.Cover,
+		Pages:    priorStateEventPages,
+		Snapshot: nil,
+	}
+	return eb
+}
+
+func (s ServerSuite) produceCommandBook() *eventedcore.CommandBook {
+	page := &eventedcore.CommandPage{
 		Sequence:    0,
 		Synchronous: false,
-		Command:     anyEmpty,
+		Command:     nil,
 	}
-	commandBook := &evented_core.CommandBook{
-		Cover: &evented_core.Cover{
-			Domain: domain,
-			Root:     id.String(),
-		},
-		Pages: []*evented_core.CommandPage{page},
-	}
-	commandResponse, _ := server.Handle(ctx, commandBook)
 
-	s.Assert().EqualValues(0, commandResponse.Books[0].Pages[0].Sequence)
-	s.Assert().Equal(false, commandResponse.Books[0].Pages[0].Synchronous)
-	s.Assert().EqualValues(1, commandResponse.Books[0].Pages[1].Sequence)
-	s.Assert().Equal(true, commandResponse.Books[0].Pages[1].Synchronous)
-	s.Assert().Equal(id.String(), commandResponse.Books[0].Cover.Root)
-	s.Assert().Equal(domain, commandResponse.Books[0].Cover.Domain)
+	randomId, _ := uuid.NewRandom()
+	id := evented_proto.UUIDToProto(randomId)
+
+	cover := &eventedcore.Cover{
+		Domain: "test",
+		Root:   &id,
+	}
+
+	commandBook := &eventedcore.CommandBook{
+		Cover: cover,
+		Pages: []*eventedcore.CommandPage{page},
+	}
+	return commandBook
 }
+
 
 
 func TestServerSuite(t *testing.T) {
 	suite.Run(t, new(ServerSuite))
 }
 
-type BusinessLogicMock struct{}
-
-func (bl *BusinessLogicMock) Handle(ctx context.Context, in *evented_core.ContextualCommand, opts ...grpc.CallOption) (*evented_core.EventBook, error){
-	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
-	return NewEventBook(
-		in.Command.Cover.Root,
-		in.Command.Cover.Domain,
-		[]*evented_core.EventPage{
-			NewEventPage(0, false, *anyEmpty),
-			NewEventPage(1, true, *anyEmpty),
-			NewEventPage(2, false, *anyEmpty),
-		},
-		nil,
-		), nil
-}

@@ -5,8 +5,12 @@ import "core/evented.proto";
 
 
 service EventQuery {
-    rpc GetEventBook (Query) returns (evented.core.EventBook) {
-    }
+    rpc GetEventBook (Query) returns (evented.core.EventBook){}
+    rpc GetNextSequence (evented.core.UUID) returns (NextSequence){}
+}
+
+message NextSequence {
+    uint32 sequence = 1;
 }
 
 message Query {

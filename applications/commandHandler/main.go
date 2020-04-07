@@ -7,14 +7,13 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
-	memoryRepository "github.com/benjaminabbitt/evented/repository/events/event-memory"
-	"github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport"
-	"github.com/benjaminabbitt/evented/transport/async/evented_amqp"
-	mockProjector "github.com/benjaminabbitt/evented/transport/sync/projector/mock"
+	"github.com/benjaminabbitt/evented/transport/async"
+	"github.com/benjaminabbitt/evented/transport/async/amqp"
+	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	mockSaga "github.com/benjaminabbitt/evented/transport/sync/saga/mock"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -38,17 +37,17 @@ func main() {
 	defer log.Sync()
 	errh.LogIfErr(err, "Error configuring application.")
 
-
 	businessAddress := viper.GetString("business.address")
 	commandHandlerPort := uint16(viper.GetUint("port"))
 	log.Infow("Starting Command Handler", "port", commandHandlerPort)
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 
-	eventRepo := setupEventRepo()
+	eventRepo, err := events.SetupEventRepo(log, errh)
+	errh.LogIfErr(err, "Error configuring event repo")
 	ssRepo := setupSnapshotRepo()
 	domain := viper.GetString("domain")
 
-	repo := eventBook.Repository{
+	repo := eventBook.RepositoryBasic{
 		EventRepo:    eventRepo,
 		SnapshotRepo: ssRepo,
 		Domain:       domain,
@@ -57,7 +56,7 @@ func main() {
 	handlers := transport.NewTransportHolder(log)
 
 	handlers.Add(mockSaga.NewSagaClient(log))
-	handlers.Add(mockProjector.NewProjectorClient(log))
+	handlers.Add(projector.NewProjectorClient(log))
 	handlers.Add(setupServiceBus(domain))
 
 	server := framework.NewServer(
@@ -70,47 +69,30 @@ func main() {
 	server.Listen(commandHandlerPort)
 }
 
-func setupEventRepo()(repo events.EventRepository){
-	log.Infow("test")
-	configurationKey := "eventStore"
-	typee := viper.GetString("eventstore.type")
+func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
+	configurationKey := "snapshotStore"
+	typee := viper.GetString("snapshotStore.type")
 	mongodb := "mongodb"
 	memory := "memory"
 	if typee == mongodb {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
-		log.Infow("Using MongoDb for Event Store", "url", url, "dbName", dbName)
-		repo = mongo.NewMongoClient(url, dbName, log, errh)
-	}else if typee == memory{
-		repo = memoryRepository.NewMemoryRepository()
-	}
-	return repo
-}
-
-func setupSnapshotRepo()(repo snapshots.SnapshotRepo){
-	configurationKey := "snapshotStore"
-	typee := viper.GetString("snapshotStore.type")
-	mongodb := "mongodb"
-	memory := "memory"
-	if typee == mongodb{
-		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
-		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
-		log.Warnw("Read Mongo preference for snapshot repo.  Snapshot Mongo incomplete.  Configuring wtih Memory for now...", "url", url, "dbName",dbName)
+		log.Warnw("Read Mongo preference for snapshot repo.  Snapshot Mongo incomplete.  Configuring wtih Memory for now...", "url", url, "dbName", dbName)
 		repo = snapshot_memory.NewSSMemoryRepository()
-	}else if typee == memory{
+	} else if typee == memory {
 		repo = snapshot_memory.NewSSMemoryRepository()
 	}
 	return repo
 }
 
-func setupServiceBus(domain string)(transport transport.Transport){
+func setupServiceBus(domain string) (transport async.Transport) {
 	configurationKey := "transport"
 	amqpText := "amqp"
 	typee := viper.GetString(fmt.Sprintf("%s.type", configurationKey))
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := evented_amqp.NewAMQPClient(url, exchange, log, errh)
+		client := amqp.NewAMQPClient(url, exchange, log, errh)
 		return client
 	}
 	return nil
