@@ -5,7 +5,6 @@ import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"google.golang.org/grpc"
-	"log"
 )
 
 type GRPCSagaClient struct {
@@ -13,11 +12,7 @@ type GRPCSagaClient struct {
 }
 
 func (client GRPCSagaClient) SendSync(evts evented_core.EventBook) (responseEvents *evented_core.EventBook, err error) {
-	responseEvents, err = client.client.HandleSync(context.Background(), &evts)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return responseEvents, nil
+	return client.client.HandleSync(context.Background(), &evts)
 }
 
 func NewGRPCSagaClient() GRPCSagaClient {

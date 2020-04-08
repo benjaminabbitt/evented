@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
+	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
-	"github.com/benjaminabbitt/evented/transport"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
 )
 
-func NewServer(eventBookRepository eventBook.Repository, transports transport.Holder, businessClient client.BusinessClient, log *zap.SugaredLogger, errh *evented.ErrLogger) Server {
+func NewServer(eventBookRepository eventBook.Repository, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger, errh *evented.ErrLogger) Server {
 	return Server{
 		errh:                errh,
 		log:                 log,
@@ -49,7 +49,7 @@ type Server struct {
 	errh                *evented.ErrLogger
 	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Repository
-	transports          transport.Holder
+	transports          transport.TransportHolder
 	businessClient      client.BusinessClient
 }
 
