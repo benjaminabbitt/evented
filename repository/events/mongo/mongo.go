@@ -15,7 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Mongo struct {
@@ -100,17 +99,17 @@ func (m Mongo) eventPagesToInterface(root uuid.UUID, pages []*evented_core.Event
 }
 
 //Adds an array of events to the data store
-func (m Mongo) Add(id uuid.UUID, events []*evented_core.EventPage) (err error) {
+func (m Mongo) Add(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) (err error) {
 	var numbered []*evented_core.EventPage
 	var forced *evented_core.EventPage
 	remainingEvents := events
 	for {
 		numbered, forced, remainingEvents = m.extractUntilFirstForced(remainingEvents)
 		if len(numbered) > 0 {
-			m.insert(id, numbered)
+			m.insert(ctx, id, numbered)
 		}
 		if forced != nil {
-			m.insertForced(id, forced)
+			m.insertForced(ctx, id, forced)
 		}
 		if len(remainingEvents) == 0 {
 			break
@@ -129,9 +128,9 @@ func (m Mongo) extractUntilFirstForced(events []*evented_core.EventPage) (number
 	return events, nil, nil
 }
 
-func (m Mongo) insertForced(id uuid.UUID, event *evented_core.EventPage) {
+func (m Mongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) {
 	for {
-		seq := m.getNextSequence(id)
+		seq := m.getNextSequence(ctx, id)
 		mep := m.pageToMEPWithSequence(id, seq, *event)
 		_, err := m.Collection.InsertOne(nil, mep)
 		if err == nil {
@@ -140,15 +139,15 @@ func (m Mongo) insertForced(id uuid.UUID, event *evented_core.EventPage) {
 	}
 }
 
-func (m Mongo) insert(id uuid.UUID, events []*evented_core.EventPage) {
-	m.Collection.InsertMany(nil, m.eventPagesToInterface(id, events))
+func (m Mongo) insert(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) {
+	m.Collection.InsertMany(ctx, m.eventPagesToInterface(id, events))
 }
 
-func (m Mongo) getNextSequence(id uuid.UUID) uint32 {
+func (m Mongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
 	idStr := id.String()
 	options := options.FindOne()
 	options.SetSort(bson.D{{"sequence", -1}})
-	result := m.Collection.FindOne(nil, bson.D{{"root", idStr}}, options)
+	result := m.Collection.FindOne(ctx, bson.D{{"root", idStr}}, options)
 	if result.Err() != nil {
 		// XXX: the only way to identify what the error is here is via a string comparison, eww.  Working with the assumption that any error here is a no documents in result.
 		return 0
@@ -159,16 +158,15 @@ func (m Mongo) getNextSequence(id uuid.UUID) uint32 {
 }
 
 // Gets the next available sequence for a provided ID
-func (m Mongo) GetNextSequence(id uuid.UUID) (nextSequence *evented_query.NextSequence, err error) {
+func (m Mongo) GetNextSequence(ctx context.Context, id uuid.UUID) (nextSequence *evented_query.NextSequence, err error) {
 	nextSequence = &evented_query.NextSequence{
-		Sequence: m.getNextSequence(id),
+		Sequence: m.getNextSequence(ctx, id),
 	}
 	return nextSequence, nil
 }
 
 // Gets the events related to the provided ID
-func (m Mongo) Get(id uuid.UUID) (evt []*evented_core.EventPage, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func (m Mongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
@@ -191,8 +189,7 @@ func (m Mongo) Get(id uuid.UUID) (evt []*evented_core.EventPage, err error) {
 
 // Gets the events related to the provided ID
 // To provides an inclusive limit to the events fetched
-func (m Mongo) GetTo(id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func (m Mongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
@@ -218,8 +215,7 @@ func (m Mongo) GetTo(id uuid.UUID, to uint32) (evt []*evented_core.EventPage, er
 
 // Gets the events related to the provided ID
 // From provides an inclusive limit to the events fetched
-func (m Mongo) GetFrom(id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func (m Mongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$gte", from}}},
@@ -245,8 +241,7 @@ func (m Mongo) GetFrom(id uuid.UUID, from uint32) (evt []*evented_core.EventPage
 
 // Gets the events related to the provided ID
 // From and To provide an inclusive limit to the events fetched
-func (m Mongo) GetFromTo(id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func (m Mongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},

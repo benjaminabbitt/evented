@@ -56,7 +56,7 @@ type Server struct {
 func (server Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.CommandHandlerResponse, err error) {
 	uuid, err := evented_proto.ProtoToUUID(*in.Cover.Root)
 	server.errh.LogIfErr(err, "")
-	priorState, err := server.eventBookRepository.Get(uuid)
+	priorState, err := server.eventBookRepository.Get(ctx, uuid)
 	server.errh.LogIfErr(err, "")
 
 	contextualCommand := &evented_core.ContextualCommand{
@@ -64,14 +64,14 @@ func (server Server) Handle(ctx context.Context, in *evented_core.CommandBook) (
 		Command: in,
 	}
 
-	businessResponse, err := server.businessClient.Handle(contextualCommand)
+	businessResponse, err := server.businessClient.Handle(ctx, contextualCommand)
 	server.errh.LogIfErr(err, "")
-	response, err := server.handleEventBook(businessResponse)
+	response, err := server.handleEventBook(ctx, businessResponse)
 	return &response, err
 }
 
-func (server Server) handleEventBook(eb *evented_core.EventBook) (result evented_core.CommandHandlerResponse, err error) {
-	err = server.eventBookRepository.Put(*eb)
+func (server Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result evented_core.CommandHandlerResponse, err error) {
+	err = server.eventBookRepository.Put(ctx, *eb)
 	server.errh.LogIfErr(err, "")
 
 	sync, _ := server.extractSynchronous(*eb)
@@ -79,19 +79,19 @@ func (server Server) handleEventBook(eb *evented_core.EventBook) (result evented
 	var projections []*evented_core.Projection
 
 	for _, syncProjector := range server.transports.GetProjections() {
-		response, err := syncProjector.HandleSync(&sync)
+		response, err := syncProjector.HandleSync(ctx, &sync)
 		server.errh.LogIfErr(err, "")
 		projections = append(projections, response)
 	}
 
 	for _, syncSaga := range server.transports.GetSaga() {
-		response, err := syncSaga.HandleSync(&sync)
+		response, err := syncSaga.HandleSync(ctx, &sync)
 		server.errh.LogIfErr(err, "")
 		eventBooks = append(eventBooks, response)
 	}
 
 	for _, t := range server.transports.GetTransports() {
-		err := t.Handle(eb)
+		err := t.Handle(ctx, eb)
 		server.errh.LogIfErr(err, "")
 	}
 
@@ -117,6 +117,6 @@ func (server Server) extractSynchronous(originalBook evented_core.EventBook) (sy
 }
 
 func (server Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.CommandHandlerResponse, err error) {
-	r, err := server.handleEventBook(in)
+	r, err := server.handleEventBook(ctx, in)
 	return &r, err
 }

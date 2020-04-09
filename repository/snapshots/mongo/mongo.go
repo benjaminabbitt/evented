@@ -22,10 +22,11 @@ func eventPagesToInterface(pages []*evented_core.EventPage) []interface{} {
 	return s
 }
 
-func Get(id string) (snap *evented_core.Snapshot, err error) {
+func Get(ctx context.Context, id string) (snap *evented_core.Snapshot, err error) {
 
 }
-func Put(id string, snap *evented_core.Snapshot) (err error) {
+
+func Put(ctx context.Context, id string, snap *evented_core.Snapshot) (err error) {
 
 }
 

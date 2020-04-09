@@ -16,6 +16,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
+	mock2 "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
@@ -27,6 +28,7 @@ type ServerSuite struct {
 	errh    *evented.ErrLogger
 	domainA string
 	domainB string
+	ctx     context.Context
 }
 
 func (s *ServerSuite) SetupTest() {
@@ -34,6 +36,7 @@ func (s *ServerSuite) SetupTest() {
 	defer s.log.Sync()
 	s.domainA = "testA"
 	s.domainB = "testB"
+	s.ctx = context.Background()
 }
 
 func (s ServerSuite) Test_Handle() {
@@ -45,15 +48,16 @@ func (s ServerSuite) Test_Handle() {
 	commandBook := s.produceCommandBook()
 
 	id, _ := evented_proto.ProtoToUUID(*commandBook.Cover.Root)
-	eventBookRepo.On("Get", id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
+
+	eventBookRepo.On("Get", mock2.Anything, id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
 
 	contextualCommand := &eventedcore.ContextualCommand{
 		Events:  s.produceHistoricalEventBook(*commandBook),
 		Command: commandBook,
 	}
 
-	businessClient.On("Handle", contextualCommand).Return(s.produceBusinessResponse(*commandBook), nil)
-	eventBookRepo.On("Put", *s.produceBusinessResponse(*commandBook)).Return(nil)
+	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(s.produceBusinessResponse(*commandBook), nil)
+	eventBookRepo.On("Put", mock2.Anything, *s.produceBusinessResponse(*commandBook)).Return(nil)
 
 	holder.On("GetProjections").Return([]projector.SyncProjection{})
 	holder.On("GetSaga").Return([]saga.SyncSaga{})
@@ -73,7 +77,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	commandBook := s.produceCommandBook()
 
 	id, _ := evented_proto.ProtoToUUID(*commandBook.Cover.Root)
-	eventBookRepo.On("Get", id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
+	eventBookRepo.On("Get", mock2.Anything, id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
 
 	contextualCommand := &eventedcore.ContextualCommand{
 		Events:  s.produceHistoricalEventBook(*commandBook),
@@ -81,8 +85,8 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	}
 
 	businessResponse := s.produceBusinessResponse(*commandBook)
-	businessClient.On("Handle", contextualCommand).Return(businessResponse, nil)
-	eventBookRepo.On("Put", *businessResponse).Return(nil)
+	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(businessResponse, nil)
+	eventBookRepo.On("Put", mock2.Anything, *businessResponse).Return(nil)
 
 	var syncEventPages []*eventedcore.EventPage
 	syncEventPages = append(syncEventPages, &eventedcore.EventPage{
@@ -111,7 +115,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	}
 
 	mockProjector := new(projector.MockProjectorClient)
-	mockProjector.On("HandleSync", syncEventBook).Return(projection, nil)
+	mockProjector.On("HandleSync", mock2.Anything, syncEventBook).Return(projection, nil)
 	holder.On("GetProjections").Return([]projector.SyncProjection{mockProjector})
 
 	sagaResult := &eventedcore.EventBook{
@@ -121,7 +125,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	}
 
 	mockSaga := new(saga.MockSagaClient)
-	mockSaga.On("HandleSync", syncEventBook).Return(sagaResult, nil)
+	mockSaga.On("HandleSync", mock2.Anything, syncEventBook).Return(sagaResult, nil)
 	holder.On("GetSaga").Return([]saga.SyncSaga{mockSaga})
 
 	var asyncEventPages []*eventedcore.EventPage
@@ -149,7 +153,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	}
 
 	mockTransport := new(mock.AsyncTransport)
-	mockTransport.On("Handle", asyncEventBook).Return(nil)
+	mockTransport.On("Handle", mock2.Anything, asyncEventBook).Return(nil)
 	holder.On("GetTransports").Return([]async.Transport{mockTransport})
 
 	server.Handle(context.Background(), commandBook)

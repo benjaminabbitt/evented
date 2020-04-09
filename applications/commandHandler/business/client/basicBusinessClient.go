@@ -23,6 +23,6 @@ type BasicBusinessClient struct {
 	bl  evented_business.BusinessLogicClient
 }
 
-func (client BasicBusinessClient) Handle(command *evented_core.ContextualCommand) (events *evented_core.EventBook, err error) {
-	return client.bl.Handle(context.Background(), command)
+func (client BasicBusinessClient) Handle(ctx context.Context, command *evented_core.ContextualCommand) (events *evented_core.EventBook, err error) {
+	return client.bl.Handle(ctx, command)
 }

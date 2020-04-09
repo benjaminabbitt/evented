@@ -1,6 +1,7 @@
 package eventBook
 
 import (
+	"context"
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
@@ -19,36 +20,36 @@ type RepositoryBasic struct {
 	Domain       string
 }
 
-func (repo RepositoryBasic) Get(id uuid.UUID) (book evented_core.EventBook, err error) {
-	snapshot, err := repo.SnapshotRepo.Get(id)
+func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book evented_core.EventBook, err error) {
+	snapshot, err := repo.SnapshotRepo.Get(ctx, id)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed to get snapshot for id %s", id))
 	var from uint32 = 0
 	if snapshot != nil {
 		from = snapshot.Sequence
 	}
-	pages, err := repo.EventRepo.GetFrom(id, from)
+	pages, err := repo.EventRepo.GetFrom(ctx, id, from)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting from page %d on id %s", from, id))
 	return repo.makeEventBook(id, pages, snapshot), nil
 }
 
-func (repo RepositoryBasic) Put(book evented_core.EventBook) error {
+func (repo RepositoryBasic) Put(ctx context.Context, book evented_core.EventBook) error {
 	root, err := evented_proto.ProtoToUUID(*book.Cover.Root)
 	repo.errh.LogIfErr(err, "")
-	err = repo.EventRepo.Add(root, book.Pages)
+	err = repo.EventRepo.Add(ctx, root, book.Pages)
 	repo.errh.LogIfErr(err, "Failed adding pages to repo")
-	err = repo.SnapshotRepo.Put(root, book.Snapshot)
+	err = repo.SnapshotRepo.Put(ctx, root, book.Snapshot)
 	repo.errh.LogIfErr(err, "Failed adding snapshot to repo")
 	return err
 }
 
-func (repo RepositoryBasic) GetFromTo(id uuid.UUID, from uint32, to uint32) (book evented_core.EventBook, err error) {
-	eventPages, err := repo.EventRepo.GetFromTo(id, from, to)
+func (repo RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book evented_core.EventBook, err error) {
+	eventPages, err := repo.EventRepo.GetFromTo(ctx, id, from, to)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting pages %d to %d on id %s", from, to, id))
 	return repo.makeEventBook(id, eventPages, nil), nil
 }
 
-func (repo RepositoryBasic) GetFrom(id uuid.UUID, from uint32) (book evented_core.EventBook, err error) {
-	eventPages, err := repo.EventRepo.GetFrom(id, from)
+func (repo RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book evented_core.EventBook, err error) {
+	eventPages, err := repo.EventRepo.GetFrom(ctx, id, from)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting from page %d on id %s", from, id))
 	return repo.makeEventBook(id, eventPages, nil), nil
 }

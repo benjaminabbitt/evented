@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"context"
 	"fmt"
 	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
@@ -19,7 +20,7 @@ type Client struct {
 	exchangeName string
 }
 
-func (client Client) Handle(evts *evented_core.EventBook) (err error) {
+func (client Client) Handle(ctx context.Context, evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	client.errh.LogIfErr(err, "Failed to serialize Event Book")
 	client.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", client.exchangeName)
