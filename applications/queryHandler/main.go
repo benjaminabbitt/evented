@@ -6,7 +6,6 @@ import (
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
 	errh.LogIfErr(err, "Error configuring application.")
-	repo := events.SetupEventRepo(log, errh)
+	repo, err := events.SetupEventRepo(log, errh)
 	server := businessLogic2.NewEventQueryServer(repo, log, errh)
 
 	port := uint16(viper.GetUint("port"))

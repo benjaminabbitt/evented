@@ -21,7 +21,7 @@ type LastProcessedRepo struct {
 	suite.Suite
 	log             *zap.SugaredLogger
 	errh            *evented.ErrLogger
-	systemUnderTest Mongo
+	systemUnderTest SnapshotMongoRepo
 	sampleId        uuid.UUID
 	mongoId         [12]byte
 }
@@ -39,7 +39,7 @@ func (o *LastProcessedRepo) Test_SequenceZero() {
 	dait := dockerTestSuite.DockerAssistedIntegrationTest{}
 	dait.CreateNewContainer("mongo", []uint16{27017})
 	defer dait.StopContainer()
-	repo := NewMongoClient(
+	repo := NewSnapshotMongoRepo(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
 		"test",
 		o.log,
@@ -61,7 +61,7 @@ func (o *LastProcessedRepo) Test_SequenceGreaterThanZero() {
 	dait := dockerTestSuite.DockerAssistedIntegrationTest{}
 	dait.CreateNewContainer("mongo", []uint16{27017})
 	defer dait.StopContainer()
-	repo := NewMongoClient(
+	repo := NewSnapshotMongoRepo(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
 		"test",
 		o.log,

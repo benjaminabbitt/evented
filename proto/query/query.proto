@@ -5,17 +5,13 @@ import "core/evented.proto";
 
 
 service EventQuery {
-    rpc GetEventBook (Query) returns (evented.core.EventBook){}
-    rpc GetNextSequence (evented.core.UUID) returns (NextSequence){}
-}
-
-message NextSequence {
-    uint32 sequence = 1;
+    rpc GetEventBook (Query) returns (evented.core.EventBook) {
+    }
 }
 
 message Query {
     string domain = 1;
-    string root = 2;
+    evented.core.UUID root = 2;
     uint32 lowerBound = 3;
     uint32 upperBound = 4;
 }

@@ -13,6 +13,6 @@ func StringifyEventBook(eb *evented_core.EventBook) string {
 		seq, _ := GetSequence(page)
 		pages += fmt.Sprintf("%d,", seq)
 	}
-	id, _ := evented_proto.ProtoToUUID(*eb.Cover.Root)
+	id, _ := evented_proto.ProtoToUUID(eb.Cover.Root)
 	return fmt.Sprintf("%s:%s:%s", eb.Cover.Domain, id.String(), strings.TrimSuffix(pages, ","))
 }

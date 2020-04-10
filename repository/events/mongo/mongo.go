@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/query"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -155,14 +154,6 @@ func (m Mongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
 	var resultModel mongoEvent
 	result.Decode(&resultModel)
 	return resultModel.Sequence + 1
-}
-
-// Gets the next available sequence for a provided ID
-func (m Mongo) GetNextSequence(ctx context.Context, id uuid.UUID) (nextSequence *evented_query.NextSequence, err error) {
-	nextSequence = &evented_query.NextSequence{
-		Sequence: m.getNextSequence(ctx, id),
-	}
-	return nextSequence, nil
 }
 
 // Gets the events related to the provided ID

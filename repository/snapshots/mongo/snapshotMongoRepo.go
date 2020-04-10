@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-type Mongo struct {
+type SnapshotMongoRepo struct {
 	client     *mongo.Client
 	collection *mongo.Collection
 }
@@ -48,7 +48,7 @@ func storageToCore(storage *snapshot) (root uuid.UUID, snapshot *evented_core.Sn
 	}, nil
 }
 
-func (o Mongo) Get(ctx context.Context, root uuid.UUID) (snap *evented_core.Snapshot, err error) {
+func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *evented_core.Snapshot, err error) {
 	idBytes, err := mongosupport.RootToMongo(root)
 	singleResult := o.collection.FindOne(ctx, bson.D{{"_id", idBytes}})
 	record := &snapshot{}
@@ -57,7 +57,7 @@ func (o Mongo) Get(ctx context.Context, root uuid.UUID) (snap *evented_core.Snap
 	return coreRecord, nil
 }
 
-func (o Mongo) Put(ctx context.Context, root uuid.UUID, snap *evented_core.Snapshot) (err error) {
+func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evented_core.Snapshot) (err error) {
 	record := coreToStorage(root, snap)
 	idBytes, err := mongosupport.RootToMongo(root)
 	if snap.Sequence == 0 {
@@ -74,12 +74,12 @@ func (o Mongo) Put(ctx context.Context, root uuid.UUID, snap *evented_core.Snaps
 	return nil
 }
 
-func NewMongoClient(uri string, databaseName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client Mongo) {
+func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client SnapshotMongoRepo) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	collection := mongoClient.Database(databaseName).Collection("snapshots")
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Mongo{client: mongoClient, collection: collection}
+	return SnapshotMongoRepo{client: mongoClient, collection: collection}
 }

@@ -78,7 +78,7 @@ func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
 	if typee == mongodb {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
-		repo = mongo.NewMongoClient(url, dbName, log, errh)
+		repo = mongo.NewSnapshotMongoRepo(url, dbName, log, errh)
 	} else if typee == memory {
 		repo = snapshot_memory.NewSSMemoryRepository()
 	}

@@ -33,7 +33,7 @@ func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book evented
 }
 
 func (repo RepositoryBasic) Put(ctx context.Context, book evented_core.EventBook) error {
-	root, err := evented_proto.ProtoToUUID(*book.Cover.Root)
+	root, err := evented_proto.ProtoToUUID(book.Cover.Root)
 	repo.errh.LogIfErr(err, "")
 	err = repo.EventRepo.Add(ctx, root, book.Pages)
 	repo.errh.LogIfErr(err, "Failed adding pages to repo")

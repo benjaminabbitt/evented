@@ -3,45 +3,44 @@ package businessLogic
 import (
 	"context"
 	"github.com/benjaminabbitt/evented"
+	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/core"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
-	"github.com/benjaminabbitt/evented/repository/events"
+	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func NewEventQueryServer(repos events.EventRepository, log *zap.SugaredLogger, errh *evented.ErrLogger) EventQueryServer {
+func NewEventQueryServer(repos eventBook.Repository, log *zap.SugaredLogger, errh *evented.ErrLogger) EventQueryServer {
 	return EventQueryServer{
 		repos: repos,
-		log:  log,
-		errh: errh,
+		log:   log,
+		errh:  errh,
 	}
 }
 
 type EventQueryServer struct {
 	evented_query.UnimplementedEventQueryServer
-	repos events.EventRepository
-	log  *zap.SugaredLogger
-	errh *evented.ErrLogger
+	repos eventBook.Repository
+	log   *zap.SugaredLogger
+	errh  *evented.ErrLogger
 }
 
 func (server *EventQueryServer) GetEventBook(ctx context.Context, req *evented_query.Query) (*evented_core.EventBook, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEventBook not implemented")
-}
-func (server *EventQueryServer) GetNextSequence(ctx context.Context, req *evented_core.UUID) (*evented_query.NextSequence, error) {
-	id, err := uuid.ParseBytes(req.Value)
+	id, err := evented_proto.ProtoToUUID(req.Root)
 	if err != nil {
 		return nil, err
 	}
-	seq, err := server.repos.GetNextSequence(id)
-	if err != nil {
-		return nil, err
+	var book evented_core.EventBook
+	if req.LowerBound != 0 && req.UpperBound != 0 {
+		book, err = server.repos.GetFromTo(ctx, id, req.LowerBound, req.UpperBound)
+	} else if req.LowerBound != 0 {
+		book, err = server.repos.GetFrom(ctx, id, req.LowerBound)
+	} else {
+		book, err = server.repos.Get(ctx, id)
 	}
-	return seq, nil
+	return &book, nil
 }
 
 func (server *EventQueryServer) Listen(port uint16) {
