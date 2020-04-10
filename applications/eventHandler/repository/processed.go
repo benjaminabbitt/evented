@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/benjaminabbitt/evented"
+	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,7 +22,7 @@ type Processed struct {
 }
 
 func (o Processed) Received(ctx context.Context, id uuid.UUID, sequence uint32) (err error) {
-	idBytes, err := o.mongoKey(id)
+	idBytes, err := mongosupport.RootToMongo(id)
 	record := MongoEventTrackRecord{
 		MongoId:  idBytes,
 		Root:     id.String(),
@@ -42,7 +43,7 @@ func (o Processed) Received(ctx context.Context, id uuid.UUID, sequence uint32) 
 }
 
 func (o Processed) LastReceived(ctx context.Context, id uuid.UUID) (sequence uint32, err error) {
-	idBytes, err := o.mongoKey(id)
+	idBytes, err := mongosupport.RootToMongo(id)
 	singleResult := o.Collection.FindOne(ctx, bson.D{{"_id", idBytes}})
 	record := &MongoEventTrackRecord{}
 	err = singleResult.Decode(record)
@@ -50,15 +51,6 @@ func (o Processed) LastReceived(ctx context.Context, id uuid.UUID) (sequence uin
 		return sequence, err
 	}
 	return record.Sequence, nil
-}
-
-func (o Processed) mongoKey(id uuid.UUID) (idBytes [12]byte, err error) {
-	idByteSlice, err := id.MarshalBinary()
-	if err != nil {
-		return idBytes, err
-	}
-	copy(idBytes[:], idByteSlice[:12])
-	return idBytes, nil
 }
 
 type MongoEventTrackRecord struct {

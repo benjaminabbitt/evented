@@ -9,12 +9,13 @@ import (
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
+	"github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/async"
 	"github.com/benjaminabbitt/evented/transport/async/amqp"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
-	mockSaga "github.com/benjaminabbitt/evented/transport/sync/saga/mock"
+	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -55,8 +56,8 @@ func main() {
 
 	handlers := transport.NewTransportHolder(log)
 
-	handlers.Add(mockSaga.NewSagaClient(log))
-	handlers.Add(projector.NewProjectorClient(log))
+	handlers.Add(saga.MockSagaClient{})
+	handlers.Add(projector.MockProjectorClient{})
 	handlers.Add(setupServiceBus(domain))
 
 	server := framework.NewServer(
@@ -77,8 +78,7 @@ func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
 	if typee == mongodb {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
-		log.Warnw("Read Mongo preference for snapshot repo.  Snapshot Mongo incomplete.  Configuring wtih Memory for now...", "url", url, "dbName", dbName)
-		repo = snapshot_memory.NewSSMemoryRepository()
+		repo = mongo.NewMongoClient(url, dbName, log, errh)
 	} else if typee == memory {
 		repo = snapshot_memory.NewSSMemoryRepository()
 	}

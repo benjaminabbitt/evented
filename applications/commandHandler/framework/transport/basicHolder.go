@@ -8,8 +8,6 @@ import (
 	"reflect"
 )
 
-
-
 type BasicHolder struct {
 	Log         *zap.SugaredLogger
 	transports  []async.Transport
@@ -17,7 +15,7 @@ type BasicHolder struct {
 	sagas       []saga.SyncSaga
 }
 
-func (th *BasicHolder) Add(i interface{}) {
+func (th BasicHolder) Add(i interface{}) {
 	switch i.(type) {
 	case async.Transport:
 		th.transports = append(th.transports, i.(async.Transport))
@@ -35,20 +33,18 @@ func (th *BasicHolder) Add(i interface{}) {
 	}
 }
 
-func (th *BasicHolder) GetTransports() []async.Transport {
+func (th BasicHolder) GetTransports() []async.Transport {
 	return th.transports
 }
 
-func (th *BasicHolder) GetProjections() []projector.SyncProjection {
+func (th BasicHolder) GetProjections() []projector.SyncProjection {
 	return th.projections
 }
 
-func (th *BasicHolder) GetSaga() []saga.SyncSaga {
+func (th BasicHolder) GetSaga() []saga.SyncSaga {
 	return th.sagas
 }
 
 func NewTransportHolder(log *zap.SugaredLogger) *BasicHolder {
 	return &BasicHolder{Log: log}
 }
-
-
