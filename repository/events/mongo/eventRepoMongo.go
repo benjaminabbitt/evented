@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -16,7 +17,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Mongo struct {
+type EventRepoMongo struct {
 	errh           *evented.ErrLogger
 	log            *zap.SugaredLogger
 	client         mongo.Client
@@ -34,7 +35,7 @@ type mongoEvent struct {
 	Root        string
 }
 
-func (m Mongo) pageToMEP(root uuid.UUID, page evented_core.EventPage) (r mongoEvent) {
+func (m EventRepoMongo) pageToMEP(root uuid.UUID, page evented_core.EventPage) (r mongoEvent) {
 	mongoId := m.generateId(root, page)
 
 	return mongoEvent{
@@ -47,11 +48,11 @@ func (m Mongo) pageToMEP(root uuid.UUID, page evented_core.EventPage) (r mongoEv
 	}
 }
 
-func (m Mongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page evented_core.EventPage) (r mongoEvent) {
+func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page evented_core.EventPage) (r mongoEvent) {
 	page.Sequence = &evented_core.EventPage_Num{Num: sequence}
 	return m.pageToMEP(root, page)
 }
-func (m Mongo) getSequence(page evented_core.EventPage) uint32 {
+func (m EventRepoMongo) getSequence(page evented_core.EventPage) uint32 {
 	var sequence uint32
 	switch s := page.Sequence.(type) {
 	case *evented_core.EventPage_Num:
@@ -62,7 +63,7 @@ func (m Mongo) getSequence(page evented_core.EventPage) uint32 {
 	return sequence
 }
 
-func (m Mongo) generateId(root uuid.UUID, page evented_core.EventPage) [12]byte {
+func (m EventRepoMongo) generateId(root uuid.UUID, page evented_core.EventPage) [12]byte {
 	var mongoId [12]byte
 	rootBin, _ := root.MarshalBinary()
 	for i, v := range rootBin[0:7] {
@@ -78,7 +79,7 @@ func (m Mongo) generateId(root uuid.UUID, page evented_core.EventPage) [12]byte 
 	return mongoId
 }
 
-func (Mongo) mepToPage(m mongoEvent) (root uuid.UUID, page evented_core.EventPage) {
+func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page evented_core.EventPage) {
 	page = evented_core.EventPage{
 		Sequence:    &evented_core.EventPage_Num{Num: m.Sequence},
 		CreatedAt:   m.CreatedAt,
@@ -89,7 +90,7 @@ func (Mongo) mepToPage(m mongoEvent) (root uuid.UUID, page evented_core.EventPag
 	return root, page
 }
 
-func (m Mongo) eventPagesToInterface(root uuid.UUID, pages []*evented_core.EventPage) []interface{} {
+func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*evented_core.EventPage) []interface{} {
 	s := make([]interface{}, len(pages))
 	for k, v := range pages {
 		s[k] = m.pageToMEP(root, *v)
@@ -98,7 +99,7 @@ func (m Mongo) eventPagesToInterface(root uuid.UUID, pages []*evented_core.Event
 }
 
 //Adds an array of events to the data store
-func (m Mongo) Add(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) (err error) {
+func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) (err error) {
 	var numbered []*evented_core.EventPage
 	var forced *evented_core.EventPage
 	remainingEvents := events
@@ -117,7 +118,7 @@ func (m Mongo) Add(ctx context.Context, id uuid.UUID, events []*evented_core.Eve
 	return nil
 }
 
-func (m Mongo) extractUntilFirstForced(events []*evented_core.EventPage) (numbered []*evented_core.EventPage, forced *evented_core.EventPage, remainder []*evented_core.EventPage) {
+func (m EventRepoMongo) extractUntilFirstForced(events []*evented_core.EventPage) (numbered []*evented_core.EventPage, forced *evented_core.EventPage, remainder []*evented_core.EventPage) {
 	for idx, page := range events {
 		switch page.GetSequence().(type) {
 		case *evented_core.EventPage_Force:
@@ -127,7 +128,7 @@ func (m Mongo) extractUntilFirstForced(events []*evented_core.EventPage) (number
 	return events, nil, nil
 }
 
-func (m Mongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) {
+func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) {
 	for {
 		seq := m.getNextSequence(ctx, id)
 		mep := m.pageToMEPWithSequence(id, seq, *event)
@@ -138,11 +139,11 @@ func (m Mongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_co
 	}
 }
 
-func (m Mongo) insert(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) {
+func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) {
 	m.Collection.InsertMany(ctx, m.eventPagesToInterface(id, events))
 }
 
-func (m Mongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
+func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
 	idStr := id.String()
 	options := options.FindOne()
 	options.SetSort(bson.D{{"sequence", -1}})
@@ -157,7 +158,7 @@ func (m Mongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
 }
 
 // Gets the events related to the provided ID
-func (m Mongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
@@ -180,7 +181,7 @@ func (m Mongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.Event
 
 // Gets the events related to the provided ID
 // To provides an inclusive limit to the events fetched
-func (m Mongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
@@ -206,7 +207,7 @@ func (m Mongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*event
 
 // Gets the events related to the provided ID
 // From provides an inclusive limit to the events fetched
-func (m Mongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$gte", from}}},
@@ -232,7 +233,7 @@ func (m Mongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (evt []*e
 
 // Gets the events related to the provided ID
 // From and To provide an inclusive limit to the events fetched
-func (m Mongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
@@ -257,7 +258,7 @@ func (m Mongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint
 	return results, nil
 }
 
-func (m Mongo) establishIndices() {
+func (m EventRepoMongo) establishIndices() {
 	sequenceModel := mongo.IndexModel{
 		Keys: bsonx.Doc{
 			{Key: "root", Value: bsonx.Int32(1)},
@@ -268,13 +269,12 @@ func (m Mongo) establishIndices() {
 	indices.CreateOne(context.Background(), sequenceModel)
 }
 
-func NewMongoClient(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client *Mongo) {
+func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client events.EventRepository) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
 	errh.LogIfErr(err, "")
 	err = mongoClient.Ping(nil, readpref.Primary())
 	errh.LogIfErr(err, "")
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
-	client = &Mongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log, errh: errh}
-	client.establishIndices()
+	client = &EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log, errh: errh}
 	return client
 }

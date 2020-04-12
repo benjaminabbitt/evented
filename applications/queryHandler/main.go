@@ -1,7 +1,6 @@
 package main
 
 import (
-	businessLogic2 "github.com/benjaminabbitt/evented/applications/queryHandler/businessLogic"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
@@ -19,7 +18,7 @@ func main() {
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
 	errh.LogIfErr(err, "Error configuring application.")
 	repo, err := events.SetupEventRepo(log, errh)
-	server := businessLogic2.NewEventQueryServer(repo, log, errh)
+	server := NewEventQueryServer(repo, log, errh)
 
 	port := uint16(viper.GetUint("port"))
 	log.Infow("Starting Business Server...", "port", port)

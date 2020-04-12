@@ -20,7 +20,7 @@ type RepositoryBasic struct {
 	Domain       string
 }
 
-func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book evented_core.EventBook, err error) {
+func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *evented_core.EventBook, err error) {
 	snapshot, err := repo.SnapshotRepo.Get(ctx, id)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed to get snapshot for id %s", id))
 	var from uint32 = 0
@@ -32,7 +32,7 @@ func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book evented
 	return repo.makeEventBook(id, pages, snapshot), nil
 }
 
-func (repo RepositoryBasic) Put(ctx context.Context, book evented_core.EventBook) error {
+func (repo RepositoryBasic) Put(ctx context.Context, book *evented_core.EventBook) error {
 	root, err := evented_proto.ProtoToUUID(book.Cover.Root)
 	repo.errh.LogIfErr(err, "")
 	err = repo.EventRepo.Add(ctx, root, book.Pages)
@@ -42,19 +42,19 @@ func (repo RepositoryBasic) Put(ctx context.Context, book evented_core.EventBook
 	return err
 }
 
-func (repo RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book evented_core.EventBook, err error) {
+func (repo RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *evented_core.EventBook, err error) {
 	eventPages, err := repo.EventRepo.GetFromTo(ctx, id, from, to)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting pages %d to %d on id %s", from, to, id))
 	return repo.makeEventBook(id, eventPages, nil), nil
 }
 
-func (repo RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book evented_core.EventBook, err error) {
+func (repo RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *evented_core.EventBook, err error) {
 	eventPages, err := repo.EventRepo.GetFrom(ctx, id, from)
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting from page %d on id %s", from, id))
 	return repo.makeEventBook(id, eventPages, nil), nil
 }
 
-func (repo RepositoryBasic) makeEventBook(root uuid.UUID, pages []*evented_core.EventPage, snapshot *evented_core.Snapshot) (book evented_core.EventBook) {
+func (repo RepositoryBasic) makeEventBook(root uuid.UUID, pages []*evented_core.EventPage, snapshot *evented_core.Snapshot) (book *evented_core.EventBook) {
 	rootBytes, err := root.MarshalBinary()
 	repo.errh.LogIfErr(err, fmt.Sprintf("Failed making Event Book"))
 	protoRoot := &evented_core.UUID{
@@ -64,7 +64,7 @@ func (repo RepositoryBasic) makeEventBook(root uuid.UUID, pages []*evented_core.
 		Domain: repo.Domain,
 		Root:   protoRoot,
 	}
-	book = evented_core.EventBook{
+	book = &evented_core.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: snapshot,

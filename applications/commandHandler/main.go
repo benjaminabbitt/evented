@@ -8,8 +8,9 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
+	event_mongo "github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
-	"github.com/benjaminabbitt/evented/repository/snapshots/mongo"
+	snapshot_mongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/async"
@@ -43,13 +44,13 @@ func main() {
 	log.Infow("Starting Command Handler", "port", commandHandlerPort)
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 
-	eventRepo, err := events.SetupEventRepo(log, errh)
+	eventRepo, err := setupEventRepo(log, errh)
 	errh.LogIfErr(err, "Error configuring event repo")
 	ssRepo := setupSnapshotRepo()
 	domain := viper.GetString("domain")
 
 	repo := eventBook.RepositoryBasic{
-		EventRepo:    eventRepo,
+		EventRepo:    *eventRepo,
 		SnapshotRepo: ssRepo,
 		Domain:       domain,
 	}
@@ -78,7 +79,7 @@ func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
 	if typee == mongodb {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
-		repo = mongo.NewSnapshotMongoRepo(url, dbName, log, errh)
+		repo = snapshot_mongo.NewSnapshotMongoRepo(url, dbName, log, errh)
 	} else if typee == memory {
 		repo = snapshot_memory.NewSSMemoryRepository()
 	}
@@ -96,4 +97,18 @@ func setupServiceBus(domain string) (transport async.Transport) {
 		return client
 	}
 	return nil
+}
+func setupEventRepo(log *zap.SugaredLogger, errh *evented.ErrLogger) (repo *events.EventRepository, err error) {
+	configurationKey := "eventStore"
+	typee := viper.GetString("eventstore.type")
+	mongodb := "mongodb"
+	if typee == mongodb {
+		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
+		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
+		collectionName := viper.GetString(fmt.Sprintf("%s.%s.collection", configurationKey, mongodb))
+		log.Infow("Using MongoDb for Event Store", "url", url, "dbName", dbName)
+		tempRepo := event_mongo.NewEventRepoMongo(url, dbName, collectionName, log, errh)
+		repo = &tempRepo
+	}
+	return repo, nil
 }

@@ -54,13 +54,17 @@ type Server struct {
 }
 
 func (server Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.CommandHandlerResponse, err error) {
-	uuid, err := evented_proto.ProtoToUUID(*in.Cover.Root)
-	server.errh.LogIfErr(err, "")
+	uuid, err := evented_proto.ProtoToUUID(in.Cover.Root)
+	if err != nil {
+		return nil, err
+	}
 	priorState, err := server.eventBookRepository.Get(ctx, uuid)
-	server.errh.LogIfErr(err, "")
+	if err != nil {
+		return nil, err
+	}
 
 	contextualCommand := &evented_core.ContextualCommand{
-		Events:  &priorState,
+		Events:  priorState,
 		Command: in,
 	}
 
@@ -71,7 +75,7 @@ func (server Server) Handle(ctx context.Context, in *evented_core.CommandBook) (
 }
 
 func (server Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result evented_core.CommandHandlerResponse, err error) {
-	err = server.eventBookRepository.Put(ctx, *eb)
+	err = server.eventBookRepository.Put(ctx, eb)
 	server.errh.LogIfErr(err, "")
 
 	sync, _ := server.extractSynchronous(*eb)
