@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
@@ -15,10 +13,9 @@ import (
 )
 
 var log *zap.SugaredLogger
-var errh *evented.ErrLogger
 
 func main() {
-	log, errh := support.Log()
+	log := support.Log()
 	defer log.Sync()
 
 	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
@@ -26,14 +23,18 @@ func main() {
 	flag.Parse()
 
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	errh.LogIfErr(err, "Error configuring application.")
+	if err != nil {
+		log.Error(err)
+	}
 
 	log.Info("Starting...")
 	target := viper.GetString("commandHandlerURL")
 	log.Info(target)
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
 	log.Infof("Connected to remote %s", target)
-	errh.LogIfErr(err, fmt.Sprintf("Error dialing %s", target))
+	if err != nil {
+		log.Error(err)
+	}
 	ch := evented_core.NewCommandHandlerClient(conn)
 	log.Info("Client Created...")
 	id, err := uuid.NewRandom()

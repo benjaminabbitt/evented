@@ -13,7 +13,7 @@ import (
 	"net"
 )
 
-func NewServer(eventBookRepository eventBook.Repository, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
+func NewServer(eventBookRepository eventBook.EventBookStorer, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
 	return Server{
 		log:                 log,
 		eventBookRepository: eventBookRepository,
@@ -49,7 +49,7 @@ func (o *Server) createListener(port uint16) net.Listener {
 type Server struct {
 	evented_core.UnimplementedCommandHandlerServer
 	log                 *zap.SugaredLogger
-	eventBookRepository eventBook.Repository
+	eventBookRepository eventBook.EventBookStorer
 	transports          transport.TransportHolder
 	businessClient      client.BusinessClient
 }

@@ -35,7 +35,7 @@ func (o *LastProcessedRepo) SetupTest() {
 
 func (o *LastProcessedRepo) Test_SequenceZero() {
 	dait := dockerTestSuite.DockerAssistedIntegrationTest{}
-	dait.CreateNewContainer("mongo", []uint16{27017})
+	_ = dait.CreateNewContainer("mongo", []uint16{27017})
 	defer dait.StopContainer()
 	repo := NewSnapshotMongoRepo(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
@@ -56,7 +56,7 @@ func (o *LastProcessedRepo) Test_SequenceZero() {
 
 func (o *LastProcessedRepo) Test_SequenceGreaterThanZero() {
 	dait := dockerTestSuite.DockerAssistedIntegrationTest{}
-	dait.CreateNewContainer("mongo", []uint16{27017})
+	_ = dait.CreateNewContainer("mongo", []uint16{27017})
 	defer dait.StopContainer()
 	repo := NewSnapshotMongoRepo(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type SnapshotRepo interface {
+type SnapshotStorer interface {
 	Get(ctx context.Context, id uuid.UUID) (snap *evented_core.Snapshot, err error)
 	Put(ctx context.Context, id uuid.UUID, snap *evented_core.Snapshot) (err error)
 }

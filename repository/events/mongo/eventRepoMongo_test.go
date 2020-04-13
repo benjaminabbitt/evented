@@ -17,7 +17,7 @@ import (
 
 type MongoIntegrationSuite struct {
 	suite.Suite
-	Mongo       events.EventRepository
+	Mongo       events.EventStorer
 	populatedId uuid.UUID
 	log         *zap.SugaredLogger
 	dait        *dockerTestSuite.DockerAssistedIntegrationTest

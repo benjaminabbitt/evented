@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/repository/snapshots"
 	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 )
 
 type SnapshotMongoRepo struct {
+	log        *zap.SugaredLogger
 	client     *mongo.Client
 	collection *mongo.Collection
 }
@@ -51,8 +53,16 @@ func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *event
 	idBytes, err := mongosupport.RootToMongo(root)
 	singleResult := o.collection.FindOne(ctx, bson.D{{"_id", idBytes}})
 	record := &snapshot{}
-	singleResult.Decode(record)
+	err = singleResult.Decode(record)
+	if err != nil {
+		o.log.Error(err)
+		return nil, err
+	}
 	_, coreRecord, err := storageToCore(record)
+	if err != nil {
+		o.log.Error(err)
+		return nil, err
+	}
 	return coreRecord, nil
 }
 
@@ -62,23 +72,31 @@ func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evente
 	if snap.Sequence == 0 {
 		_, err := o.collection.InsertOne(ctx, record)
 		if err != nil {
+			o.log.Error(err)
 			return err
 		}
 	} else {
 		_, err := o.collection.ReplaceOne(ctx, bson.D{{"_id", idBytes}}, record)
 		if err != nil {
+			o.log.Error(err)
 			return err
 		}
 	}
 	return nil
 }
 
-func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client SnapshotMongoRepo) {
+func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
-	collection := mongoClient.Database(databaseName).Collection("snapshots")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
-	return SnapshotMongoRepo{client: mongoClient, collection: collection}
+	collection := mongoClient.Database(databaseName).Collection("snapshots")
+	if collection != nil {
+		if err != nil {
+			log.Fatal(err)
+		}
+		return SnapshotMongoRepo{client: mongoClient, collection: collection, log: log}
+	}
+	return nil
 }

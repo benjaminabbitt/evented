@@ -8,7 +8,7 @@ import (
 
 type TransportHolder interface {
 	Add(i interface{})
-	GetTransports() []async.Transport
-	GetProjections() []projector.SyncProjection
-	GetSaga() []saga.SyncSaga
+	GetTransports() []async.EventTransporter
+	GetProjections() []projector.SyncProjectionTransporter
+	GetSaga() []saga.SyncSagaTransporter
 }

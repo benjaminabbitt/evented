@@ -15,17 +15,17 @@ func (o MockHolder) Add(i interface{}) {
 	o.Called(i)
 }
 
-func (o MockHolder) GetTransports() []async.Transport {
+func (o MockHolder) GetTransports() []async.EventTransporter {
 	args := o.Called()
-	return args.Get(0).([]async.Transport)
+	return args.Get(0).([]async.EventTransporter)
 }
 
-func (o MockHolder) GetProjections() []projector.SyncProjection {
+func (o MockHolder) GetProjections() []projector.SyncProjectionTransporter {
 	args := o.Called()
-	return args.Get(0).([]projector.SyncProjection)
+	return args.Get(0).([]projector.SyncProjectionTransporter)
 }
 
-func (o MockHolder) GetSaga() []saga.SyncSaga {
+func (o MockHolder) GetSaga() []saga.SyncSagaTransporter {
 	args := o.Called()
-	return args.Get(0).([]saga.SyncSaga)
+	return args.Get(0).([]saga.SyncSagaTransporter)
 }

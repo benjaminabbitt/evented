@@ -3,7 +3,6 @@ package amqp
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/jsonpb"
@@ -12,17 +11,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type Client struct {
-	errh         *evented.ErrLogger
+type AMQPSender struct {
 	log          *zap.SugaredLogger
 	ch           *amqp.Channel
 	marshaller   *jsonpb.Marshaler
 	exchangeName string
 }
 
-func (client Client) Handle(ctx context.Context, evts *evented_core.EventBook) (err error) {
+func (client AMQPSender) Handle(ctx context.Context, evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
-	client.errh.LogIfErr(err, "Failed to serialize Event Book")
 	client.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", client.exchangeName)
 	err = client.ch.Publish(
 		client.exchangeName,
@@ -36,7 +33,7 @@ func (client Client) Handle(ctx context.Context, evts *evented_core.EventBook) (
 	return nil
 }
 
-func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger) *Client {
+func NewAMQPSender(url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Error(err)
@@ -60,7 +57,7 @@ func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger) *Cli
 	if err != nil {
 		log.Error(err)
 	}
-	client := &Client{
+	client := &AMQPSender{
 		log:          log,
 		exchangeName: exchangeName,
 		ch:           ch,

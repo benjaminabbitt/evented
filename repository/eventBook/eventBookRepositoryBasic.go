@@ -12,8 +12,8 @@ import (
 
 type RepositoryBasic struct {
 	log          *zap.SugaredLogger
-	EventRepo    events.EventRepository
-	SnapshotRepo snapshots.SnapshotRepo
+	EventRepo    events.EventStorer
+	SnapshotRepo snapshots.SnapshotStorer
 	Domain       string
 }
 

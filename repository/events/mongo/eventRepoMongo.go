@@ -180,9 +180,8 @@ func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint
 	opts.SetSort(bson.D{{"sequence", -1}})
 	result := m.Collection.FindOne(ctx, bson.D{{"root", idStr}}, opts)
 	if result.Err() != nil {
-		err := result.Err()
-		//XXX: find some better way to do this
-		if err.Error() == "mongo: no documents in result" {
+		//XXX: find some better way to do this, string compare on an error string is fraught with issues
+		if result.Err().Error() == "mongo: no documents in result" {
 			return 0, nil
 		} else {
 			return 0, result.Err()
@@ -324,7 +323,7 @@ func (m EventRepoMongo) establishIndices() error {
 	return nil
 }
 
-func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventRepository, err error) {
+func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventStorer, err error) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err

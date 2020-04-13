@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	log, errh := support.Log()
+	log := support.Log()
 	defer log.Sync()
 
 	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
@@ -16,8 +16,10 @@ func main() {
 	flag.Parse()
 
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	errh.LogIfErr(err, "Error configuring application.")
-	server := businessLogic.NewSimpleBusinessLogicServer(log, errh)
+	if err != nil {
+		log.Error(err)
+	}
+	server := businessLogic.NewPlaceholderBusinessLogicServer(log)
 
 	port := uint16(viper.GetUint("port"))
 	log.Infow("Starting Business Server...", "port", port)

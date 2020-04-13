@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented"
 	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,7 +12,6 @@ import (
 )
 
 type Processed struct {
-	errh           *evented.ErrLogger
 	log            *zap.SugaredLogger
 	client         mongo.Client
 	Database       string
@@ -59,7 +57,7 @@ type MongoEventTrackRecord struct {
 	Sequence uint32
 }
 
-func NewProcessedClient(uri string, databaseName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client *Processed) {
+func NewProcessedClient(uri string, databaseName string, log *zap.SugaredLogger) (client *Processed) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
 	errh.LogIfErr(err, "")
 	err = mongoClient.Ping(nil, readpref.Primary())

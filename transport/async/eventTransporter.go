@@ -5,6 +5,6 @@ import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 )
 
-type Transport interface {
+type EventTransporter interface {
 	Handle(ctx context.Context, evts *evented_core.EventBook) (err error)
 }

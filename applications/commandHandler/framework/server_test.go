@@ -57,9 +57,9 @@ func (s ServerSuite) Test_Handle() {
 	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(s.produceBusinessResponse(commandBook), nil)
 	eventBookRepo.On("Put", mock2.Anything, s.produceBusinessResponse(commandBook)).Return(nil)
 
-	holder.On("GetProjections").Return([]projector.SyncProjection{})
-	holder.On("GetSaga").Return([]saga.SyncSaga{})
-	holder.On("GetTransports").Return([]async.Transport{})
+	holder.On("GetProjections").Return([]projector.SyncProjectionTransporter{})
+	holder.On("GetSaga").Return([]saga.SyncSagaTransporter{})
+	holder.On("GetTransports").Return([]async.EventTransporter{})
 	server.Handle(context.Background(), commandBook)
 	holder.AssertExpectations(s.T())
 	businessClient.AssertExpectations(s.T())
@@ -114,7 +114,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 
 	mockProjector := new(projector.MockProjectorClient)
 	mockProjector.On("HandleSync", mock2.Anything, syncEventBook).Return(projection, nil)
-	holder.On("GetProjections").Return([]projector.SyncProjection{mockProjector})
+	holder.On("GetProjections").Return([]projector.SyncProjectionTransporter{mockProjector})
 
 	sagaResult := &eventedcore.EventBook{
 		Cover:    nil,
@@ -124,7 +124,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 
 	mockSaga := new(saga.MockSagaClient)
 	mockSaga.On("HandleSync", mock2.Anything, syncEventBook).Return(sagaResult, nil)
-	holder.On("GetSaga").Return([]saga.SyncSaga{mockSaga})
+	holder.On("GetSaga").Return([]saga.SyncSagaTransporter{mockSaga})
 
 	var asyncEventPages []*eventedcore.EventPage
 	asyncEventPages = append(asyncEventPages, &eventedcore.EventPage{
@@ -152,7 +152,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 
 	mockTransport := new(mock.AsyncTransport)
 	mockTransport.On("Handle", mock2.Anything, asyncEventBook).Return(nil)
-	holder.On("GetTransports").Return([]async.Transport{mockTransport})
+	holder.On("GetTransports").Return([]async.EventTransporter{mockTransport})
 
 	server.Handle(context.Background(), commandBook)
 	mockProjector.AssertExpectations(s.T())

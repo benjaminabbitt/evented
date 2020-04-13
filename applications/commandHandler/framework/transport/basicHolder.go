@@ -10,38 +10,38 @@ import (
 
 type BasicHolder struct {
 	Log         *zap.SugaredLogger
-	transports  []async.Transport
-	projections []projector.SyncProjection
-	sagas       []saga.SyncSaga
+	transports  []async.EventTransporter
+	projections []projector.SyncProjectionTransporter
+	sagas       []saga.SyncSagaTransporter
 }
 
 func (th BasicHolder) Add(i interface{}) {
 	switch i.(type) {
-	case async.Transport:
-		th.transports = append(th.transports, i.(async.Transport))
+	case async.EventTransporter:
+		th.transports = append(th.transports, i.(async.EventTransporter))
 	default:
 		th.Log.Infow("Attempted to add non-transport type to transport BasicHolder.  This may be a synchronous-only transport, and may be OK.")
 	}
 
 	switch i.(type) {
-	case projector.SyncProjection:
-		th.projections = append(th.projections, i.(projector.SyncProjection))
-	case saga.SyncSaga:
-		th.sagas = append(th.sagas, i.(saga.SyncSaga))
+	case projector.SyncProjectionTransporter:
+		th.projections = append(th.projections, i.(projector.SyncProjectionTransporter))
+	case saga.SyncSagaTransporter:
+		th.sagas = append(th.sagas, i.(saga.SyncSagaTransporter))
 	default:
 		th.Log.Infow("Attempted to add non-synchronous type to transport BasicHolder.", "type", reflect.TypeOf(i).Name())
 	}
 }
 
-func (th BasicHolder) GetTransports() []async.Transport {
+func (th BasicHolder) GetTransports() []async.EventTransporter {
 	return th.transports
 }
 
-func (th BasicHolder) GetProjections() []projector.SyncProjection {
+func (th BasicHolder) GetProjections() []projector.SyncProjectionTransporter {
 	return th.projections
 }
 
-func (th BasicHolder) GetSaga() []saga.SyncSaga {
+func (th BasicHolder) GetSaga() []saga.SyncSagaTransporter {
 	return th.sagas
 }
 

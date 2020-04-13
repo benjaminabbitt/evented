@@ -20,10 +20,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	NAME = "commandHandler"
-)
-
 var log *zap.SugaredLogger
 
 func main() {
@@ -48,7 +44,7 @@ func main() {
 	domain := viper.GetString("domain")
 
 	repo := eventBook.RepositoryBasic{
-		EventRepo:    *eventRepo,
+		EventRepo:    eventRepo,
 		SnapshotRepo: ssRepo,
 		Domain:       domain,
 	}
@@ -68,7 +64,7 @@ func main() {
 	server.Listen(commandHandlerPort)
 }
 
-func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
+func setupSnapshotRepo() (repo snapshots.SnapshotStorer) {
 	configurationKey := "snapshotStore"
 	typee := viper.GetString("snapshotStore.type")
 	mongodb := "mongodb"
@@ -80,19 +76,19 @@ func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
 	return repo
 }
 
-func setupServiceBus(domain string) (transport async.Transport) {
+func setupServiceBus(domain string) (transport async.EventTransporter) {
 	configurationKey := "transport"
 	amqpText := "amqp"
 	typee := viper.GetString(fmt.Sprintf("%s.type", configurationKey))
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := amqp.NewAMQPClient(url, exchange, log)
+		client := amqp.NewAMQPSender(url, exchange, log)
 		return client
 	}
 	return nil
 }
-func setupEventRepo(log *zap.SugaredLogger) (repo *events.EventRepository, err error) {
+func setupEventRepo(log *zap.SugaredLogger) (repo events.EventStorer, err error) {
 	configurationKey := "eventStore"
 	typee := viper.GetString("eventstore.type")
 	mongodb := "mongodb"
@@ -101,11 +97,11 @@ func setupEventRepo(log *zap.SugaredLogger) (repo *events.EventRepository, err e
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
 		collectionName := viper.GetString(fmt.Sprintf("%s.%s.collection", configurationKey, mongodb))
 		log.Infow("Using MongoDb for Event Store", "url", url, "dbName", dbName)
-		tempRepo, err := event_mongo.NewEventRepoMongo(url, dbName, collectionName, log)
+		repo, err := event_mongo.NewEventRepoMongo(url, dbName, collectionName, log)
 		if err != nil {
 			return nil, err
 		}
-		repo = &tempRepo
+		return repo, nil
 	}
 	return repo, nil
 }

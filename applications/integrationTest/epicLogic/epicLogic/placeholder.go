@@ -1,7 +1,6 @@
 package epicLogic
 
 import (
-	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
@@ -13,26 +12,26 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewMockEpicLogic(log *zap.SugaredLogger, errh *evented.ErrLogger) MockEpicLogicServer {
-	return MockEpicLogicServer{
-		log:  log,
-		errh: errh,
+func NewPlaceholderEpicLogic(log *zap.SugaredLogger) PlaceholderEpicLogic {
+	return PlaceholderEpicLogic{
+		log: log,
 	}
 }
 
-type MockEpicLogicServer struct {
+type PlaceholderEpicLogic struct {
 	evented_eventHandler.EventHandlerServer
 	eventDomain string
 	log         *zap.SugaredLogger
-	errh        *evented.ErrLogger
 }
 
-func (c *MockEpicLogicServer) Handle(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {
+func (o *PlaceholderEpicLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {
 	uuid, err := uuid.NewRandom()
-	c.errh.LogIfErr(err, "Error generating new UUID")
+	if err != nil {
+		o.log.Error(err)
+	}
 	root := evented_proto.UUIDToProto(uuid)
 	cover := eventedcore.Cover{
-		Domain: c.eventDomain,
+		Domain: o.eventDomain,
 		Root:   &root,
 	}
 	eb := &eventedcore.EventBook{
@@ -48,11 +47,13 @@ func (c *MockEpicLogicServer) Handle(ctx context.Context, in *eventedcore.EventB
 	return eb, nil
 }
 
-func (c *MockEpicLogicServer) Listen(port uint16) {
-	lis := support.CreateListener(port, c.errh)
+func (o *PlaceholderEpicLogic) Listen(port uint16) {
+	lis := support.CreateListener(port, o.log)
 	grpcServer := grpc.NewServer()
 
-	evented_eventHandler.RegisterEventHandlerServer(grpcServer, c)
+	evented_eventHandler.RegisterEventHandlerServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
-	c.errh.LogIfErr(err, "Failed starting server")
+	if err != nil {
+		o.log.Error(err)
+	}
 }

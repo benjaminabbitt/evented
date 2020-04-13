@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type EventRepository interface {
+type EventStorer interface {
 	Add(ctx context.Context, id uuid.UUID, evt []*evented_core.EventPage) (err error)
 	Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error)
 	GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error)

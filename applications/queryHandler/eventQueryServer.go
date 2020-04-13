@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewEventQueryServer(repos eventBook.Repository, log *zap.SugaredLogger) EventQueryServer {
+func NewEventQueryServer(repos eventBook.EventBookStorer, log *zap.SugaredLogger) EventQueryServer {
 	return EventQueryServer{
 		repos: repos,
 		log:   log,
@@ -20,7 +20,7 @@ func NewEventQueryServer(repos eventBook.Repository, log *zap.SugaredLogger) Eve
 
 type EventQueryServer struct {
 	evented_query.UnimplementedEventQueryServer
-	repos eventBook.Repository
+	repos eventBook.EventBookStorer
 	log   *zap.SugaredLogger
 }
 

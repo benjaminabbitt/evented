@@ -15,7 +15,16 @@ type DockerAssistedIntegrationTest struct {
 	Ports []types.Port
 }
 
-func (o *DockerAssistedIntegrationTest) extractPort(id string) (ports []types.Port, err error) {
+func (o *DockerAssistedIntegrationTest) GetPortMapping(servicePort uint16) (hostPort uint16, err error) {
+	for _, port := range o.Ports {
+		if servicePort == port.PrivatePort {
+			return port.PublicPort, nil
+		}
+	}
+	return 0, errors.New(fmt.Sprintf("Service port not found: %d", servicePort))
+}
+
+func (o *DockerAssistedIntegrationTest) getPorts() (ports []types.Port, err error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		fmt.Println("Unable to create docker client")
@@ -28,12 +37,12 @@ func (o *DockerAssistedIntegrationTest) extractPort(id string) (ports []types.Po
 	}
 
 	for _, container := range containers {
-		if container.ID == id {
+		if container.ID == o.Id {
 			ports = container.Ports
 			return ports, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("No running container found with id %s", id))
+	return nil, errors.New(fmt.Sprintf("No running container found with id %s", o.Id))
 }
 
 func (o *DockerAssistedIntegrationTest) CreateNewContainer(image string, internalPorts []uint16) error {
@@ -70,8 +79,8 @@ func (o *DockerAssistedIntegrationTest) CreateNewContainer(image string, interna
 	}
 
 	_ = cli.ContainerStart(context.Background(), cont.ID, types.ContainerStartOptions{})
+	o.Ports, _ = o.getPorts()
 	o.Id = cont.ID
-	o.Ports, _ = o.extractPort(o.Id)
 	return nil
 }
 
