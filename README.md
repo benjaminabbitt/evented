@@ -14,9 +14,9 @@ No, but it will help, and the framework is designed to make it as easy as possib
 ## Why did you...?
 ### Use Go?
 A few factors:
-* I wanted to learn Go, as it is gaining steam in the DevOps community.
 * I wanted something that had robust support for GRPC, so that framework users can program in the language and runtime of their choosing.
 * Go can and does compile to static executable code, reducing container sizes.
+* I wanted to learn Go, as it is gaining steam in the DevOps community.
 
 ### Use the generated protobuf/grpc data models throughout all layers of the application?  Isn't that bad architecture?
 Arguably yes, it's bad architecture, in the conventional sense of technical architecture.  At one point in the history, the project separated the layers with different data models per layer.  Ultimately, this introduced large changes as the data models changed, and led to a few annoying-to-track-down defects in local testing.
