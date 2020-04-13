@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
@@ -19,27 +18,25 @@ import (
 type QueryHandlerSuite struct {
 	suite.Suite
 	log   *zap.SugaredLogger
-	errh  *evented.ErrLogger
 	ctx   context.Context
 	repos *eventBook.MockEventBookRepository
 	sut   EventQueryServer
 }
 
 func (s *QueryHandlerSuite) SetupTest() {
-	s.log, s.errh = support.Log()
+	s.log = support.Log()
 	defer s.log.Sync()
 	s.ctx = context.Background()
 	s.repos = &eventBook.MockEventBookRepository{}
 	s.sut = EventQueryServer{
 		repos: s.repos,
 		log:   s.log,
-		errh:  s.errh,
 	}
 }
 
 func (o *QueryHandlerSuite) Test_Low_High() {
 	uuid, _ := uuid2.NewRandom()
-	protoUUID := evented_proto.UUIDToProto(&uuid)
+	protoUUID := evented_proto.UUIDToProto(uuid)
 	cover := &evented_core.Cover{
 		Root:   &protoUUID,
 		Domain: "test",
@@ -77,7 +74,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 }
 func (o *QueryHandlerSuite) Test_Low() {
 	uuid, _ := uuid2.NewRandom()
-	protoUUID := evented_proto.UUIDToProto(&uuid)
+	protoUUID := evented_proto.UUIDToProto(uuid)
 	cover := &evented_core.Cover{
 		Root:   &protoUUID,
 		Domain: "test",
@@ -108,7 +105,7 @@ func (o *QueryHandlerSuite) Test_Low() {
 
 func (o *QueryHandlerSuite) Test_NoLimits() {
 	uuid, _ := uuid2.NewRandom()
-	protoUUID := evented_proto.UUIDToProto(&uuid)
+	protoUUID := evented_proto.UUIDToProto(uuid)
 	cover := &evented_core.Cover{
 		Root:   &protoUUID,
 		Domain: "test",

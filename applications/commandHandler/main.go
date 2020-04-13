@@ -10,7 +10,6 @@ import (
 	event_mongo "github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	snapshot_mongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
-	snapshot_memory "github.com/benjaminabbitt/evented/repository/snapshots/snapshot-memory"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/async"
 	"github.com/benjaminabbitt/evented/transport/async/amqp"
@@ -33,7 +32,7 @@ func main() {
 	flag.Parse()
 
 	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	if err != nil{
+	if err != nil {
 		log.Error(err)
 	}
 	log = support.Log()
@@ -73,13 +72,10 @@ func setupSnapshotRepo() (repo snapshots.SnapshotRepo) {
 	configurationKey := "snapshotStore"
 	typee := viper.GetString("snapshotStore.type")
 	mongodb := "mongodb"
-	memory := "memory"
 	if typee == mongodb {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, mongodb))
 		dbName := viper.GetString(fmt.Sprintf("%s.%s.database", configurationKey, mongodb))
 		repo = snapshot_mongo.NewSnapshotMongoRepo(url, dbName, log)
-	} else if typee == memory {
-		repo = snapshot_memory.NewSSMemoryRepository()
 	}
 	return repo
 }

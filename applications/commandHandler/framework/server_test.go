@@ -2,7 +2,6 @@ package framework
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
@@ -25,14 +24,13 @@ import (
 type ServerSuite struct {
 	suite.Suite
 	log     *zap.SugaredLogger
-	errh    *evented.ErrLogger
 	domainA string
 	domainB string
 	ctx     context.Context
 }
 
 func (s *ServerSuite) SetupTest() {
-	s.log, s.errh = support.Log()
+	s.log = support.Log()
 	defer s.log.Sync()
 	s.domainA = "testA"
 	s.domainB = "testB"
@@ -43,21 +41,21 @@ func (s ServerSuite) Test_Handle() {
 	eventBookRepo := new(eventBook.MockEventBookRepository)
 	holder := new(transport.MockHolder)
 	businessClient := new(client.MockClient)
-	server := NewServer(eventBookRepo, holder, businessClient, s.log, s.errh)
+	server := NewServer(eventBookRepo, holder, businessClient, s.log)
 
 	commandBook := s.produceCommandBook()
 
-	id, _ := evented_proto.ProtoToUUID(*commandBook.Cover.Root)
+	id, _ := evented_proto.ProtoToUUID(commandBook.Cover.Root)
 
-	eventBookRepo.On("Get", mock2.Anything, id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
+	eventBookRepo.On("Get", mock2.Anything, id).Return(s.produceHistoricalEventBook(commandBook), nil)
 
 	contextualCommand := &eventedcore.ContextualCommand{
-		Events:  s.produceHistoricalEventBook(*commandBook),
+		Events:  s.produceHistoricalEventBook(commandBook),
 		Command: commandBook,
 	}
 
-	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(s.produceBusinessResponse(*commandBook), nil)
-	eventBookRepo.On("Put", mock2.Anything, *s.produceBusinessResponse(*commandBook)).Return(nil)
+	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(s.produceBusinessResponse(commandBook), nil)
+	eventBookRepo.On("Put", mock2.Anything, s.produceBusinessResponse(commandBook)).Return(nil)
 
 	holder.On("GetProjections").Return([]projector.SyncProjection{})
 	holder.On("GetSaga").Return([]saga.SyncSaga{})
@@ -72,21 +70,21 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	eventBookRepo := new(eventBook.MockEventBookRepository)
 	holder := new(transport.MockHolder)
 	businessClient := new(client.MockClient)
-	server := NewServer(eventBookRepo, holder, businessClient, s.log, s.errh)
+	server := NewServer(eventBookRepo, holder, businessClient, s.log)
 
 	commandBook := s.produceCommandBook()
 
-	id, _ := evented_proto.ProtoToUUID(*commandBook.Cover.Root)
-	eventBookRepo.On("Get", mock2.Anything, id).Return(*s.produceHistoricalEventBook(*commandBook), nil)
+	id, _ := evented_proto.ProtoToUUID(commandBook.Cover.Root)
+	eventBookRepo.On("Get", mock2.Anything, id).Return(s.produceHistoricalEventBook(commandBook), nil)
 
 	contextualCommand := &eventedcore.ContextualCommand{
-		Events:  s.produceHistoricalEventBook(*commandBook),
+		Events:  s.produceHistoricalEventBook(commandBook),
 		Command: commandBook,
 	}
 
-	businessResponse := s.produceBusinessResponse(*commandBook)
+	businessResponse := s.produceBusinessResponse(commandBook)
 	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(businessResponse, nil)
-	eventBookRepo.On("Put", mock2.Anything, *businessResponse).Return(nil)
+	eventBookRepo.On("Put", mock2.Anything, businessResponse).Return(nil)
 
 	var syncEventPages []*eventedcore.EventPage
 	syncEventPages = append(syncEventPages, &eventedcore.EventPage{
@@ -165,7 +163,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	eventBookRepo.AssertExpectations(s.T())
 }
 
-func (s ServerSuite) produceBusinessResponse(commandBook eventedcore.CommandBook) *eventedcore.EventBook {
+func (s ServerSuite) produceBusinessResponse(commandBook *eventedcore.CommandBook) *eventedcore.EventBook {
 	var businessReturnEventPages []*eventedcore.EventPage
 
 	businessReturnEventPages = append(businessReturnEventPages, &eventedcore.EventPage{
@@ -194,7 +192,7 @@ func (s ServerSuite) produceBusinessResponse(commandBook eventedcore.CommandBook
 	return businessReturnEventBook
 }
 
-func (s ServerSuite) produceHistoricalEventBook(commandBook eventedcore.CommandBook) *eventedcore.EventBook {
+func (s ServerSuite) produceHistoricalEventBook(commandBook *eventedcore.CommandBook) *eventedcore.EventBook {
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
 	eventPage := NewEventPage(0, false, *anyEmpty)
 	priorStateEventPages := []*eventedcore.EventPage{

@@ -2,10 +2,8 @@ package eventBook
 
 import (
 	"context"
-	"fmt"
-	"github.com/benjaminabbitt/evented"
-	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	eventedproto "github.com/benjaminabbitt/evented/proto"
+	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	"github.com/google/uuid"
@@ -13,58 +11,73 @@ import (
 )
 
 type RepositoryBasic struct {
-	errh         *evented.ErrLogger
 	log          *zap.SugaredLogger
 	EventRepo    events.EventRepository
 	SnapshotRepo snapshots.SnapshotRepo
 	Domain       string
 }
 
-func (repo RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *evented_core.EventBook, err error) {
-	snapshot, err := repo.SnapshotRepo.Get(ctx, id)
-	repo.errh.LogIfErr(err, fmt.Sprintf("Failed to get snapshot for id %s", id))
+func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedcore.EventBook, err error) {
+	snapshot, err := o.SnapshotRepo.Get(ctx, id)
+	if err != nil {
+		o.log.Error(err)
+	}
 	var from uint32 = 0
 	if snapshot != nil {
 		from = snapshot.Sequence
 	}
-	pages, err := repo.EventRepo.GetFrom(ctx, id, from)
-	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting from page %d on id %s", from, id))
-	return repo.makeEventBook(id, pages, snapshot), nil
+	pages, err := o.EventRepo.GetFrom(ctx, id, from)
+	if err != nil {
+		o.log.Error(err)
+	}
+	return o.makeEventBook(id, pages, snapshot), nil
 }
 
-func (repo RepositoryBasic) Put(ctx context.Context, book *evented_core.EventBook) error {
-	root, err := evented_proto.ProtoToUUID(book.Cover.Root)
-	repo.errh.LogIfErr(err, "")
-	err = repo.EventRepo.Add(ctx, root, book.Pages)
-	repo.errh.LogIfErr(err, "Failed adding pages to repo")
-	err = repo.SnapshotRepo.Put(ctx, root, book.Snapshot)
-	repo.errh.LogIfErr(err, "Failed adding snapshot to repo")
+func (o RepositoryBasic) Put(ctx context.Context, book *eventedcore.EventBook) error {
+	root, err := eventedproto.ProtoToUUID(book.Cover.Root)
+	if err != nil {
+		o.log.Error(err)
+	}
+	err = o.EventRepo.Add(ctx, root, book.Pages)
+	if err != nil {
+		o.log.Error(err)
+	}
+	err = o.SnapshotRepo.Put(ctx, root, book.Snapshot)
+	if err != nil {
+		o.log.Error(err)
+	}
 	return err
 }
 
-func (repo RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *evented_core.EventBook, err error) {
-	eventPages, err := repo.EventRepo.GetFromTo(ctx, id, from, to)
-	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting pages %d to %d on id %s", from, to, id))
-	return repo.makeEventBook(id, eventPages, nil), nil
+func (o RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *eventedcore.EventBook, err error) {
+	eventPages, err := o.EventRepo.GetFromTo(ctx, id, from, to)
+	if err != nil {
+		o.log.Error(err)
+	}
+	return o.makeEventBook(id, eventPages, nil), nil
 }
 
-func (repo RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *evented_core.EventBook, err error) {
-	eventPages, err := repo.EventRepo.GetFrom(ctx, id, from)
-	repo.errh.LogIfErr(err, fmt.Sprintf("Failed getting from page %d on id %s", from, id))
-	return repo.makeEventBook(id, eventPages, nil), nil
+func (o RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *eventedcore.EventBook, err error) {
+	eventPages, err := o.EventRepo.GetFrom(ctx, id, from)
+	if err != nil {
+		o.log.Error(err)
+	}
+	return o.makeEventBook(id, eventPages, nil), nil
 }
 
-func (repo RepositoryBasic) makeEventBook(root uuid.UUID, pages []*evented_core.EventPage, snapshot *evented_core.Snapshot) (book *evented_core.EventBook) {
+func (o RepositoryBasic) makeEventBook(root uuid.UUID, pages []*eventedcore.EventPage, snapshot *eventedcore.Snapshot) (book *eventedcore.EventBook) {
 	rootBytes, err := root.MarshalBinary()
-	repo.errh.LogIfErr(err, fmt.Sprintf("Failed making Event Book"))
-	protoRoot := &evented_core.UUID{
+	if err != nil {
+		o.log.Error(err)
+	}
+	protoRoot := &eventedcore.UUID{
 		Value: rootBytes,
 	}
-	cover := &evented_core.Cover{
-		Domain: repo.Domain,
+	cover := &eventedcore.Cover{
+		Domain: o.Domain,
 		Root:   protoRoot,
 	}
-	book = &evented_core.EventBook{
+	book = &eventedcore.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: snapshot,
