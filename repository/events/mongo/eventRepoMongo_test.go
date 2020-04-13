@@ -89,7 +89,15 @@ func (s *MongoIntegrationSuite) Test_Insert_Force_Preexisting_Sequence() {
 		Synchronous: false,
 	}
 	_ = s.Mongo.Add(context.Background(), id, []*evented_core.EventPage{page})
-	_ = s.Mongo.Add(context.Background(), id, []*evented_core.EventPage{page})
+
+	cp := &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Force{Force: true},
+		CreatedAt:   ts,
+		Event:       nil,
+		Synchronous: false,
+	}
+
+	_ = s.Mongo.Add(context.Background(), id, []*evented_core.EventPage{cp})
 	result, _ := s.Mongo.Get(context.Background(), id)
 	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, result[0].Sequence)
 	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, result[1].Sequence)

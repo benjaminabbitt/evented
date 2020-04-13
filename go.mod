@@ -8,6 +8,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/golang/protobuf v1.4.0-rc.4
 	github.com/google/uuid v1.1.1
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect

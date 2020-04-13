@@ -35,7 +35,7 @@ type mongoEvent struct {
 	Root        string
 }
 
-func (m EventRepoMongo) pageToMEP(root uuid.UUID, page evented_core.EventPage) (r mongoEvent) {
+func (m EventRepoMongo) pageToMEP(root uuid.UUID, page *evented_core.EventPage) (r mongoEvent) {
 	mongoId := m.generateId(root, page)
 
 	return mongoEvent{
@@ -48,11 +48,11 @@ func (m EventRepoMongo) pageToMEP(root uuid.UUID, page evented_core.EventPage) (
 	}
 }
 
-func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page evented_core.EventPage) (r mongoEvent) {
+func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page *evented_core.EventPage) (r mongoEvent) {
 	page.Sequence = &evented_core.EventPage_Num{Num: sequence}
 	return m.pageToMEP(root, page)
 }
-func (m EventRepoMongo) getSequence(page evented_core.EventPage) uint32 {
+func (m EventRepoMongo) getSequence(page *evented_core.EventPage) uint32 {
 	var sequence uint32
 	switch s := page.Sequence.(type) {
 	case *evented_core.EventPage_Num:
@@ -63,7 +63,7 @@ func (m EventRepoMongo) getSequence(page evented_core.EventPage) uint32 {
 	return sequence
 }
 
-func (m EventRepoMongo) generateId(root uuid.UUID, page evented_core.EventPage) [12]byte {
+func (m EventRepoMongo) generateId(root uuid.UUID, page *evented_core.EventPage) [12]byte {
 	var mongoId [12]byte
 	rootBin, _ := root.MarshalBinary()
 	for i, v := range rootBin[0:7] {
@@ -79,8 +79,8 @@ func (m EventRepoMongo) generateId(root uuid.UUID, page evented_core.EventPage) 
 	return mongoId
 }
 
-func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page evented_core.EventPage) {
-	page = evented_core.EventPage{
+func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page *evented_core.EventPage) {
+	page = &evented_core.EventPage{
 		Sequence:    &evented_core.EventPage_Num{Num: m.Sequence},
 		CreatedAt:   m.CreatedAt,
 		Event:       m.Event,
@@ -93,7 +93,7 @@ func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page evented_core
 func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*evented_core.EventPage) []interface{} {
 	s := make([]interface{}, len(pages))
 	for k, v := range pages {
-		s[k] = m.pageToMEP(root, *v)
+		s[k] = m.pageToMEP(root, v)
 	}
 	return s
 }
@@ -106,10 +106,16 @@ func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented
 	for {
 		numbered, forced, remainingEvents = m.extractUntilFirstForced(remainingEvents)
 		if len(numbered) > 0 {
-			m.insert(ctx, id, numbered)
+			err := m.insert(ctx, id, numbered)
+			if err != nil {
+				return err
+			}
 		}
 		if forced != nil {
-			m.insertForced(ctx, id, forced)
+			err := m.insertForced(ctx, id, forced)
+			if err != nil {
+				return err
+			}
 		}
 		if len(remainingEvents) == 0 {
 			break
@@ -128,54 +134,91 @@ func (m EventRepoMongo) extractUntilFirstForced(events []*evented_core.EventPage
 	return events, nil, nil
 }
 
-func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) {
+func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) error {
+	var err error
 	for {
-		seq := m.getNextSequence(ctx, id)
-		mep := m.pageToMEPWithSequence(id, seq, *event)
-		_, err := m.Collection.InsertOne(nil, mep)
-		if err == nil {
+		var seq uint32
+		seq, err = m.getNextSequence(ctx, id)
+		if err != nil {
+			return err
+		}
+		mep := m.pageToMEPWithSequence(id, seq, event)
+		_, err = m.Collection.InsertOne(ctx, mep)
+		if err != nil {
+			if Any(err.(mongo.BulkWriteException).WriteErrors, isKeyConflict) {
+				continue
+			} else {
+				return err
+			}
+		} else {
 			break
 		}
 	}
+	return nil
 }
 
-func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) {
-	m.Collection.InsertMany(ctx, m.eventPagesToInterface(id, events))
+func isKeyConflict(err mongo.BulkWriteError) bool {
+	return err.Code == 11000
 }
 
-func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) uint32 {
+func Any(vs []mongo.BulkWriteError, f func(writeError mongo.BulkWriteError) bool) bool {
+	for _, v := range vs {
+		if f(v) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*evented_core.EventPage) error {
+	_, err := m.Collection.InsertMany(ctx, m.eventPagesToInterface(id, events))
+	return err
+}
+
+func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint32, error) {
 	idStr := id.String()
-	options := options.FindOne()
-	options.SetSort(bson.D{{"sequence", -1}})
-	result := m.Collection.FindOne(ctx, bson.D{{"root", idStr}}, options)
+	opts := options.FindOne()
+	opts.SetSort(bson.D{{"sequence", -1}})
+	result := m.Collection.FindOne(ctx, bson.D{{"root", idStr}}, opts)
 	if result.Err() != nil {
-		// XXX: the only way to identify what the error is here is via a string comparison, eww.  Working with the assumption that any error here is a no documents in result.
-		return 0
+		err := result.Err()
+		//XXX: find some better way to do this
+		if err.Error() == "mongo: no documents in result" {
+			return 0, nil
+		} else {
+			return 0, result.Err()
+		}
 	}
 	var resultModel mongoEvent
-	result.Decode(&resultModel)
-	return resultModel.Sequence + 1
+	err := result.Decode(&resultModel)
+	if err != nil {
+		return 0, err
+	}
+	return resultModel.Sequence + 1, nil
 }
 
 // Gets the events related to the provided ID
 func (m EventRepoMongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
 		if err != nil {
-			m.log.Fatal(err)
+			return nil, err
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, &page)
+		results = append(results, page)
 	}
 
 	if err := cur.Err(); err != nil {
-		m.log.Fatal(err)
+		return nil, err
 	}
 
-	cur.Close(ctx)
 	return results, nil
 }
 
@@ -186,6 +229,10 @@ func (m EventRepoMongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
 	})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
 		var elem mongoEvent
@@ -194,14 +241,13 @@ func (m EventRepoMongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt
 			m.log.Fatal(err)
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, &page)
+		results = append(results, page)
 	}
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
 	}
 
-	cur.Close(ctx)
 	return results, nil
 }
 
@@ -212,6 +258,9 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) 
 		{"root", id.String()},
 		{"sequence", bson.D{{"$gte", from}}},
 	})
+	if err != nil {
+		return nil, err
+	}
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
 		var elem mongoEvent
@@ -220,7 +269,7 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) 
 			m.log.Fatal(err)
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, &page)
+		results = append(results, page)
 	}
 
 	if err := cur.Err(); err != nil {
@@ -239,6 +288,9 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32
 		{"sequence", bson.D{{"$lte", to}}},
 		{"sequence", bson.D{{"$gte", from}}},
 	})
+	if err != nil {
+		return nil, err
+	}
 	var results []*evented_core.EventPage
 	for cur.Next(ctx) {
 		var elem mongoEvent
@@ -247,7 +299,7 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32
 			m.log.Fatal(err)
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, &page)
+		results = append(results, page)
 	}
 
 	if err := cur.Err(); err != nil {
@@ -258,7 +310,7 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32
 	return results, nil
 }
 
-func (m EventRepoMongo) establishIndices() {
+func (m EventRepoMongo) establishIndices() error {
 	sequenceModel := mongo.IndexModel{
 		Keys: bsonx.Doc{
 			{Key: "root", Value: bsonx.Int32(1)},
@@ -266,7 +318,11 @@ func (m EventRepoMongo) establishIndices() {
 		},
 	}
 	indices := m.Collection.Indexes()
-	indices.CreateOne(context.Background(), sequenceModel)
+	_, err := indices.CreateOne(context.Background(), sequenceModel)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client events.EventRepository) {
