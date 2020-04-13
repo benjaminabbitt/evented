@@ -2,12 +2,14 @@ package support
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented"
+	"go.uber.org/zap"
 	"net"
 )
 
-func CreateListener(port uint16, errh *evented.ErrLogger) net.Listener {
+func CreateListener(port uint16, log zap.SugaredLogger) net.Listener {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	errh.LogIfErr(err, "Failed to Listen")
+	if err != nil {
+		log.Error(err)
+	}
 	return lis
 }

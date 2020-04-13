@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"encoding/binary"
-	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/golang/protobuf/ptypes/any"
@@ -18,7 +17,6 @@ import (
 )
 
 type EventRepoMongo struct {
-	errh           *evented.ErrLogger
 	log            *zap.SugaredLogger
 	client         mongo.Client
 	Database       string
@@ -52,6 +50,7 @@ func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, p
 	page.Sequence = &evented_core.EventPage_Num{Num: sequence}
 	return m.pageToMEP(root, page)
 }
+
 func (m EventRepoMongo) getSequence(page *evented_core.EventPage) uint32 {
 	var sequence uint32
 	switch s := page.Sequence.(type) {
@@ -325,12 +324,13 @@ func (m EventRepoMongo) establishIndices() error {
 	return nil
 }
 
-func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client events.EventRepository) {
+func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventRepository, err error) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
-	errh.LogIfErr(err, "")
+	if err != nil {
+		return nil, err
+	}
 	err = mongoClient.Ping(nil, readpref.Primary())
-	errh.LogIfErr(err, "")
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
-	client = &EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log, errh: errh}
-	return client
+	client = &EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
+	return client, nil
 }

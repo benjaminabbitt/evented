@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"
@@ -74,7 +73,7 @@ func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evente
 	return nil
 }
 
-func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger, errh *evented.ErrLogger) (client SnapshotMongoRepo) {
+func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client SnapshotMongoRepo) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	collection := mongoClient.Database(databaseName).Collection("snapshots")

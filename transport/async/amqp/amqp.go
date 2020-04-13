@@ -36,13 +36,17 @@ func (client Client) Handle(ctx context.Context, evts *evented_core.EventBook) (
 	return nil
 }
 
-func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger, errh *evented.ErrLogger) *Client {
+func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger) *Client {
 	conn, err := amqp.Dial(url)
-	errh.LogIfErr(err, "Failed to connect")
+	if err != nil {
+		log.Error(err)
+	}
 	log.Info("Connected to AMQP Broker")
 	ch, err := conn.Channel()
 	log.Info("Channel Formed")
-	errh.LogIfErr(err, "Failed to open channel")
+	if err != nil {
+		log.Error(err)
+	}
 	err = ch.ExchangeDeclare(
 		exchangeName,
 		"fanout",
@@ -53,7 +57,9 @@ func NewAMQPClient(url string, exchangeName string, log *zap.SugaredLogger, errh
 		nil,
 	)
 	log.Info("Exchange Declared")
-	errh.LogIfErr(err, "Failed to declare exchange")
+	if err != nil {
+		log.Error(err)
+	}
 	client := &Client{
 		log:          log,
 		exchangeName: exchangeName,

@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
@@ -20,14 +19,13 @@ func TestLastProcessedRepoSuite(t *testing.T) {
 type LastProcessedRepo struct {
 	suite.Suite
 	log             *zap.SugaredLogger
-	errh            *evented.ErrLogger
 	systemUnderTest SnapshotMongoRepo
 	sampleId        uuid.UUID
 	mongoId         [12]byte
 }
 
 func (o *LastProcessedRepo) SetupTest() {
-	o.log, o.errh = support.Log()
+	o.log = support.Log()
 	defer o.log.Sync()
 
 	id, _ := uuid.Parse("c5c10714-2272-4329-809c-38344e318279")
@@ -43,7 +41,6 @@ func (o *LastProcessedRepo) Test_SequenceZero() {
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
 		"test",
 		o.log,
-		o.errh,
 	)
 	ctx := context.Background()
 
@@ -65,7 +62,6 @@ func (o *LastProcessedRepo) Test_SequenceGreaterThanZero() {
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
 		"test",
 		o.log,
-		o.errh,
 	)
 
 	zero := &evented_core.Snapshot{

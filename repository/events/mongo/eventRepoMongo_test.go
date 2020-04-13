@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
@@ -16,26 +15,29 @@ import (
 	"time"
 )
 
-var log *zap.SugaredLogger
-var errh *evented.ErrLogger
-
 type MongoIntegrationSuite struct {
 	suite.Suite
 	Mongo       events.EventRepository
 	populatedId uuid.UUID
 	log         *zap.SugaredLogger
-	errh        *evented.ErrLogger
 	dait        *dockerTestSuite.DockerAssistedIntegrationTest
 }
 
 func (s *MongoIntegrationSuite) SetupSuite() {
-	s.log, s.errh = support.Log()
-	context := context.Background()
+	s.log = support.Log()
+	ctx := context.Background()
 
 	s.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
-	s.dait.CreateNewContainer("mongo", []uint16{27017})
+	err := s.dait.CreateNewContainer("mongo", []uint16{27017})
+	if err != nil {
+		s.log.Error(err)
+	}
 
-	s.Mongo = NewEventRepoMongo(fmt.Sprintf("mongodb://localhost:%d", s.dait.Ports[0].PublicPort), "test", "events", s.log, s.errh)
+	mongo, err := NewEventRepoMongo(fmt.Sprintf("mongodb://localhost:%d", s.dait.Ports[0].PublicPort), "test", "events", s.log)
+	if err != nil {
+		s.log.Error(err)
+	}
+	s.Mongo = mongo
 
 	ts, _ := ptypes.TimestampProto(time.Now())
 	id, _ := uuid.NewRandom()
@@ -57,12 +59,15 @@ func (s *MongoIntegrationSuite) SetupSuite() {
 			Synchronous: false,
 		})
 	}
-	_ = s.Mongo.Add(context, id, pages)
+	_ = s.Mongo.Add(ctx, id, pages)
 }
 
 func (s *MongoIntegrationSuite) TearDownSuite() {
 	s.log.Sync()
-	s.dait.StopContainer()
+	err := s.dait.StopContainer()
+	if err != nil {
+		s.log.Error(err)
+	}
 }
 
 func (s *MongoIntegrationSuite) Test_Insert_Sequence() {
