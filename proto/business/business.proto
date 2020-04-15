@@ -1,5 +1,6 @@
 syntax = "proto3";
 package evented.business;
+option go_package = "business;evented_business";
 
 import "core/evented.proto";
 

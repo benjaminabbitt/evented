@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package evented.saga;
+option go_package = "saga;evented_saga";
 
 import "core/evented.proto";
 

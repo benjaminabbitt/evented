@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package evented.projector;
+option go_package = "projector;evented_projector";
 
 import "core/evented.proto";
 
