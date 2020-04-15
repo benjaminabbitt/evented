@@ -37,11 +37,12 @@ func (o *AmqpSuite) SetupSuite() {
 	if err != nil {
 		o.log.Error(err)
 	}
-	time.Sleep(30 * time.Second)
+	//time.Sleep(30 * time.Second)
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
 	o.sender = sender.NewAMQPSender(url, o.exchangeName, o.log)
 	o.sender.Connect()
+
 	o.receiver = &receiver.AMQPReceiver{
 		SourceURL:         url,
 		SourceExhangeName: o.exchangeName,

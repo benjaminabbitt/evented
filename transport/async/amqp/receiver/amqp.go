@@ -69,10 +69,11 @@ func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) *evented_core.Even
 	return eb
 }
 
-func (o *AMQPReceiver) Connect() {
+func (o *AMQPReceiver) Connect() error {
 	conn, err := amqp.Dial(o.SourceURL)
 	if err != nil {
 		o.Log.Error(err)
+		return err
 	}
 
 	ch, err := conn.Channel()
@@ -99,6 +100,7 @@ func (o *AMQPReceiver) Connect() {
 		)
 		if err != nil {
 			o.Log.Error(err)
+			return err
 		}
 		o.queue = &q
 
@@ -111,6 +113,7 @@ func (o *AMQPReceiver) Connect() {
 		)
 		if err != nil {
 			o.Log.Error(err)
+			return err
 		}
 
 		delivery, err := o.ch.Consume(
@@ -124,9 +127,11 @@ func (o *AMQPReceiver) Connect() {
 		)
 		if err != nil {
 			o.Log.Error(err)
+			return err
 		}
 		o.deliveryChan = delivery
 	}
+	return nil
 }
 
 func (o *AMQPReceiver) GetMessage(ctx context.Context) *evented_core.EventBook {
