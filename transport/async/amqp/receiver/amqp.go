@@ -8,6 +8,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
+	"math"
+	"math/rand"
+	"time"
 )
 
 type AMQPReceiver struct {
@@ -20,6 +23,7 @@ type AMQPReceiver struct {
 	ch                *amqp.Channel
 	queue             *amqp.Queue
 	deliveryChan      <-chan amqp.Delivery
+	conn              *amqp.Connection
 }
 
 func (o *AMQPReceiver) ListenForever() {
@@ -69,14 +73,34 @@ func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) *evented_core.Even
 	return eb
 }
 
+func (o *AMQPReceiver) connectWithBackoff() error {
+	var conn *amqp.Connection
+	var err error
+	var count uint8
+	var max = 1000
+	var min = 0
+	for {
+		conn, err = amqp.Dial(o.SourceURL)
+		if err == nil {
+			break
+		}
+		randOffset := time.Duration(rand.Intn(max-min)+min) * time.Millisecond
+		primaryTime := time.Duration(int(math.Pow(2, float64(count)))*1000) * time.Millisecond
+		time.Sleep(primaryTime + randOffset)
+		count++
+	}
+	o.conn = conn
+	return nil
+}
+
 func (o *AMQPReceiver) Connect() error {
-	conn, err := amqp.Dial(o.SourceURL)
+	o.connectWithBackoff()
+
+	ch, err := o.conn.Channel()
 	if err != nil {
 		o.Log.Error(err)
 		return err
 	}
-
-	ch, err := conn.Channel()
 	o.ch = ch
 
 	if ch != nil {

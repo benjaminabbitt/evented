@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
-	"time"
 )
 
 type AmqpSuite struct {
@@ -37,7 +36,6 @@ func (o *AmqpSuite) SetupSuite() {
 	if err != nil {
 		o.log.Error(err)
 	}
-	//time.Sleep(30 * time.Second)
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
 	o.sender = sender.NewAMQPSender(url, o.exchangeName, o.log)
@@ -69,7 +67,6 @@ func (o AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
 	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEventPage(0, false, any.Any{})}, nil)
 	_ = o.sender.Handle(eb)
-	time.Sleep(1 * time.Second)
 	message := o.receiver.GetMessage(context.Background())
 	o.Assert().Equal(eb.Cover.Domain, message.Cover.Domain)
 	o.Assert().Equal(eb.Cover.Root.String(), message.Cover.Root.String())
