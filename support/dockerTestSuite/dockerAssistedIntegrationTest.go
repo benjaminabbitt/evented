@@ -79,8 +79,8 @@ func (o *DockerAssistedIntegrationTest) CreateNewContainer(image string, interna
 	}
 
 	_ = cli.ContainerStart(context.Background(), cont.ID, types.ContainerStartOptions{})
-	o.Ports, _ = o.getPorts()
 	o.Id = cont.ID
+	o.Ports, _ = o.getPorts()
 	return nil
 }
 

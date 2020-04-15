@@ -12,7 +12,7 @@ import (
 	snapshot_mongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/async"
-	"github.com/benjaminabbitt/evented/transport/async/amqp"
+	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	flag "github.com/spf13/pflag"
@@ -83,7 +83,7 @@ func setupServiceBus(domain string) (transport async.EventTransporter) {
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := amqp.NewAMQPSender(url, exchange, log)
+		client := sender.NewAMQPSender(url, exchange, log)
 		return client
 	}
 	return nil

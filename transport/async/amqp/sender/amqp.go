@@ -1,11 +1,9 @@
-package amqp
+package sender
 
 import (
-	"context"
 	"fmt"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
@@ -14,15 +12,15 @@ import (
 type AMQPSender struct {
 	log          *zap.SugaredLogger
 	ch           *amqp.Channel
-	marshaller   *jsonpb.Marshaler
 	exchangeName string
+	url          string
 }
 
-func (client AMQPSender) Handle(ctx context.Context, evts *evented_core.EventBook) (err error) {
+func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
-	client.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", client.exchangeName)
-	err = client.ch.Publish(
-		client.exchangeName,
+	o.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", o.exchangeName)
+	err = o.ch.Publish(
+		o.exchangeName,
 		"",
 		false,
 		false,
@@ -34,18 +32,30 @@ func (client AMQPSender) Handle(ctx context.Context, evts *evented_core.EventBoo
 }
 
 func NewAMQPSender(url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
-	conn, err := amqp.Dial(url)
-	if err != nil {
-		log.Error(err)
+	client := &AMQPSender{
+		log:          log,
+		exchangeName: exchangeName,
+		url:          url,
 	}
-	log.Info("Connected to AMQP Broker")
+	return client
+}
+
+func (o *AMQPSender) Connect() error {
+	conn, err := amqp.Dial(o.url)
+	if err != nil {
+		o.log.Error(err)
+		return err
+	}
+	o.log.Info("Connected to AMQP Broker")
 	ch, err := conn.Channel()
-	log.Info("Channel Formed")
 	if err != nil {
-		log.Error(err)
+		o.log.Error(err)
+		return err
 	}
+	o.ch = ch
+	o.log.Info("Channel Formed")
 	err = ch.ExchangeDeclare(
-		exchangeName,
+		o.exchangeName,
 		"fanout",
 		true,
 		false,
@@ -53,15 +63,10 @@ func NewAMQPSender(url string, exchangeName string, log *zap.SugaredLogger) *AMQ
 		false,
 		nil,
 	)
-	log.Info("Exchange Declared")
+	o.log.Info("Exchange Declared")
 	if err != nil {
-		log.Error(err)
+		o.log.Error(err)
+		return err
 	}
-	client := &AMQPSender{
-		log:          log,
-		exchangeName: exchangeName,
-		ch:           ch,
-		marshaller:   &jsonpb.Marshaler{},
-	}
-	return client
+	return nil
 }

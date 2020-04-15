@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/eventHandler/rabbitmq"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -50,8 +50,8 @@ func main() {
 
 func makeRabbitReceiver(
 	eventHandler evented_eventHandler.EventHandlerClient,
-	commandHandlers map[string]evented_core.CommandHandlerClient) rabbitmq.RabbitMQReceiver {
-	receiver := rabbitmq.RabbitMQReceiver{
+	commandHandlers map[string]evented_core.CommandHandlerClient) receiver.AMQPReceiver {
+	receiver := receiver.AMQPReceiver{
 		SourceURL:         viper.GetString("transport.source.amqp.url"),
 		SourceExhangeName: viper.GetString("transport.source.amqp.exchange"),
 		SourceQueueName:   viper.GetString("transport.source.amqp.queue"),
