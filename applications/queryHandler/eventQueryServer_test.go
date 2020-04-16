@@ -27,14 +27,14 @@ type QueryHandlerSuite struct {
 	sut   *DefaultEventQueryServer
 }
 
-func (s *QueryHandlerSuite) SetupTest() {
-	s.log = support.Log()
-	defer s.log.Sync()
-	s.ctx = context.Background()
-	s.repos = &mer.EventRepository{}
-	s.sut = &DefaultEventQueryServer{
-		eventRepos: s.repos,
-		log:        s.log,
+func (o *QueryHandlerSuite) SetupTest() {
+	o.log = support.Log()
+	defer o.log.Sync()
+	o.ctx = context.Background()
+	o.repos = &mer.EventRepository{}
+	o.sut = &DefaultEventQueryServer{
+		eventRepos: o.repos,
+		log:        o.log,
 	}
 }
 
