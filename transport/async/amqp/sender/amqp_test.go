@@ -6,7 +6,6 @@ import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -41,7 +40,7 @@ func (o *AmqpSuite) TearDownSuite() {
 
 func (o AmqpSuite) TestNoExceptionThrown() {
 	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEventPage(0, false, any.Any{})}, nil)
+	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	err := o.client.Handle(eb)
 	o.Assert().Nil(err)
 }

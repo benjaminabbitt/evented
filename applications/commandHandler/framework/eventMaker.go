@@ -3,17 +3,29 @@ package framework
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 )
 
 func NewEventPage(sequence uint32, sync bool, eventDetails any.Any) *evented_core.EventPage {
 	return &evented_core.EventPage{
-		Sequence:    &evented_core.EventPage_Num{Num:sequence},
+		Sequence:    &evented_core.EventPage_Num{Num: sequence},
 		Synchronous: sync,
 		CreatedAt:   &timestamp.Timestamp{},
 		Event:       &eventDetails,
+	}
+}
+
+func NewEmptyEventPage(sequence uint32, sync bool) *evented_core.EventPage {
+	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
+	return &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Num{Num: sequence},
+		Synchronous: sync,
+		CreatedAt:   &timestamp.Timestamp{},
+		Event:       anyEmpty,
 	}
 }
 

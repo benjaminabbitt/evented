@@ -18,6 +18,7 @@ type RepositoryBasic struct {
 }
 
 func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedcore.EventBook, err error) {
+	ch := make(chan *eventedcore.EventPage)
 	snapshot, err := o.SnapshotRepo.Get(ctx, id)
 	if err != nil {
 		o.log.Error(err)
@@ -26,9 +27,13 @@ func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedco
 	if snapshot != nil {
 		from = snapshot.Sequence
 	}
-	pages, err := o.EventRepo.GetFrom(ctx, id, from)
+	err = o.EventRepo.GetFrom(ctx, ch, id, from)
 	if err != nil {
 		o.log.Error(err)
+	}
+	var pages []*eventedcore.EventPage
+	for page := range ch {
+		pages = append(pages, page)
 	}
 	return o.makeEventBook(id, pages, snapshot), nil
 }
@@ -50,19 +55,29 @@ func (o RepositoryBasic) Put(ctx context.Context, book *eventedcore.EventBook) e
 }
 
 func (o RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *eventedcore.EventBook, err error) {
-	eventPages, err := o.EventRepo.GetFromTo(ctx, id, from, to)
+	ch := make(chan *eventedcore.EventPage)
+	err = o.EventRepo.GetFromTo(ctx, ch, id, from, to)
 	if err != nil {
 		o.log.Error(err)
 	}
-	return o.makeEventBook(id, eventPages, nil), nil
+	var pages []*eventedcore.EventPage
+	for page := range ch {
+		pages = append(pages, page)
+	}
+	return o.makeEventBook(id, pages, nil), nil
 }
 
 func (o RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *eventedcore.EventBook, err error) {
-	eventPages, err := o.EventRepo.GetFrom(ctx, id, from)
+	ch := make(chan *eventedcore.EventPage)
+	err = o.EventRepo.GetFrom(ctx, ch, id, from)
 	if err != nil {
 		o.log.Error(err)
 	}
-	return o.makeEventBook(id, eventPages, nil), nil
+	var pages []*eventedcore.EventPage
+	for page := range ch {
+		pages = append(pages, page)
+	}
+	return o.makeEventBook(id, pages, nil), nil
 }
 
 func (o RepositoryBasic) makeEventBook(root uuid.UUID, pages []*eventedcore.EventPage, snapshot *eventedcore.Snapshot) (book *eventedcore.EventBook) {

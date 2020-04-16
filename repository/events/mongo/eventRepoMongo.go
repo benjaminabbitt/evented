@@ -196,78 +196,78 @@ func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint
 }
 
 // Gets the events related to the provided ID
-func (m EventRepoMongo) Get(ctx context.Context, id uuid.UUID) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, ) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer cur.Close(ctx)
-	var results []*evented_core.EventPage
+	evtChan = make(chan *evented_core.EventPage)
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, page)
+		evtChan <- page
 	}
 
 	if err := cur.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return results, nil
+	return nil
 }
 
 // Gets the events related to the provided ID
 // To provides an inclusive limit to the events fetched
-func (m EventRepoMongo) GetTo(ctx context.Context, id uuid.UUID, to uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer cur.Close(ctx)
-	var results []*evented_core.EventPage
+	evtChan = make(chan *evented_core.EventPage)
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
 		if err != nil {
-			m.log.Fatal(err)
+			return err
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, page)
+		evtChan <- page
 	}
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
 	}
 
-	return results, nil
+	return nil
 }
 
 // Gets the events related to the provided ID
 // From provides an inclusive limit to the events fetched
-func (m EventRepoMongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, from uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$gte", from}}},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var results []*evented_core.EventPage
+	evtChan = make(chan *evented_core.EventPage)
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
 		if err != nil {
-			m.log.Fatal(err)
+			return err
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, page)
+		evtChan <- page
 	}
 
 	if err := cur.Err(); err != nil {
@@ -275,29 +275,29 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, id uuid.UUID, from uint32) 
 	}
 
 	cur.Close(ctx)
-	return results, nil
+	return nil
 }
 
 // Gets the events related to the provided ID
 // From and To provide an inclusive limit to the events fetched
-func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (evt []*evented_core.EventPage, err error) {
+func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lte", to}}},
 		{"sequence", bson.D{{"$gte", from}}},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var results []*evented_core.EventPage
+	evtChan = make(chan *evented_core.EventPage)
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
 		if err != nil {
-			m.log.Fatal(err)
+			return err
 		}
 		_, page := m.mepToPage(elem)
-		results = append(results, page)
+		evtChan <- page
 	}
 
 	if err := cur.Err(); err != nil {
@@ -305,7 +305,7 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, id uuid.UUID, from uint32
 	}
 
 	cur.Close(ctx)
-	return results, nil
+	return nil
 }
 
 func (m EventRepoMongo) establishIndices() error {

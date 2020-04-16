@@ -1,46 +1,88 @@
 package main
 
 import (
-	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
-	"github.com/benjaminabbitt/evented/repository/eventBook"
+	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-func NewEventQueryServer(repos eventBook.EventBookStorer, log *zap.SugaredLogger) EventQueryServer {
-	return EventQueryServer{
-		repos: repos,
-		log:   log,
+func NewEventQueryServer(maxSize uint64, repos events.EventStorer, log *zap.SugaredLogger) DefaultEventQueryServer {
+	return DefaultEventQueryServer{
+		EventBookSize: maxSize,
+		eventRepos:    repos,
+		log:           log,
 	}
 }
 
-type EventQueryServer struct {
+type DefaultEventQueryServer struct {
 	evented_query.UnimplementedEventQueryServer
-	repos eventBook.EventBookStorer
-	log   *zap.SugaredLogger
+	EventBookSize uint64
+	eventRepos    events.EventStorer
+	log           *zap.SugaredLogger
 }
 
-func (o *EventQueryServer) GetEventBook(ctx context.Context, req *evented_query.Query) (*evented_core.EventBook, error) {
+func (o *DefaultEventQueryServer) GetEvents(req *evented_query.Query, server evented_query.EventQuery_GetEventsServer) error {
 	id, err := evented_proto.ProtoToUUID(req.Root)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var book *evented_core.EventBook
+	evtChan := make(chan *evented_core.EventPage)
+	var eventPages []*evented_core.EventPage
+	cover := &evented_core.Cover{
+		Domain: req.Domain,
+		Root:   req.Root,
+	}
 	if req.LowerBound != 0 && req.UpperBound != 0 {
-		book, err = o.repos.GetFromTo(ctx, id, req.LowerBound, req.UpperBound)
+		err = o.eventRepos.GetFromTo(server.Context(), evtChan, id, req.LowerBound, req.UpperBound)
 	} else if req.LowerBound != 0 {
-		book, err = o.repos.GetFrom(ctx, id, req.LowerBound)
+		err = o.eventRepos.GetFrom(server.Context(), evtChan, id, req.LowerBound)
 	} else {
-		book, err = o.repos.Get(ctx, id)
+		err = o.eventRepos.Get(server.Context(), evtChan, id)
 	}
-	return book, nil
+	maxSize := o.EventBookSize
+	for page := range evtChan {
+		pSize := uint64(proto.Size(page))
+		size := uint64(0)
+		// This approximation of size is not 100% correct, as of 20200415, it'll be about 2 bytes small per tests.
+		// This addition is a performance optimization to avoid having to re-generate and re-serialize the event book repeatedly,
+		//   and a single-digit-byte-class error isn't worth spending cycles on.
+		if (size + pSize) > maxSize {
+			book := &evented_core.EventBook{
+				Cover:    cover,
+				Pages:    eventPages,
+				Snapshot: nil,
+			}
+			err := server.Send(book)
+			if err != nil {
+				o.log.Error(err)
+				return err
+			}
+			size = 0
+			eventPages = []*evented_core.EventPage{}
+		} else {
+			size += pSize
+			eventPages = append(eventPages, page)
+		}
+
+	}
+	return nil
 }
 
-func (o *EventQueryServer) Listen(port uint16) error {
+func (o *DefaultEventQueryServer) Synchronize(server evented_query.EventQuery_SynchronizeServer) error {
+	panic("implement me")
+}
+
+func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server evented_query.EventQuery_GetAggregateRootsServer) error {
+	panic("implement me")
+}
+
+func (o *DefaultEventQueryServer) Listen(port uint16) error {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpc.NewServer()
 

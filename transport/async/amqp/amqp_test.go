@@ -9,7 +9,6 @@ import (
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -58,14 +57,14 @@ func (o *AmqpSuite) TearDownSuite() {
 
 func (o AmqpSuite) TestNoExceptionThrown() {
 	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEventPage(0, false, any.Any{})}, nil)
+	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	err := o.sender.Handle(eb)
 	o.Assert().Nil(err)
 }
 
 func (o AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEventPage(0, false, any.Any{})}, nil)
+	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	_ = o.sender.Handle(eb)
 	message := o.receiver.GetMessage(context.Background())
 	o.Assert().Equal(eb.Cover.Domain, message.Cover.Domain)

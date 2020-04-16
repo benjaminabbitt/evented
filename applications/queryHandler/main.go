@@ -24,7 +24,7 @@ func main() {
 		log.Error(err)
 	}
 	repo, err := mongo.NewEventRepoMongo(mongoUrl, databaseName, collectionName, log)
-	server := NewEventQueryServer(repo, log)
+	server := NewEventQueryServer(1000, repo, log)
 
 	port := uint16(viper.GetUint("port"))
 	log.Infow("Starting Business Server...", "port", port)

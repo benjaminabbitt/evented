@@ -7,7 +7,7 @@ import "core/evented.proto";
 import "google/protobuf/empty.proto";
 
 service EventQuery {
-    rpc GetEventBook (Query) returns (stream evented.core.EventBook) {
+    rpc GetEvents (Query) returns (stream evented.core.EventBook) {
     }
     rpc Synchronize (stream Query) returns (stream evented.core.EventBook) {
     }
@@ -24,4 +24,8 @@ message Query {
 message AggregateRoot {
     string domain = 1;
     evented.core.UUID root = 2;
+}
+
+message TestByteArray {
+    bytes bytes = 1;
 }

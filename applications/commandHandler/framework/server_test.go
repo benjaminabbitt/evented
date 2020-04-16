@@ -12,8 +12,6 @@ import (
 	"github.com/benjaminabbitt/evented/transport/async/mock"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	mock2 "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -193,8 +191,7 @@ func (s ServerSuite) produceBusinessResponse(commandBook *eventedcore.CommandBoo
 }
 
 func (s ServerSuite) produceHistoricalEventBook(commandBook *eventedcore.CommandBook) *eventedcore.EventBook {
-	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
-	eventPage := NewEventPage(0, false, *anyEmpty)
+	eventPage := NewEmptyEventPage(0, false)
 	priorStateEventPages := []*eventedcore.EventPage{
 		eventPage,
 	}
