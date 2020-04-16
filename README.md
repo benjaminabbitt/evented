@@ -1,4 +1,12 @@
 # Evented Framework
+## Benefits
+### Big Data/Silos
+By using the Evented system, you can project, re-project, re-re-project the data to different views and data warehouses on an as-needed basis easily.
+
+### Reactive
+
+### 
+
 ## What Is This?
 
 ## Do I have to?
