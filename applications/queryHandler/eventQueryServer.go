@@ -52,15 +52,9 @@ func (o *DefaultEventQueryServer) GetEvents(req *evented_query.Query, server eve
 		// This approximation of size is not 100% correct, as of 20200415, it'll be about 2 bytes small per tests.
 		// This addition is a performance optimization to avoid having to re-generate and re-serialize the event book repeatedly,
 		//   and a single-digit-byte-class error isn't worth spending cycles on.
-		if (size + pSize) > maxSize {
-			book := &evented_core.EventBook{
-				Cover:    cover,
-				Pages:    eventPages,
-				Snapshot: nil,
-			}
-			err := server.Send(book)
+		if ((size + pSize) > maxSize) && (len(eventPages) > 0) {
+			err := o.send(cover, eventPages, server)
 			if err != nil {
-				o.log.Error(err)
 				return err
 			}
 			size = 0
@@ -69,7 +63,21 @@ func (o *DefaultEventQueryServer) GetEvents(req *evented_query.Query, server eve
 			size += pSize
 			eventPages = append(eventPages, page)
 		}
+	}
+	err = o.send(cover, eventPages, server)
+	return nil
+}
 
+func (o *DefaultEventQueryServer) send(cover *evented_core.Cover, pages []*evented_core.EventPage, server evented_query.EventQuery_GetEventsServer) error {
+	book := &evented_core.EventBook{
+		Cover:    cover,
+		Pages:    pages,
+		Snapshot: nil,
+	}
+	err := server.Send(book)
+	if err != nil {
+		o.log.Error(err)
+		return err
 	}
 	return nil
 }
