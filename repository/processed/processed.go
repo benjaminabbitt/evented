@@ -1,4 +1,4 @@
-package repository
+package processed
 
 import (
 	"context"
@@ -59,10 +59,11 @@ type MongoEventTrackRecord struct {
 
 func NewProcessedClient(uri string, databaseName string, log *zap.SugaredLogger) (client *Processed) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
-	errh.LogIfErr(err, "")
+	if err != nil {
+		log.Error(err)
+	}
 	err = mongoClient.Ping(nil, readpref.Primary())
-	errh.LogIfErr(err, "")
 	collection := mongoClient.Database(databaseName).Collection("processtracking")
-	client = &Processed{client: *mongoClient, Database: databaseName, Collection: *collection, log: log, errh: errh}
+	client = &Processed{client: *mongoClient, Database: databaseName, Collection: *collection, log: log}
 	return client
 }

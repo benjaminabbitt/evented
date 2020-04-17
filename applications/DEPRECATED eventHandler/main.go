@@ -45,7 +45,7 @@ func main() {
 	eh := makeEventHandlerClient()
 
 	receiver := makeRabbitReceiver(*eh, commandHandlers)
-	receiver.Listen()
+	receiver.ListenForever()
 }
 
 func makeRabbitReceiver(

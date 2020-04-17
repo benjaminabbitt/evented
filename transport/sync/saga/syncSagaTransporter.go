@@ -6,5 +6,5 @@ import (
 )
 
 type SyncSagaTransporter interface {
-	HandleSync(ctx context.Context, evts *evented_core.EventBook) (responseEvents *evented_core.EventBook, err error)
+	HandleSync(ctx context.Context, evts *evented_core.EventBook) (responseEvents []*evented_core.EventBook, err error)
 }

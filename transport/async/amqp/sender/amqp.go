@@ -14,8 +14,9 @@ import (
 
 type AMQPSender struct {
 	log          *zap.SugaredLogger
-	ch           *amqp.Channel
+	amqpch       *amqp.Channel
 	conn         *amqp.Connection
+	ch           chan *evented_core.EventBook
 	exchangeName string
 	url          string
 }
@@ -23,7 +24,7 @@ type AMQPSender struct {
 func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	o.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", o.exchangeName)
-	err = o.ch.Publish(
+	err = o.amqpch.Publish(
 		o.exchangeName,
 		"",
 		false,
@@ -35,15 +36,28 @@ func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 	return nil
 }
 
-func NewAMQPSender(url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
+func (o AMQPSender) Run() {
+	go func(ch chan *evented_core.EventBook) {
+		for eb := range o.ch {
+			err := o.Handle(eb)
+			if err != nil {
+				o.log.Error(err)
+			}
+		}
+	}(o.ch)
+}
+
+func NewAMQPSender(ch chan *evented_core.EventBook, url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
 	client := &AMQPSender{
 		log:          log,
 		exchangeName: exchangeName,
 		url:          url,
+		ch:           ch,
 	}
 	return client
 }
 
+///TODO: extrapolate to something more generic
 func (o *AMQPSender) connectWithBackoff() error {
 	var conn *amqp.Connection
 	var err error
@@ -72,7 +86,7 @@ func (o *AMQPSender) Connect() error {
 		o.log.Error(err)
 		return err
 	}
-	o.ch = ch
+	o.amqpch = ch
 	o.log.Info("Channel Formed")
 	err = ch.ExchangeDeclare(
 		o.exchangeName,

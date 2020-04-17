@@ -5,11 +5,10 @@ import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
+	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
-	"math"
-	"math/rand"
 	"time"
 )
 
@@ -44,12 +43,12 @@ func (o *AMQPReceiver) ListenForever() {
 }
 
 func (o *AMQPReceiver) ProcessMessage(ctx context.Context, book *evented_core.EventBook) error {
-	response, err := o.EventHandler.Handle(context.Background(), book)
+	response, err := o.EventHandler.Handle(ctx, book)
 	if err != nil {
 		o.Log.Error(err)
 	}
 	if response != nil {
-		chResponse, err := o.DestinationSink[response.Cover.Domain].Record(context.Background(), response)
+		chResponse, err := o.DestinationSink[response.Cover.Domain].Record(ctx, response)
 		if err != nil {
 			o.Log.Error(err)
 		}
@@ -75,22 +74,14 @@ func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) *evented_core.Even
 
 func (o *AMQPReceiver) connectWithBackoff() error {
 	var conn *amqp.Connection
-	var err error
-	var count uint8
-	var max = 1000
-	var min = 0
-	for {
-		conn, err = amqp.Dial(o.SourceURL)
-		if err == nil {
-			break
-		}
-		randOffset := time.Duration(rand.Intn(max-min)+min) * time.Millisecond
-		primaryTime := time.Duration(int(math.Pow(2, float64(count)))*1000) * time.Millisecond
-		time.Sleep(primaryTime + randOffset)
-		count++
-	}
+	// This is sufficiently ugly I may replace it at some point soon, just for readability
+	conn, err := func(conn interface{}, err error) (*amqp.Connection, error) {
+		return conn.(*amqp.Connection), err
+	}(support.WithExpBackoff(func() (interface{}, error) {
+		return amqp.Dial(o.SourceURL)
+	}, 3*time.Second))
 	o.conn = conn
-	return nil
+	return err
 }
 
 func (o *AMQPReceiver) Connect() error {
