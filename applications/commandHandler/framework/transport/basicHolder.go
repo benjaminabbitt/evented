@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"github.com/benjaminabbitt/evented/transport/async"
+	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"go.uber.org/zap"
@@ -10,15 +10,15 @@ import (
 
 type BasicHolder struct {
 	Log         *zap.SugaredLogger
-	transports  []async.EventTransporter
+	transports  []chan *evented_core.EventBook
 	projections []projector.SyncProjectionTransporter
 	sagas       []saga.SyncSagaTransporter
 }
 
 func (th BasicHolder) Add(i interface{}) {
 	switch i.(type) {
-	case async.EventTransporter:
-		th.transports = append(th.transports, i.(async.EventTransporter))
+	case chan *evented_core.EventBook:
+		th.transports = append(th.transports, i.(chan *evented_core.EventBook))
 	default:
 		th.Log.Infow("Attempted to add non-transport type to transport BasicHolder.  This may be a synchronous-only transport, and may be OK.")
 	}
@@ -33,7 +33,7 @@ func (th BasicHolder) Add(i interface{}) {
 	}
 }
 
-func (th BasicHolder) GetTransports() []async.EventTransporter {
+func (th BasicHolder) GetTransports() []chan *evented_core.EventBook {
 	return th.transports
 }
 

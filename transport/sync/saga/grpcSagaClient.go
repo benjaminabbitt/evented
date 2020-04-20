@@ -11,11 +11,11 @@ type GRPCSagaClient struct {
 	client evented_saga.SagaClient
 }
 
-func (client GRPCSagaClient) SendSync(ctx context.Context, evts evented_core.EventBook) (responseEvents *evented_core.EventBook, err error) {
-	return client.client.HandleSync(ctx, &evts)
+func (o GRPCSagaClient) SendSync(ctx context.Context, evts evented_core.EventBook) (responseEvents *evented_core.EventBook, err error) {
+	return o.client.HandleSync(ctx, &evts)
 }
 
-func NewGRPCSagaClient() GRPCSagaClient {
-	client := evented_saga.NewSagaClient(&grpc.ClientConn{})
+func NewGRPCSagaClient(conn *grpc.ClientConn) GRPCSagaClient {
+	client := evented_saga.NewSagaClient(conn)
 	return GRPCSagaClient{client: client}
 }

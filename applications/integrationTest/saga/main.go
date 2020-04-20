@@ -10,6 +10,9 @@ import (
 
 var log *zap.SugaredLogger
 
+/*
+Placeholder business logic -- used for Saga integration tests
+ */
 func main() {
 	log = support.Log()
 	defer log.Sync()

@@ -70,17 +70,58 @@ func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 	}
 
 	businessResponse, err := o.businessClient.Handle(ctx, contextualCommand)
-	response, err := o.handleEventBook(ctx, businessResponse)
-	return response, err
+	if err != nil {
+		return nil, err
+	}
+	synchronousResults, err := o.handleEventBook(ctx, businessResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	synchronousResults.Books = append(synchronousResults.Books, businessResponse)
+	return synchronousResults, err
 }
 
 func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	err = o.eventBookRepository.Put(ctx, eb)
+	if err != nil {
+		return nil, err
+	}
 
 	sync, _ := o.extractSynchronous(eb)
-	//	var eventBooks []*evented_core.EventBook
-	var projections []*evented_core.Projection
 
+	projections, err := o.sendSyncProjections(ctx, sync)
+	if err != nil {
+		return nil, err
+	}
+	result.Projections = projections
+
+	otherDomainEventBooks, err := o.sendSyncSagas(ctx, sync)
+	if err != nil {
+		return nil, err
+	}
+	result.Books = otherDomainEventBooks
+
+	for _, t := range o.transports.GetTransports() {
+		t <- eb
+	}
+
+	return result, nil
+}
+
+func (o Server) sendSyncSagas(ctx context.Context, sync *evented_core.EventBook) (eventBooks []*evented_core.EventBook, err error) {
+	for _, syncSaga := range o.transports.GetSaga() {
+		response, err := syncSaga.HandleSync(ctx, sync)
+		if err != nil {
+			o.log.Error(err)
+			return nil, err
+		}
+		eventBooks = append(eventBooks, response...)
+	}
+	return eventBooks, nil
+}
+
+func (o Server) sendSyncProjections(ctx context.Context, sync *evented_core.EventBook) (projections []*evented_core.Projection, err error) {
 	for _, syncProjector := range o.transports.GetProjections() {
 		response, err := syncProjector.HandleSync(ctx, sync)
 		if err != nil {
@@ -89,26 +130,7 @@ func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook)
 		}
 		projections = append(projections, response)
 	}
-
-	//for _, syncSaga := range o.transports.GetSaga() {
-	//	response, err := syncSaga.HandleSync(ctx, sync)
-	//	if err != nil {
-	//		o.log.Error(err)
-	//		return nil, err
-	//	}
-	//
-	//	eventBooks = append(eventBooks, response)
-	//}
-	//result.Books = eventBooks
-	//
-	//for _, t := range o.transports.GetTransports() {
-	//	t <- &transport.ContextualEventBook{
-	//		EventBook: eb,
-	//		Context:   ctx,
-	//	}
-	//}
-
-	return result, nil
+	return projections, nil
 }
 
 func (o Server) extractSynchronous(originalBook *evented_core.EventBook) (synchronous *evented_core.EventBook, async *evented_core.EventBook) {
@@ -132,6 +154,6 @@ func (o Server) extractSynchronous(originalBook *evented_core.EventBook) (synchr
 }
 
 func (o Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.SynchronousProcessingResponse, err error) {
-	r, err := o.handleEventBook(ctx, in)
-	return r, err
+	eb, err := o.handleEventBook(ctx, in)
+	return eb, err
 }

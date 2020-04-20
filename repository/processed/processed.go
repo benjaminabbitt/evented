@@ -46,7 +46,12 @@ func (o Processed) LastReceived(ctx context.Context, id uuid.UUID) (sequence uin
 	record := &MongoEventTrackRecord{}
 	err = singleResult.Decode(record)
 	if err != nil {
-		return sequence, err
+		// XXX: Fixing this will require error handling strategy change in the mongo-go-driver project.  We can use string comparison for now.
+		if err.Error() == "mongo: no documents in result" {
+			return 0, nil
+		} else {
+			return sequence, err
+		}
 	}
 	return record.Sequence, nil
 }

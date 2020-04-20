@@ -5,13 +5,14 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
+	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	event_mongo "github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	snapshot_mongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/benjaminabbitt/evented/transport/async"
+	"github.com/benjaminabbitt/evented/support/grpcZap"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -51,8 +52,23 @@ func main() {
 
 	handlers := transport.NewTransportHolder(log)
 
-	handlers.Add(saga.MockSagaClient{})
-	handlers.Add(projector.MockProjectorClient{})
+	sagaConfig := viper.GetStringMap("sync.sagas")
+	for name, _ := range sagaConfig {
+		url := viper.GetString("sync.sagas." + name + ".url")
+		sagaConn := grpcZap.GenerateConfiguredConn(url, log)
+		log.Infow("Synchronous Saga Configuration:", name, url)
+		handlers.Add(saga.NewGRPCSagaClient(sagaConn))
+	}
+
+	projectorConfig := viper.GetStringSlice("sync.projectors")
+	for _, url := range projectorConfig {
+		log.Infow("Synchronous Projector Configuration:", "host", url)
+		projectorConn := grpcZap.GenerateConfiguredConn(url, log)
+		handlers.Add(projector.NewGRPCProjector(projectorConn))
+	}
+
+	projectorConn := grpcZap.GenerateConfiguredConn(viper.GetString("projector.url"), log)
+	handlers.Add(projector.NewGRPCProjector(projectorConn))
 	handlers.Add(setupServiceBus(domain))
 
 	server := framework.NewServer(
@@ -76,15 +92,17 @@ func setupSnapshotRepo() (repo snapshots.SnapshotStorer) {
 	return repo
 }
 
-func setupServiceBus(domain string) (transport async.EventTransporter) {
+func setupServiceBus(domain string) (trans chan *evented_core.EventBook) {
+	trans = make(chan *evented_core.EventBook)
 	configurationKey := "transport"
 	amqpText := "amqp"
 	typee := viper.GetString(fmt.Sprintf("%s.type", configurationKey))
 	if typee == amqpText {
 		url := viper.GetString(fmt.Sprintf("%s.%s.url", configurationKey, amqpText))
 		exchange := viper.GetString(fmt.Sprintf("%s.%s.exchange", configurationKey, amqpText))
-		client := sender.NewAMQPSender(url, exchange, log)
-		return client
+
+		_ = sender.NewAMQPSender(trans, url, exchange, log)
+		return trans
 	}
 	return nil
 }
