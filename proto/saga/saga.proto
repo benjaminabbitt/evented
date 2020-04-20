@@ -4,8 +4,12 @@ package evented.saga;
 option go_package = "saga;evented_saga";
 
 import "core/evented.proto";
+import "google/protobuf/empty.proto";
 
 service Saga {
-    rpc HandleSync (evented.core.EventBook) returns (evented.core.EventBook) {}
+    rpc HandleSync (evented.core.EventBook) returns (evented.core.EventBook) {
+    }
+    rpc Handle (evented.core.EventBook) returns (google.protobuf.Empty) {
+    }
 }
 

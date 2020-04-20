@@ -4,8 +4,13 @@ package evented.projector;
 option go_package = "projector;evented_projector";
 
 import "core/evented.proto";
+import "google/protobuf/empty.proto";
 
 service Projector {
-    rpc HandleSync (evented.core.EventBook) returns (evented.core.Projection) {}
+    rpc HandleSync (evented.core.EventBook) returns (evented.core.Projection) {
+    }
+    rpc Handle (evented.core.EventBook) returns (google.protobuf.Empty) {
+    }
+
 }
 

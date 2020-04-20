@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/integrationTest/epicLogic/epicLogic"
+	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/saga"
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -20,9 +20,9 @@ func main() {
 
 	log.Infow("Flags: ", "name", name, "configPath", configPath)
 
-	err := support.SetupConfig(name, configPath, flag.CommandLine)
+	_ = support.SetupConfig(name, configPath, flag.CommandLine)
 
-	server := epicLogic.NewPlaceholderEpicLogic(log)
+	server := saga.NewPlaceholderEpicLogic(log)
 
 	port := uint16(viper.GetUint("port"))
 	log.Infow("Starting Epic Server...", "port", port)

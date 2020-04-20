@@ -54,7 +54,7 @@ type Server struct {
 	businessClient      client.BusinessClient
 }
 
-func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.CommandHandlerResponse, err error) {
+func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	uuid, err := eventedproto.ProtoToUUID(in.Cover.Root)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 	return response, err
 }
 
-func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.CommandHandlerResponse, err error) {
+func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	err = o.eventBookRepository.Put(ctx, eb)
 
 	sync, _ := o.extractSynchronous(eb)
@@ -131,7 +131,7 @@ func (o Server) extractSynchronous(originalBook *evented_core.EventBook) (synchr
 	return synchronous, async
 }
 
-func (o Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.CommandHandlerResponse, err error) {
+func (o Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.SynchronousProcessingResponse, err error) {
 	r, err := o.handleEventBook(ctx, in)
 	return r, err
 }

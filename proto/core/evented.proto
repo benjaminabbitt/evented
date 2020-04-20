@@ -46,7 +46,7 @@ message Projection {
     google.protobuf.Any projection = 4;
 }
 
-message CommandHandlerResponse {
+message SynchronousProcessingResponse {
     repeated EventBook books = 1;
     repeated Projection projections = 3;
 }
@@ -68,6 +68,6 @@ message ContextualCommand {
 }
 
 service CommandHandler {
-    rpc Handle (CommandBook) returns (CommandHandlerResponse){}
-    rpc Record (EventBook) returns (CommandHandlerResponse){}
+    rpc Handle (CommandBook) returns (SynchronousProcessingResponse) {}
+    rpc Record (EventBook) returns (SynchronousProcessingResponse) {}
 }

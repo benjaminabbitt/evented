@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package evented.saga.coordinator;
+option go_package = "sagaCoordinator;evented_saga_coordinator";
+
+import "core/evented.proto";
+import "google/protobuf/empty.proto";
+
+service SagaCoordinator {
+    rpc HandleSync (evented.core.EventBook) returns (evented.core.SynchronousProcessingResponse) {
+    }
+    rpc Handle (evented.core.EventBook) returns (google.protobuf.Empty) {
+    }
+}
+

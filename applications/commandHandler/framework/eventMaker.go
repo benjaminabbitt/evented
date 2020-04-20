@@ -10,12 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewEventPage(sequence uint32, sync bool, eventDetails any.Any) *evented_core.EventPage {
+func NewEventPage(sequence uint32, sync bool, eventDetails *any.Any) *evented_core.EventPage {
 	return &evented_core.EventPage{
 		Sequence:    &evented_core.EventPage_Num{Num: sequence},
 		Synchronous: sync,
 		CreatedAt:   &timestamp.Timestamp{},
-		Event:       &eventDetails,
+		Event:       eventDetails,
 	}
 }
 
