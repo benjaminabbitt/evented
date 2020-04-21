@@ -10,7 +10,7 @@ type MockSagaClient struct {
 	mock.Mock
 }
 
-func (o MockSagaClient) HandleSync(ctx context.Context, evts *evented_core.EventBook) (responseEvents *evented_core.EventBook, err error) {
+func (o *MockSagaClient) HandleSync(ctx context.Context, evts *evented_core.EventBook) (responseEvents *evented_core.SynchronousProcessingResponse, err error) {
 	args := o.Called(ctx, evts)
-	return args.Get(0).(*evented_core.EventBook), args.Error(1)
+	return args.Get(0).(*evented_core.SynchronousProcessingResponse), args.Error(1)
 }

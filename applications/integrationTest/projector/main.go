@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/saga"
+	"github.com/benjaminabbitt/evented/applications/integrationTest/projector/projector"
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -11,7 +11,7 @@ import (
 var log *zap.SugaredLogger
 
 /*
-Placeholder business logic -- used for Saga integration tests
+Placeholder business logic -- used for Projector integration tests
 */
 func main() {
 	log = support.Log()
@@ -25,9 +25,9 @@ func main() {
 
 	_ = support.SetupConfig(name, configPath, flag.CommandLine)
 
-	server := saga.NewPlaceholderSagaLogic(log)
+	server := projector.NewPlaceholderProjectorLogic(log)
 
 	port := uint16(viper.GetUint("port"))
-	log.Infow("Starting Saga Server...", "port", port)
+	log.Infow("Starting Projector Server...", "port", port)
 	server.Listen(port)
 }

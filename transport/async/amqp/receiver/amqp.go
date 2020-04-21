@@ -4,7 +4,6 @@ import (
 	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
@@ -16,11 +15,10 @@ type AMQPReceiver struct {
 	SourceURL         string
 	SourceExhangeName string
 	SourceQueueName   string
-	DestinationSink   map[string]evented_core.CommandHandlerClient
 	Log               *zap.SugaredLogger
-	EventHandler      evented_eventHandler.EventHandlerClient
 	ch                *amqp.Channel
 	queue             *amqp.Queue
+	OutputChannel     chan<- *evented_core.EventBook
 	deliveryChan      <-chan amqp.Delivery
 	conn              *amqp.Connection
 }
@@ -31,10 +29,7 @@ func (o *AMQPReceiver) ListenForever() {
 	go func() {
 		for delivery := range o.deliveryChan {
 			eb := o.ExtractMessage(delivery)
-			err := o.ProcessMessage(context.Background(), eb)
-			if err != nil {
-				o.Log.Error(err)
-			}
+			o.OutputChannel <- eb
 		}
 	}()
 
@@ -42,20 +37,20 @@ func (o *AMQPReceiver) ListenForever() {
 	<-forever
 }
 
-func (o *AMQPReceiver) ProcessMessage(ctx context.Context, book *evented_core.EventBook) error {
-	response, err := o.EventHandler.Handle(ctx, book)
-	if err != nil {
-		o.Log.Error(err)
-	}
-	if response != nil {
-		chResponse, err := o.DestinationSink[response.Cover.Domain].Record(ctx, response)
-		if err != nil {
-			o.Log.Error(err)
-		}
-		o.Log.Info(chResponse)
-	}
-	return nil
-}
+//func (o *AMQPReceiver) ProcessMessage(ctx context.Context, book *evented_core.EventBook) error {
+//	response, err := o.EventHandler.Handle(ctx, book)
+//	if err != nil {
+//		o.Log.Error(err)
+//	}
+//	if response != nil {
+//		chResponse, err := o.DestinationSink[response.Cover.Domain].Record(ctx, response)
+//		if err != nil {
+//			o.Log.Error(err)
+//		}
+//		o.Log.Info(chResponse)
+//	}
+//	return nil
+//}
 
 func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) *evented_core.EventBook {
 	o.Log.Info(delivery.ContentType)

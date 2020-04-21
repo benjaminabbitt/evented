@@ -10,3 +10,4 @@ package evented_proto
 //go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./projector/projector.proto
 //go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./query/query.proto
 //go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./sagaCoordinator/sagaCoordinator.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./projectorCoordinator/projectorCoordinator.proto

@@ -34,7 +34,7 @@ func main() {
 	target := viper.GetString("eventHandlerURL")
 	log.Info(target)
 
-	conn := grpcZap.GenerateConfiguredConn(target, log)
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
 
 	log.Infof("Connected to remote %s", target)
 	if err != nil {

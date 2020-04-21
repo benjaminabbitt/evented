@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/saga"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_eventHandler "github.com/benjaminabbitt/evented/proto/eventHandler"
+	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -30,51 +31,57 @@ func main() {
 		log.Error(err)
 	}
 
-	commandHandlers := make(map[string]evented_core.CommandHandlerClient)
-	config := viper.Get("commandHandlers")
-	log.Info(config)
+	config := saga.Configuration{}
 
-	for key, element := range config.(map[string]interface{}) {
-		log.Info(key)
-		log.Info(element)
-		url := element.(map[string]interface{})["url"]
-		log.Info(url)
-		commandHandlers[key] = *makeCommandHandlerClient(url.(string))
-	}
+	commandHandler := *makeCommandHandlerClient(config.CommandHandlerURL())
 
-	eh := makeEventHandlerClient()
+	ctx := context.Background()
 
-	receiver := makeRabbitReceiver(*eh, commandHandlers)
-	receiver.ListenForever()
+	eh := makeEventHandlerClient(config)
+
+	ebChan, rec := makeRabbitReceiver(config)
+	go func() {
+		for {
+			eb := <-ebChan
+			reb, err := eh.Handle(ctx, eb)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			_, err = commandHandler.Record(ctx, reb)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}()
+	rec.ListenForever()
 }
 
-func makeRabbitReceiver(
-	eventHandler evented_eventHandler.EventHandlerClient,
-	commandHandlers map[string]evented_core.CommandHandlerClient) receiver.AMQPReceiver {
+func makeRabbitReceiver(config saga.Configuration) (chan *evented_core.EventBook, receiver.AMQPReceiver) {
+	outChan := make(chan *evented_core.EventBook)
 	receiver := receiver.AMQPReceiver{
-		SourceURL:         viper.GetString("transport.source.amqp.url"),
-		SourceExhangeName: viper.GetString("transport.source.amqp.exchange"),
-		SourceQueueName:   viper.GetString("transport.source.amqp.queue"),
-		DestinationSink:   commandHandlers,
+		SourceURL:         config.AMQPURL(),
+		SourceExhangeName: config.AMQPExchange(),
+		SourceQueueName:   config.AMQPQueue(),
 		Log:               log,
-		EventHandler:      eventHandler,
+		OutputChannel:     outChan,
 	}
 	log.Infow("Created RabbitMQ Receiver", "url", receiver.SourceURL, "queue", receiver.SourceQueueName)
-	return receiver
+	return outChan, receiver
 }
 
-func makeEventHandlerClient() *evented_eventHandler.EventHandlerClient {
+func makeEventHandlerClient(config saga.Configuration) evented_saga.SagaClient {
 	log.Info("Starting...")
-	target := viper.GetString("business.address")
+	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Error(err)
 	}
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	eventHandler := evented_eventHandler.NewEventHandlerClient(conn)
+	eventHandler := evented_saga.NewSagaClient(conn)
 	log.Info("Client Created...")
-	return &eventHandler
+	return eventHandler
 }
 
 func makeCommandHandlerClient(target string) *evented_core.CommandHandlerClient {

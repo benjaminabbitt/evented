@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/eventProcessing/grpc/saga/saga"
-	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
+	"github.com/benjaminabbitt/evented/applications/eventProcessing/grpc/projector/projector"
+	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
@@ -11,11 +11,10 @@ import (
 )
 
 /*
-GRPC Server that receives Event messages and forwards them to a Sync Saga.
+GRPC Server that receives Event messages and forwards them to a Sync Projector.
 Fetches missing events from the event query server, if applicable.
-Parses the result of the sync saga, updating last processed event in storage.
-Sends the saga generated events to the other command handler
-Returns the result of the sync saga.
+Parses the result of the sync projector, updating last processed event in storage.
+Returns the result of the sync projector.
 */
 func main() {
 	log := support.Log()
@@ -36,15 +35,15 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
-	client := evented_saga.NewSagaClient(conn)
+	client := evented_projector.NewProjectorClient(conn)
 
 	p := processed.NewProcessedClient(viper.GetString("database.url"), viper.GetString("database.name"), log)
 
 	domain := viper.GetString("domain")
 
-	server := saga.NewSagaTracker(client, p, domain, log)
+	server := projector.NewProjectorCoordinator(client, p, domain, log)
 
 	port := uint16(viper.GetUint("port"))
-	log.Infow("Starting Saga Proxy Server...", "port", port)
+	log.Infow("Starting Projector Proxy Server...", "port", port)
 	server.Listen(port)
 }

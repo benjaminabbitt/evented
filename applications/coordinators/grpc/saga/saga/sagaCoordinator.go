@@ -9,19 +9,20 @@ import (
 	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/sagaCoordinator"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/benjaminabbitt/evented/support/grpcZap"
+	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func NewSagaTracker(client evented_saga.SagaClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
+func NewSagaCoordinator(sagaClient evented_saga.SagaClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
 	return SagaCoordinator{
-		processed:  processedClient,
-		log:        log,
-		sagaClient: client,
-		domain:     domain,
+		processed:           processedClient,
+		otherCommandHandler: otherCommandHandlerClient,
+		log:                 log,
+		sagaClient:          sagaClient,
+		domain:              domain,
 	}
 }
 
@@ -91,7 +92,7 @@ func (o *SagaCoordinator) markProcessed(ctx context.Context, event *eventedcore.
 func (o *SagaCoordinator) Listen(port uint16) {
 	lis := support.CreateListener(port, o.log)
 
-	grpcServer := grpcZap.GenerateConfiguredServer(o.log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
 
 	evented_saga_coordinator.RegisterSagaCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

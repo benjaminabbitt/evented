@@ -1,4 +1,4 @@
-package grpcZap
+package grpcWithInterceptors
 
 import (
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"

@@ -1,19 +1,19 @@
-package saga
+package projector
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
+	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
-func NewPlaceholderSagaLogic(log *zap.SugaredLogger) PlaceholderSagaLogic {
+func NewPlaceholderProjectorLogic(log *zap.SugaredLogger) PlaceholderSagaLogic {
 	return PlaceholderSagaLogic{
 		log: log,
 	}
@@ -30,25 +30,21 @@ func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *eventedcore.Event
 	return &empty.Empty{}, err
 }
 
-func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {
+func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.Projection, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		o.log.Error(err)
 	}
 	root := evented_proto.UUIDToProto(id)
-	cover := eventedcore.Cover{
+	cover := &eventedcore.Cover{
 		Domain: o.eventDomain,
 		Root:   &root,
 	}
-	eb := &eventedcore.EventBook{
-		Cover: &cover,
-		Pages: []*eventedcore.EventPage{&eventedcore.EventPage{
-			Sequence:    &eventedcore.EventPage_Force{Force: true},
-			CreatedAt:   &timestamp.Timestamp{},
-			Event:       nil,
-			Synchronous: false,
-		}},
-		Snapshot: nil,
+	eb := &eventedcore.Projection{
+		Cover:      cover,
+		Projector:  "test",
+		Sequence:   in.Pages[len(in.Pages)].Sequence.(*eventedcore.EventPage_Num).Num,
+		Projection: nil,
 	}
 	return eb, nil
 }
@@ -57,7 +53,7 @@ func (o *PlaceholderSagaLogic) Listen(port uint16) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
 
-	evented_saga.RegisterSagaServer(grpcServer, o)
+	evented_projector.RegisterProjectorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)
