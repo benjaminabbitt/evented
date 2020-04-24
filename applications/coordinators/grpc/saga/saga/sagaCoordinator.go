@@ -44,7 +44,7 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventB
 	last, err := o.processed.LastReceived(ctx, id)
 	seq := eb.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num
 	if err != nil {
-		//TODO
+		o.log.Error(err)
 	}
 	if last < seq {
 		evtStream, err := o.eventQueryClient.GetEvents(ctx, &evented_query.Query{
@@ -89,7 +89,7 @@ func (o *SagaCoordinator) markProcessed(ctx context.Context, event *eventedcore.
 	}
 }
 
-func (o *SagaCoordinator) Listen(port uint16) {
+func (o *SagaCoordinator) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())

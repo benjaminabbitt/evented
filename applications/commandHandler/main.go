@@ -16,7 +16,6 @@ import (
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
-	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -24,25 +23,18 @@ import (
 var log *zap.SugaredLogger
 
 func main() {
-	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
-	var configPath *string = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
-	flag.Parse()
-
-	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	if err != nil {
-		log.Error(err)
-	}
 	log = support.Log()
-	defer log.Sync()
+	config := Configuration{}
+	config.Initialize(log)
 
-	businessAddress := viper.GetString("business.address")
-	commandHandlerPort := uint16(viper.GetUint("port"))
+	businessAddress := config.BusinessURL()
+	commandHandlerPort := config.Port()
 	log.Infow("Starting Command Handler", "port", commandHandlerPort)
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 
-	eventRepo, err := setupEventRepo(log)
+	eventRepo, _ := setupEventRepo(log)
 	ssRepo := setupSnapshotRepo()
-	domain := viper.GetString("domain")
+	domain := config.Domain()
 
 	repo := eventBook.RepositoryBasic{
 		EventRepo:    eventRepo,
@@ -52,17 +44,12 @@ func main() {
 
 	handlers := transport.NewTransportHolder(log)
 
-	sagaConfig := viper.GetStringMap("sync.sagas")
-	for name, _ := range sagaConfig {
-		url := viper.GetString("sync.sagas." + name + ".url")
+	for _, url := range config.SagaURLs() {
 		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log)
-		log.Infow("Synchronous Saga Configuration:", name, url)
 		handlers.Add(saga.NewGRPCSagaClient(sagaConn))
 	}
 
-	projectorConfig := viper.GetStringSlice("sync.projectors")
-	for _, url := range projectorConfig {
-		log.Infow("Synchronous Projector Configuration:", "host", url)
+	for _, url := range config.ProjectorURLs() {
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log)
 		handlers.Add(projector.NewGRPCProjector(projectorConn))
 	}
@@ -75,7 +62,7 @@ func main() {
 		businessClient,
 		log,
 	)
-	server.Listen(commandHandlerPort)
+	server.Listen(config.Port())
 }
 
 func setupSnapshotRepo() (repo snapshots.SnapshotStorer) {

@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-func CreateListener(port uint16, log *zap.SugaredLogger) net.Listener {
+func CreateListener(port uint, log *zap.SugaredLogger) net.Listener {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Error(err)

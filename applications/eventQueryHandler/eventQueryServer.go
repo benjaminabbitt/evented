@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewEventQueryServer(maxSize uint64, repos events.EventStorer, log *zap.SugaredLogger) DefaultEventQueryServer {
+func NewEventQueryServer(maxSize uint, repos events.EventStorer, log *zap.SugaredLogger) DefaultEventQueryServer {
 	return DefaultEventQueryServer{
 		EventBookSize: maxSize,
 		eventRepos:    repos,
@@ -22,7 +22,7 @@ func NewEventQueryServer(maxSize uint64, repos events.EventStorer, log *zap.Suga
 
 type DefaultEventQueryServer struct {
 	evented_query.UnimplementedEventQueryServer
-	EventBookSize uint64
+	EventBookSize uint
 	eventRepos    events.EventStorer
 	log           *zap.SugaredLogger
 }
@@ -47,8 +47,8 @@ func (o *DefaultEventQueryServer) GetEvents(req *evented_query.Query, server eve
 	}
 	maxSize := o.EventBookSize
 	for page := range evtChan {
-		pSize := uint64(proto.Size(page))
-		size := uint64(0)
+		pSize := uint(proto.Size(page))
+		size := uint(0)
 		// This approximation of size is not 100% correct, as of 20200415, it'll be about 2 bytes small per tests.
 		// This addition is a performance optimization to avoid having to re-generate and re-serialize the event book repeatedly,
 		//   and a single-digit-byte-class error isn't worth spending cycles on.
@@ -90,7 +90,7 @@ func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server event
 	panic("implement me")
 }
 
-func (o *DefaultEventQueryServer) Listen(port uint16) error {
+func (o *DefaultEventQueryServer) Listen(port uint) error {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpc.NewServer()
 

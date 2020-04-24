@@ -22,7 +22,7 @@ func NewServer(eventBookRepository eventBook.EventBookStorer, transports transpo
 	}
 }
 
-func (o *Server) Listen(port uint16) {
+func (o *Server) Listen(port uint) {
 	o.log.Infow("Opening port", "port", port)
 	lis := o.createListener(port)
 	o.log.Infow("Port opened", "port", port)
@@ -38,7 +38,7 @@ func (o *Server) Listen(port uint16) {
 	}
 }
 
-func (o *Server) createListener(port uint16) net.Listener {
+func (o *Server) createListener(port uint) net.Listener {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		o.log.Error(err)

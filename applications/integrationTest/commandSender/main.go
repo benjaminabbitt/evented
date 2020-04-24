@@ -6,8 +6,6 @@ import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/google/uuid"
-	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -18,17 +16,11 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
-	var configPath *string = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
-	flag.Parse()
-
-	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	if err != nil {
-		log.Error(err)
-	}
+	config := Configuration{}
+	config.Initialize(log)
 
 	log.Info("Starting...")
-	target := viper.GetString("commandHandlerURL")
+	target := config.CommandHandlerURL()
 	log.Info(target)
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
 	log.Infof("Connected to remote %s", target)
@@ -48,7 +40,7 @@ func main() {
 		}}
 		commandBook := &evented_core.CommandBook{
 			Cover: &evented_core.Cover{
-				Domain: viper.GetString("domain"),
+				Domain: config.Domain(),
 				Root:   &protoId,
 			},
 			Pages: pages,

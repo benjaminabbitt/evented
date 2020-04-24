@@ -53,7 +53,7 @@ func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *eventedcore.E
 	return eb, nil
 }
 
-func (o *PlaceholderSagaLogic) Listen(port uint16) {
+func (o *PlaceholderSagaLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
 

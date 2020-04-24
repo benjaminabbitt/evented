@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/eventProcessing/grpc/projector/projector"
+	projector2 "github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -29,7 +28,10 @@ func main() {
 		log.Error(err)
 	}
 
-	target := viper.GetString("target.url")
+	config := projector2.Configuration{}
+	config.Initialize(log)
+
+	target := config.TargetURL()
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
 	log.Infof("Connected to remote %s", target)
 	if err != nil {
@@ -37,13 +39,13 @@ func main() {
 	}
 	client := evented_projector.NewProjectorClient(conn)
 
-	p := processed.NewProcessedClient(viper.GetString("database.url"), viper.GetString("database.name"), log)
+	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
-	domain := viper.GetString("domain")
+	domain := config.Name()
 
-	server := projector.NewProjectorCoordinator(client, p, domain, log)
+	server := projector2.NewProjectorCoordinator(client, p, domain, log)
 
-	port := uint16(viper.GetUint("port"))
+	port := config.Port()
 	log.Infow("Starting Projector Proxy Server...", "port", port)
 	server.Listen(port)
 }

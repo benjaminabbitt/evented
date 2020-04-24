@@ -48,7 +48,7 @@ func (o *PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *evented
 	return eventBook, nil
 }
 
-func (o *PlaceholderBusinessLogicServer) Listen(port uint16) {
+func (o *PlaceholderBusinessLogicServer) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpc.NewServer()
 

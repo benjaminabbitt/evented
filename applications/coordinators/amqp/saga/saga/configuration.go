@@ -1,8 +1,12 @@
 package saga
 
-import "github.com/spf13/viper"
+import (
+	"github.com/benjaminabbitt/evented/support"
+	"github.com/spf13/viper"
+)
 
 type Configuration struct {
+	support.ConfigInit
 }
 
 func (o *Configuration) CommandHandlerURL() string {

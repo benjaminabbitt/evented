@@ -85,7 +85,7 @@ func (o *ProjectorCoordinator) markProcessed(ctx context.Context, event *evented
 	}
 }
 
-func (o *ProjectorCoordinator) Listen(port uint16) {
+func (o *ProjectorCoordinator) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())

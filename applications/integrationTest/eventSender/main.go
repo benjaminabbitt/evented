@@ -7,12 +7,9 @@ import (
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/sagaCoordinator"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/benjaminabbitt/evented/support/grpcZap"
+	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
-	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/status"
 )
 
 var log *zap.SugaredLogger
@@ -21,27 +18,16 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	var name = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
-	var configPath = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
-	flag.Parse()
-
-	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	if err != nil {
-		log.Error(err)
-	}
+	config := Configuration{}
+	config.Initialize(log)
 
 	log.Info("Starting...")
-	target := viper.GetString("eventHandlerURL")
+	target := config.EventHandlerURL()
 	log.Info(target)
 
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
 
 	log.Infof("Connected to remote %s", target)
-	if err != nil {
-		log.Error(err)
-		stat, _ := status.FromError(err)
-		log.Error(stat)
-	}
 
 	sh := evented_saga_coordinator.NewSagaCoordinatorClient(conn)
 	log.Info("Client Created...")
@@ -55,7 +41,7 @@ func main() {
 	}
 	eventBook := &evented_core.EventBook{
 		Cover: &evented_core.Cover{
-			Domain: viper.GetString("domain"),
+			Domain: config.Domain(),
 			Root:   &protoId,
 		},
 		Pages: pages,

@@ -42,23 +42,31 @@ func main() {
 	ebChan, rec := makeRabbitReceiver(config)
 	go func() {
 		for {
-			eb := <-ebChan
-			reb, err := eh.Handle(ctx, eb)
+			msg := <-ebChan
+			reb, err := eh.Handle(ctx, msg.Book)
 			if err != nil {
 				log.Error(err)
+				rec.NAck(msg.Tag)
 				continue
 			}
 			_, err = commandHandler.Record(ctx, reb)
 			if err != nil {
 				log.Error(err)
+				rec.NAck(msg.Tag)
+				continue
+			}
+			err = rec.Ack(msg.Tag)
+			if err != nil {
+				log.Error(err)
+				continue
 			}
 		}
 	}()
 	rec.ListenForever()
 }
 
-func makeRabbitReceiver(config saga.Configuration) (chan *evented_core.EventBook, receiver.AMQPReceiver) {
-	outChan := make(chan *evented_core.EventBook)
+func makeRabbitReceiver(config saga.Configuration) (chan receiver.AMQPDecodedMessage, receiver.AMQPReceiver) {
+	outChan := make(chan receiver.AMQPDecodedMessage)
 	receiver := receiver.AMQPReceiver{
 		SourceURL:         config.AMQPURL(),
 		SourceExhangeName: config.AMQPExchange(),

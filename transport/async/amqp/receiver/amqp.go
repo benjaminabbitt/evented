@@ -1,7 +1,6 @@
 package receiver
 
 import (
-	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
@@ -11,6 +10,11 @@ import (
 	"time"
 )
 
+type AMQPDecodedMessage struct {
+	Book *evented_core.EventBook
+	Tag  uint64
+}
+
 type AMQPReceiver struct {
 	SourceURL         string
 	SourceExhangeName string
@@ -18,7 +22,7 @@ type AMQPReceiver struct {
 	Log               *zap.SugaredLogger
 	ch                *amqp.Channel
 	queue             *amqp.Queue
-	OutputChannel     chan<- *evented_core.EventBook
+	OutputChannel     chan<- AMQPDecodedMessage
 	deliveryChan      <-chan amqp.Delivery
 	conn              *amqp.Connection
 }
@@ -28,8 +32,12 @@ func (o *AMQPReceiver) ListenForever() {
 
 	go func() {
 		for delivery := range o.deliveryChan {
-			eb := o.ExtractMessage(delivery)
-			o.OutputChannel <- eb
+			eb, tag := o.ExtractMessage(delivery)
+
+			o.OutputChannel <- AMQPDecodedMessage{
+				Book: eb,
+				Tag:  tag,
+			}
 		}
 	}()
 
@@ -37,34 +45,30 @@ func (o *AMQPReceiver) ListenForever() {
 	<-forever
 }
 
-//func (o *AMQPReceiver) ProcessMessage(ctx context.Context, book *evented_core.EventBook) error {
-//	response, err := o.EventHandler.Handle(ctx, book)
-//	if err != nil {
-//		o.Log.Error(err)
-//	}
-//	if response != nil {
-//		chResponse, err := o.DestinationSink[response.Cover.Domain].Record(ctx, response)
-//		if err != nil {
-//			o.Log.Error(err)
-//		}
-//		o.Log.Info(chResponse)
-//	}
-//	return nil
-//}
-
-func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) *evented_core.EventBook {
+func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, tag uint64) {
+	if book == nil || book.Cover == nil {
+		o.Log.Error("Book or Book Cover is nil, this should not be possible.")
+		panic(book)
+	}
 	o.Log.Info(delivery.ContentType)
-	eb := &evented_core.EventBook{}
-	err := proto.Unmarshal(delivery.Body, eb)
+	err := proto.Unmarshal(delivery.Body, book)
 	if err != nil {
 		o.Log.Error(err)
 	}
-	uuid, err := evented_proto.ProtoToUUID(eb.Cover.GetRoot())
+	uuid, err := evented_proto.ProtoToUUID(book.Cover.GetRoot())
 	if err != nil {
 		o.Log.Error(err)
 	}
 	o.Log.Infof("Received a message: %s", uuid)
-	return eb
+	return book, delivery.DeliveryTag
+}
+
+func (o *AMQPReceiver) Ack(tag uint64) error {
+	return o.ch.Ack(tag, false)
+}
+
+func (o *AMQPReceiver) NAck(tag uint64) error {
+	return o.ch.Nack(tag, false, true)
 }
 
 func (o *AMQPReceiver) connectWithBackoff() error {
@@ -102,9 +106,9 @@ func (o *AMQPReceiver) Connect() error {
 
 		q, err := ch.QueueDeclare(
 			o.SourceQueueName,
-			false, // durable
+			true,  // durable
 			false, // delete when unused
-			true,  // exclusive
+			false, // exclusive
 			false, // no-wait
 			nil,   // arguments
 		)
@@ -142,11 +146,4 @@ func (o *AMQPReceiver) Connect() error {
 		o.deliveryChan = delivery
 	}
 	return nil
-}
-
-func (o *AMQPReceiver) GetMessage(ctx context.Context) *evented_core.EventBook {
-	var delivery amqp.Delivery
-	delivery = <-o.deliveryChan
-	msg := o.ExtractMessage(delivery)
-	return msg
 }
