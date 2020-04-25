@@ -2,7 +2,7 @@ package projector
 
 import (
 	"fmt"
-	evented_proto "github.com/benjaminabbitt/evented/proto"
+	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	evented_projector_coordinator "github.com/benjaminabbitt/evented/proto/projectorCoordinator"
@@ -16,17 +16,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewProjectorCoordinator(client evented_projector.ProjectorClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
+func NewProjectorCoordinator(client evented_projector.ProjectorClient, eventQueryClient evented_query.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
 	return ProjectorCoordinator{
 		processed:       processedClient,
 		log:             log,
 		projectorClient: client,
 		domain:          domain,
+		Coordinator: universal.Coordinator{
+			Processed:        processedClient,
+			EventQueryClient: eventQueryClient,
+			Log:              log,
+		},
 	}
 }
 
 type ProjectorCoordinator struct {
 	evented_projector_coordinator.UnimplementedProjectorCoordinatorServer
+	universal.Coordinator
 	domain           string //Domain of the Source
 	log              *zap.SugaredLogger
 	projectorClient  evented_projector.ProjectorClient
@@ -38,51 +44,17 @@ func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.E
 	if eb.Cover.Domain != o.domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book domain %s does not match saga configured domain %s", eb.Cover.Domain, o.domain))
 	}
-	id, err := evented_proto.ProtoToUUID(eb.Cover.Root)
-	last, err := o.processed.LastReceived(ctx, id)
-	seq := eb.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num
-	if err != nil {
-		//TODO
-	}
-	if last < seq {
-		evtStream, err := o.eventQueryClient.GetEvents(ctx, &evented_query.Query{
-			Domain:     eb.Cover.Domain,
-			Root:       eb.Cover.Root,
-			LowerBound: seq,
-		})
-		if err != nil {
-			o.log.Error(err)
-		}
-		for {
-			event, err := evtStream.Recv()
-			if err != nil {
-				o.log.Error(err)
-			}
-			_, err = o.projectorClient.Handle(ctx, event)
-			if err != nil {
-				o.log.Error(err)
-			} else {
-				o.markProcessed(ctx, event)
-			}
-		}
-	}
+	o.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
+		_, err := o.projectorClient.Handle(ctx, eb)
+		return err
+	})
 
 	reb, err := o.projectorClient.HandleSync(ctx, eb)
 	if err != nil {
 		o.log.Error(err)
 	}
-	o.markProcessed(ctx, eb)
+	o.MarkProcessed(ctx, eb)
 	return reb, err
-}
-
-func (o *ProjectorCoordinator) markProcessed(ctx context.Context, event *eventedcore.EventBook) {
-	id, err := evented_proto.ProtoToUUID(event.Cover.Root)
-	for _, page := range event.Pages {
-		err = o.processed.Received(ctx, id, page.Sequence.(*eventedcore.EventPage_Num).Num)
-		if err != nil {
-			o.log.Error(err)
-		}
-	}
 }
 
 func (o *ProjectorCoordinator) Listen(port uint) {

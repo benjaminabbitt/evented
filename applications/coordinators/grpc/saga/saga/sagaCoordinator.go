@@ -2,7 +2,7 @@ package saga
 
 import (
 	"fmt"
-	evented_proto "github.com/benjaminabbitt/evented/proto"
+	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
@@ -16,87 +16,55 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewSagaCoordinator(sagaClient evented_saga.SagaClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
+func NewSagaCoordinator(sagaClient evented_saga.SagaClient, eventQueryClient evented_query.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
 	return SagaCoordinator{
-		processed:           processedClient,
 		otherCommandHandler: otherCommandHandlerClient,
-		log:                 log,
 		sagaClient:          sagaClient,
 		domain:              domain,
+		Coordinator: universal.Coordinator{
+			Processed:        processedClient,
+			EventQueryClient: eventQueryClient,
+			Log:              log,
+		},
 	}
 }
 
 type SagaCoordinator struct {
 	evented_saga_coordinator.UnimplementedSagaCoordinatorServer
-	domain              string //Domain of the Source
-	log                 *zap.SugaredLogger
+	universal.Coordinator
+	domain              string
 	sagaClient          evented_saga.SagaClient
 	otherCommandHandler eventedcore.CommandHandlerClient
-	eventQueryClient    evented_query.EventQueryClient
-	processed           *processed.Processed
 }
 
 func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.SynchronousProcessingResponse, error) {
 	if eb.Cover.Domain != o.domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book domain %s does not match saga configured domain %s", eb.Cover.Domain, o.domain))
 	}
-	id, err := evented_proto.ProtoToUUID(eb.Cover.Root)
-	last, err := o.processed.LastReceived(ctx, id)
-	seq := eb.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num
-	if err != nil {
-		o.log.Error(err)
-	}
-	if last < seq {
-		evtStream, err := o.eventQueryClient.GetEvents(ctx, &evented_query.Query{
-			Domain:     eb.Cover.Domain,
-			Root:       eb.Cover.Root,
-			LowerBound: seq,
-		})
-		if err != nil {
-			o.log.Error(err)
-		}
-		for {
-			event, err := evtStream.Recv()
-			if err != nil {
-				o.log.Error(err)
-			}
-			_, err = o.sagaClient.Handle(ctx, event)
-			if err != nil {
-				o.log.Error(err)
-			} else {
-				o.markProcessed(ctx, event)
-			}
-		}
-	}
+
+	o.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
+		_, err := o.sagaClient.Handle(ctx, eb)
+		return err
+	})
 
 	reb, err := o.sagaClient.HandleSync(ctx, eb)
 	if err != nil {
-		o.log.Error(err)
+		o.Log.Error(err)
 	}
-	o.markProcessed(ctx, eb)
+	o.MarkProcessed(ctx, eb)
 	commandHandlerResponse, err := o.otherCommandHandler.Record(ctx, reb)
 	commandHandlerResponse.Books = append(commandHandlerResponse.Books, reb)
 	return commandHandlerResponse, err
 }
 
-func (o *SagaCoordinator) markProcessed(ctx context.Context, event *eventedcore.EventBook) {
-	id, err := evented_proto.ProtoToUUID(event.Cover.Root)
-	for _, page := range event.Pages {
-		err = o.processed.Received(ctx, id, page.Sequence.(*eventedcore.EventPage_Num).Num)
-		if err != nil {
-			o.log.Error(err)
-		}
-	}
-}
-
 func (o *SagaCoordinator) Listen(port uint) {
-	lis := support.CreateListener(port, o.log)
+	lis := support.CreateListener(port, o.Log)
 
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.Log.Desugar())
 
 	evented_saga_coordinator.RegisterSagaCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
-		o.log.Error(err)
+		o.Log.Error(err)
 	}
 }
