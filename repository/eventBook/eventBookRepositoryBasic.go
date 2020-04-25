@@ -18,7 +18,7 @@ type RepositoryBasic struct {
 }
 
 func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedcore.EventBook, err error) {
-	ch := make(chan *eventedcore.EventPage)
+	ch := make(chan *eventedcore.EventPage, 10)
 	snapshot, err := o.SnapshotRepo.Get(ctx, id)
 	if err != nil {
 		o.log.Error(err)
@@ -32,7 +32,11 @@ func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedco
 		o.log.Error(err)
 	}
 	var pages []*eventedcore.EventPage
-	for page := range ch {
+	for {
+		page, more := <-ch
+		if !more {
+			break
+		}
 		pages = append(pages, page)
 	}
 	return o.makeEventBook(id, pages, snapshot), nil
@@ -47,9 +51,11 @@ func (o RepositoryBasic) Put(ctx context.Context, book *eventedcore.EventBook) e
 	if err != nil {
 		o.log.Error(err)
 	}
-	err = o.SnapshotRepo.Put(ctx, root, book.Snapshot)
-	if err != nil {
-		o.log.Error(err)
+	if book.Snapshot != nil {
+		err = o.SnapshotRepo.Put(ctx, root, book.Snapshot)
+		if err != nil {
+			o.log.Error(err)
+		}
 	}
 	return err
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/support"
@@ -16,8 +17,8 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	config := Configuration{}
-	config.Initialize(log)
+	config := configuration.Configuration{}
+	config.Initialize("commandSender", log)
 
 	log.Info("Starting...")
 	target := config.CommandHandlerURL()

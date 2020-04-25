@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Rabbit" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="rabbitmq:3.8.3-management-alpine" />
+        <option name="command" value="-p 4369:4369 -p 5671:5671 -p 5672:5672 -p 25672:25672 " />
+        <option name="containerName" value="" />
+        <option name="entrypoint" value="" />
+        <option name="publishAllPorts" value="true" />
+        <option name="commandLineOptions" value="" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

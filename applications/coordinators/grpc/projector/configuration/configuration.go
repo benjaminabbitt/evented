@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"github.com/benjaminabbitt/evented/support"
@@ -13,18 +13,18 @@ func (o *Configuration) DatabaseURL() string {
 	return viper.GetString("database.url")
 }
 
+func (o *Configuration) TargetURL() string {
+	return viper.GetString("target.url")
+}
+
 func (o *Configuration) DatabaseName() string {
 	return viper.GetString("database.name")
 }
 
-func (o *Configuration) DatabaseCollection() string {
-	return viper.GetString("database.collection")
+func (o *Configuration) Name() string {
+	return viper.GetString("name")
 }
 
 func (o *Configuration) Port() uint {
 	return viper.GetUint("port")
-}
-
-func (o *Configuration) EventBookTargetSize() uint {
-	return viper.GetUint("targetSize")
 }

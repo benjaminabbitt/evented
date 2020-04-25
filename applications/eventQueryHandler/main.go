@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benjaminabbitt/evented/applications/eventQueryHandler/configuration"
 	"github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/support"
 )
@@ -9,7 +10,7 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	config := Configuration{}
+	config := configuration.Configuration{}
 	config.Initialize(log)
 
 	mongoUrl := config.DatabaseURL()

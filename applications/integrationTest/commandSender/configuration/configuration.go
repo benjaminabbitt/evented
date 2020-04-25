@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"github.com/benjaminabbitt/evented/support"
@@ -9,8 +9,8 @@ type Configuration struct {
 	support.ConfigInit
 }
 
-func (o *Configuration) Port() uint {
-	return viper.GetUint("port")
+func (o *Configuration) CommandHandlerURL() string {
+	return viper.GetString("commandHandlerURL")
 }
 func (o *Configuration) Domain() string {
 	return viper.GetString("domain")

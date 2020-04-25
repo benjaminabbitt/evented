@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/zap"
 	"time"
 )
@@ -55,7 +56,11 @@ func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *event
 	record := &snapshot{}
 	err = singleResult.Decode(record)
 	if err != nil {
-		o.log.Error(err)
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		} else {
+			o.log.Error(err)
+		}
 		return nil, err
 	}
 	_, coreRecord, err := storageToCore(record)
@@ -88,6 +93,10 @@ func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evente
 func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		log.Error(err)
+	}
+	err = mongoClient.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Error(err)
 	}

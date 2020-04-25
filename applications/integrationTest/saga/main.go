@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"go.uber.org/zap"
@@ -15,8 +16,8 @@ func main() {
 	log = support.Log()
 	defer log.Sync()
 
-	config := Configuration{}
-	config.Initialize(log)
+	config := configuration.Configuration{}
+	config.Initialize("saga", log)
 	server := saga.NewPlaceholderSagaLogic(log)
 
 	port := config.Port()

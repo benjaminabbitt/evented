@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"github.com/benjaminabbitt/evented/support"
@@ -12,3 +12,4 @@ type Configuration struct {
 func (o *Configuration) Port() uint {
 	return viper.GetUint("port")
 }
+

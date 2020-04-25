@@ -259,22 +259,24 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented_core.
 	if err != nil {
 		return err
 	}
-	evtChan = make(chan *evented_core.EventPage)
-	for cur.Next(ctx) {
-		var elem mongoEvent
-		err := cur.Decode(&elem)
-		if err != nil {
-			return err
+	go func() {
+		for cur.Next(ctx) {
+			var elem mongoEvent
+			err := cur.Decode(&elem)
+			if err != nil {
+				m.log.Error(err)
+			}
+			_, page := m.mepToPage(elem)
+			evtChan <- page
 		}
-		_, page := m.mepToPage(elem)
-		evtChan <- page
-	}
+		close(evtChan)
+		cur.Close(ctx)
+	}()
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
 	}
 
-	cur.Close(ctx)
 	return nil
 }
 

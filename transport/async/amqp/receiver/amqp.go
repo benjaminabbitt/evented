@@ -12,7 +12,8 @@ import (
 
 type AMQPDecodedMessage struct {
 	Book *evented_core.EventBook
-	Tag  uint64
+	Ack  func() error
+	Nack func() error
 }
 
 type AMQPReceiver struct {
@@ -32,11 +33,12 @@ func (o *AMQPReceiver) ListenForever() {
 
 	go func() {
 		for delivery := range o.deliveryChan {
-			eb, tag := o.ExtractMessage(delivery)
+			eb, ack, nack := o.ExtractMessage(delivery)
 
 			o.OutputChannel <- AMQPDecodedMessage{
 				Book: eb,
-				Tag:  tag,
+				Ack:  ack,
+				Nack: nack,
 			}
 		}
 	}()
@@ -45,30 +47,21 @@ func (o *AMQPReceiver) ListenForever() {
 	<-forever
 }
 
-func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, tag uint64) {
-	if book == nil || book.Cover == nil {
-		o.Log.Error("Book or Book Cover is nil, this should not be possible.")
-		panic(book)
-	}
+func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, ack func() error, nack func() error) {
 	o.Log.Info(delivery.ContentType)
 	err := proto.Unmarshal(delivery.Body, book)
 	if err != nil {
 		o.Log.Error(err)
+	}
+	if book == nil || book.Cover == nil {
+		o.Log.Errorw("Book or Cover is nil, this should not be possible here", "book", book, "cover", book.Cover)
 	}
 	uuid, err := evented_proto.ProtoToUUID(book.Cover.GetRoot())
 	if err != nil {
 		o.Log.Error(err)
 	}
 	o.Log.Infof("Received a message: %s", uuid)
-	return book, delivery.DeliveryTag
-}
-
-func (o *AMQPReceiver) Ack(tag uint64) error {
-	return o.ch.Ack(tag, false)
-}
-
-func (o *AMQPReceiver) NAck(tag uint64) error {
-	return o.ch.Nack(tag, false, true)
+	return book, func() error { return o.ch.Ack(delivery.DeliveryTag, false) }, func() error { return o.ch.Nack(delivery.DeliveryTag, false, true) }
 }
 
 func (o *AMQPReceiver) connectWithBackoff() error {

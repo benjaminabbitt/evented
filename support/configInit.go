@@ -6,17 +6,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type ConfigInit struct{}
+type ConfigInit struct {
+	AppName    *string
+	configPath *string
+}
 
 func (o *ConfigInit) Name() string {
-	return *flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
+	return *o.AppName
 }
 
 func (o *ConfigInit) ConfigPath() string {
-	return *flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
+	return *o.configPath
 }
 
-func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
+func (o *ConfigInit) Initialize(name string, log *zap.SugaredLogger) {
+	o.AppName = flag.String("appName", name, "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
+	o.configPath = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
+
 	flag.Parse()
 
 	err := viper.BindPFlags(flag.CommandLine)

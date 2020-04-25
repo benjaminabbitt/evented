@@ -57,11 +57,11 @@ type Server struct {
 func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	uuid, err := eventedproto.ProtoToUUID(in.Cover.Root)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	priorState, err := o.eventBookRepository.Get(ctx, uuid)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
 	contextualCommand := &evented_core.ContextualCommand{
@@ -71,34 +71,35 @@ func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 
 	businessResponse, err := o.businessClient.Handle(ctx, contextualCommand)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
-	synchronousResults, err := o.handleEventBook(ctx, businessResponse)
+	result, err = o.handleEventBook(ctx, businessResponse)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
-	synchronousResults.Books = append(synchronousResults.Books, businessResponse)
-	return synchronousResults, err
+	result.Books = append(result.Books, businessResponse)
+	return result, err
 }
 
 func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.SynchronousProcessingResponse, err error) {
+	result = &evented_core.SynchronousProcessingResponse{}
 	err = o.eventBookRepository.Put(ctx, eb)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
 	sync, _ := o.extractSynchronous(eb)
 
 	projections, err := o.sendSyncProjections(ctx, sync)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	result.Projections = projections
 
 	otherDomainEventBooks, otherProjections, err := o.sendSyncSagas(ctx, sync)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	result.Books = otherDomainEventBooks
 	result.Projections = append(result.Projections, otherProjections...)
@@ -156,6 +157,5 @@ func (o Server) extractSynchronous(originalBook *evented_core.EventBook) (synchr
 }
 
 func (o Server) Record(ctx context.Context, in *evented_core.EventBook) (response *evented_core.SynchronousProcessingResponse, err error) {
-	eb, err := o.handleEventBook(ctx, in)
-	return eb, err
+	return o.handleEventBook(ctx, in)
 }

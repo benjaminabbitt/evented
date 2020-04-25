@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
+	"github.com/benjaminabbitt/evented/applications/integrationTest/eventSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/sagaCoordinator"
@@ -18,7 +19,7 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	config := Configuration{}
+	config := configuration.Configuration{}
 	config.Initialize(log)
 
 	log.Info("Starting...")

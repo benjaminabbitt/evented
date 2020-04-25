@@ -1,4 +1,4 @@
-package saga
+package configuration
 
 import (
 	"github.com/benjaminabbitt/evented/support"

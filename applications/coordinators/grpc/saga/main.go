@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
@@ -20,7 +21,7 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	config := saga.Configuration{}
+	config := configuration.Configuration{}
 	config.Initialize(log)
 
 	target := config.TargetURL()

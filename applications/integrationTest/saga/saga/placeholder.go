@@ -6,7 +6,6 @@ import (
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -25,9 +24,8 @@ type PlaceholderSagaLogic struct {
 	log         *zap.SugaredLogger
 }
 
-func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*empty.Empty, error) {
-	_, err := o.HandleSync(ctx, in)
-	return &empty.Empty{}, err
+func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {
+	return o.HandleSync(ctx, in)
 }
 
 func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {

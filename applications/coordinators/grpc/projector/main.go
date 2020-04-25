@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
 	projector2 "github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	"github.com/benjaminabbitt/evented/repository/processed"
@@ -28,7 +29,7 @@ func main() {
 		log.Error(err)
 	}
 
-	config := projector2.Configuration{}
+	config := configuration.Configuration{}
 	config.Initialize(log)
 
 	target := config.TargetURL()
