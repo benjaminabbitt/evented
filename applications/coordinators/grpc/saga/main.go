@@ -4,6 +4,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_query "github.com/benjaminabbitt/evented/proto/query"
 	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
@@ -22,7 +23,7 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize(log)
+	config.Initialize("grpcSagaCoordinator", log)
 
 	target := config.TargetURL()
 	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
@@ -34,10 +35,11 @@ func main() {
 	otherCommandHandler := evented_core.NewCommandHandlerClient(otherCommandConn)
 
 	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
-
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
+	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 	domain := config.Domain()
 
-	server := saga.NewSagaCoordinator(sagaClient, otherCommandHandler, p, domain, log)
+	server := saga.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandler, p, domain, log)
 
 	port := config.Port()
 	log.Infow("Starting Saga Proxy Server...", "port", port)

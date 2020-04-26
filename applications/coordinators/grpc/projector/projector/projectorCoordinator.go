@@ -1,7 +1,6 @@
 package projector
 
 import (
-	"fmt"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
@@ -12,17 +11,13 @@ import (
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func NewProjectorCoordinator(client evented_projector.ProjectorClient, eventQueryClient evented_query.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
 	return ProjectorCoordinator{
-		processed:       processedClient,
-		log:             log,
-		projectorClient: client,
-		domain:          domain,
-		Coordinator: universal.Coordinator{
+		log: log,
+		Coordinator: universal.ProjectorCoordinator{
+			ProjectorClient:  client,
 			Processed:        processedClient,
 			EventQueryClient: eventQueryClient,
 			Log:              log,
@@ -32,29 +27,12 @@ func NewProjectorCoordinator(client evented_projector.ProjectorClient, eventQuer
 
 type ProjectorCoordinator struct {
 	evented_projector_coordinator.UnimplementedProjectorCoordinatorServer
-	universal.Coordinator
-	domain           string //Domain of the Source
-	log              *zap.SugaredLogger
-	projectorClient  evented_projector.ProjectorClient
-	eventQueryClient evented_query.EventQueryClient
-	processed        *processed.Processed
+	Coordinator universal.ProjectorCoordinator
+	log         *zap.SugaredLogger
 }
 
 func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
-	if eb.Cover.Domain != o.domain {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book domain %s does not match saga configured domain %s", eb.Cover.Domain, o.domain))
-	}
-	o.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
-		_, err := o.projectorClient.Handle(ctx, eb)
-		return err
-	})
-
-	reb, err := o.projectorClient.HandleSync(ctx, eb)
-	if err != nil {
-		o.log.Error(err)
-	}
-	o.MarkProcessed(ctx, eb)
-	return reb, err
+	return o.Coordinator.HandleSync(ctx, eb)
 }
 
 func (o *ProjectorCoordinator) Listen(port uint) {

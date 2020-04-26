@@ -28,3 +28,7 @@ func (o *Configuration) Name() string {
 func (o *Configuration) Port() uint {
 	return viper.GetUint("port")
 }
+
+func (o *Configuration) QueryHandlerURL() string {
+	return viper.GetString("queryHandler.url")
+}

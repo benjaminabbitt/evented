@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
-	projector2 "github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
+	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
+	evented_query "github.com/benjaminabbitt/evented/proto/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
-	flag "github.com/spf13/pflag"
+	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"google.golang.org/grpc"
 )
 
@@ -20,17 +21,8 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
-	var name *string = flag.String("appName", "", "The name of the application.  This is used in a number of places, from configuration file name, to queue names.")
-	var configPath *string = flag.String("configPath", ".", "The configuration path of the application.  Full config will be located at $configpath/$appName.yaml")
-	flag.Parse()
-
-	err := support.SetupConfig(name, configPath, flag.CommandLine)
-	if err != nil {
-		log.Error(err)
-	}
-
 	config := configuration.Configuration{}
-	config.Initialize(log)
+	config.Initialize("grpcProjectorCoordinator", log)
 
 	target := config.TargetURL()
 	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
@@ -38,13 +30,16 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
-	client := evented_projector.NewProjectorClient(conn)
+	projectorClient := evented_projector.NewProjectorClient(conn)
 
-	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
+	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 
 	domain := config.Name()
 
-	server := projector2.NewProjectorCoordinator(client, p, domain, log)
+	server := projector.NewProjectorCoordinator(projectorClient, eventQueryClient, processedClient, domain, log)
 
 	port := config.Port()
 	log.Infow("Starting Projector Proxy Server...", "port", port)

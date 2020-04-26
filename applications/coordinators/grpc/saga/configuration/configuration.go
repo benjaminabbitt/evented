@@ -32,3 +32,6 @@ func (o *Configuration) Port() uint {
 func (o *Configuration) Domain() string {
 	return viper.GetString("domain")
 }
+func (o *Configuration) QueryHandlerURL() string {
+	return viper.GetString("queryHandler.url")
+}

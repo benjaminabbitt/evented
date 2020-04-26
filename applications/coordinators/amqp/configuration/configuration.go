@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"github.com/benjaminabbitt/evented/support"
@@ -11,6 +11,10 @@ type Configuration struct {
 
 func (o *Configuration) CommandHandlerURL() string {
 	return viper.GetString("commandHandler.url")
+}
+
+func (o *Configuration) QueryHandlerURL() string {
+	return viper.GetString("queryHandler.url")
 }
 
 func (o *Configuration) AMQPURL() string {
@@ -27,4 +31,15 @@ func (o *Configuration) AMQPQueue() string {
 
 func (o *Configuration) BusinessURL() string {
 	return viper.GetString("saga.url")
+}
+
+func (o *Configuration) DatabaseURL() string {
+	return viper.GetString("database.url")
+}
+
+func (o *Configuration) DatabaseName() string {
+	return viper.GetString("database.name")
+}
+func (o *Configuration) Domain() string {
+	return viper.GetString("domain")
 }
