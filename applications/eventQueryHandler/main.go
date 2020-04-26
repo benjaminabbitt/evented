@@ -11,7 +11,7 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize(log)
+	config.Initialize("eventQueryHandlerTest", log)
 
 	mongoUrl := config.DatabaseURL()
 	databaseName := config.DatabaseName()
@@ -25,5 +25,8 @@ func main() {
 
 	port := config.Port()
 	log.Infow("Starting Business Server...", "port", port)
-	server.Listen(port)
+	err = server.Listen(port)
+	if err != nil {
+		log.Error(err)
+	}
 }

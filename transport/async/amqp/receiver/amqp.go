@@ -77,7 +77,10 @@ func (o *AMQPReceiver) connectWithBackoff() error {
 }
 
 func (o *AMQPReceiver) Connect() error {
-	o.connectWithBackoff()
+	err := o.connectWithBackoff()
+	if err != nil {
+		o.Log.Error(err)
+	}
 
 	ch, err := o.conn.Channel()
 	if err != nil {

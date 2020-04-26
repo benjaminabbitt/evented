@@ -12,18 +12,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewProjectorCoordinator(projectorClient evented_projector.ProjectorClient, eventQueryClient evented_query.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
-	return ProjectorCoordinator{
-		ProjectorClient: projectorClient,
-		Domain:          domain,
-		Coordinator: Coordinator{
-			Processed:        processedClient,
-			EventQueryClient: eventQueryClient,
-			Log:              log,
-		},
-	}
-}
-
 type ProjectorCoordinator struct {
 	Coordinator
 	Domain           string //Domain of the Source
@@ -35,7 +23,7 @@ type ProjectorCoordinator struct {
 
 func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match configured Domain %s", eb.Cover.Domain, o.Domain))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match saga configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
 	o.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
 		_, err := o.ProjectorClient.Handle(ctx, eb)

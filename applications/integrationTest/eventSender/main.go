@@ -20,7 +20,7 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize(log)
+	config.Initialize("EventSender", log)
 
 	log.Info("Starting...")
 	target := config.EventHandlerURL()

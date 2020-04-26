@@ -36,13 +36,13 @@ func (o *DockerAssistedIntegrationTest) getPorts() (ports []types.Port, err erro
 		panic(err)
 	}
 
-	for _, container := range containers {
-		if container.ID == o.Id {
-			ports = container.Ports
+	for _, cont := range containers {
+		if cont.ID == o.Id {
+			ports = cont.Ports
 			return ports, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("No running container found with id %s", o.Id))
+	return nil, errors.New(fmt.Sprintf("No running cont found with id %s", o.Id))
 }
 
 func (o *DockerAssistedIntegrationTest) CreateNewContainer(image string, internalPorts []uint16) error {

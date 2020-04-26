@@ -15,3 +15,7 @@ func (o *Configuration) Port() uint {
 func (o *Configuration) Domain() string {
 	return viper.GetString("domain")
 }
+
+func (o *Configuration) EventHandlerURL() string {
+	return viper.GetString("eventHandlerURL")
+}

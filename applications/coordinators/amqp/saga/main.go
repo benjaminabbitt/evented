@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/configuration"
+	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
+	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -29,16 +29,19 @@ func main() {
 
 	ctx := context.Background()
 
-	projectorClient := makeProjectorClient(config)
+	sagaClient := makeSagaClient(config)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
 	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 
-	processed := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.CommandHandlerURL(), log)
+	otherCommandHandlerClient := evented_core.NewCommandHandlerClient(ochConn)
+
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 
-	sagaCoordinator := universal.NewProjectorCoordinator(projectorClient, eventQueryClient, processed, config.Domain(), log)
+	sagaCoordinator := universal.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandlerClient, processedClient, config.Domain(), log)
 
 	go func() {
 		for {
@@ -73,22 +76,14 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 	return outChan, receiverInstance
 }
 
-func makeProjectorClient(config configuration.Configuration) evented_projector.ProjectorClient {
+func makeSagaClient(config configuration.Configuration) evented_saga.SagaClient {
 	log.Info("Starting...")
-	target := config.ProjectorURL()
+	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	eventHandler := evented_projector.NewProjectorClient(conn)
+	eventHandler := evented_saga.NewSagaClient(conn)
 	log.Info("Client Created...")
 	return eventHandler
 }
 
-func makeCommandHandlerClient(target string) *evented_core.CommandHandlerClient {
-	log.Infow("Attempting to connect to Command Handler at", "address", target)
-	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
-	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	commandHandler := evented_core.NewCommandHandlerClient(conn)
-	log.Info("Client Created...")
-	return &commandHandler
-}

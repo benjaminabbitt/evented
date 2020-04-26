@@ -30,7 +30,7 @@ func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: fmt.Sprintf("application/protobuf;proto=%T", *evts),
+			ContentType: fmt.Sprintf("application/protobuf;proto=%T", evts),
 			Body:        []byte(body),
 		})
 	return nil
@@ -79,7 +79,10 @@ func (o *AMQPSender) connectWithBackoff() error {
 }
 
 func (o *AMQPSender) Connect() error {
-	o.connectWithBackoff()
+	err := o.connectWithBackoff()
+	if err != nil {
+		o.log.Error(err)
+	}
 	o.log.Info("Connected to AMQP Broker")
 	ch, err := o.conn.Channel()
 	if err != nil {

@@ -29,6 +29,9 @@ func (o *Configuration) AMQPQueue() string {
 	return viper.GetString("transport.queue")
 }
 
+func (o *Configuration) BusinessURL() string {
+	return viper.GetString("saga.url")
+}
 
 func (o *Configuration) DatabaseURL() string {
 	return viper.GetString("database.url")

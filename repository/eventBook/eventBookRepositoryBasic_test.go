@@ -15,7 +15,7 @@ type EventBookRepositorySuite struct {
 	domain string
 	id     string
 	repos  RepositoryBasic
-	book   evented_core.EventBook
+	book   *evented_core.EventBook
 }
 
 func (s *EventBookRepositorySuite) SetupTest() {
@@ -42,7 +42,7 @@ func (s *EventBookRepositorySuite) SetupTest() {
 		State:    nil,
 	}
 
-	s.book = evented_core.EventBook{
+	s.book = &evented_core.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: snapshot,
