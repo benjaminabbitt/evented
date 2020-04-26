@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/configuration"
+	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
@@ -34,11 +33,11 @@ func main() {
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
 	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 
-	processed := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 
-	sagaCoordinator := universal.NewProjectorCoordinator(projectorClient, eventQueryClient, processed, config.Domain(), log)
+	sagaCoordinator := universal.NewProjectorCoordinator(projectorClient, eventQueryClient, processedClient, config.Domain(), log)
 
 	go func() {
 		for {
@@ -76,7 +75,7 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 func makeProjectorClient(config configuration.Configuration) evented_projector.ProjectorClient {
 	log.Info("Starting...")
 	target := config.ProjectorURL()
-	log.Infow("Attempting to connect to business at", "address", target)
+	log.Infow("Attempting to connect to Projector at", "address", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
 	eventHandler := evented_projector.NewProjectorClient(conn)
@@ -84,11 +83,3 @@ func makeProjectorClient(config configuration.Configuration) evented_projector.P
 	return eventHandler
 }
 
-func makeCommandHandlerClient(target string) *evented_core.CommandHandlerClient {
-	log.Infow("Attempting to connect to Command Handler at", "address", target)
-	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
-	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	commandHandler := evented_core.NewCommandHandlerClient(conn)
-	log.Info("Client Created...")
-	return &commandHandler
-}

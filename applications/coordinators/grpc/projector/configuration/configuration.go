@@ -32,3 +32,7 @@ func (o *Configuration) Port() uint {
 func (o *Configuration) QueryHandlerURL() string {
 	return viper.GetString("queryHandler.url")
 }
+
+func (o *Configuration) ProjectorURL() string {
+	return viper.GetString("projector.url")
+}
