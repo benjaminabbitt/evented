@@ -85,6 +85,7 @@ func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	result = &evented_core.SynchronousProcessingResponse{}
 	result.Books = []*evented_core.EventBook{eb}
+
 	err = o.eventBookRepository.Put(ctx, eb)
 	if err != nil {
 		return result, err
@@ -92,13 +93,13 @@ func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook)
 
 	sync, _ := o.extractSynchronous(eb)
 
-	projections, err := o.sendSyncProjections(ctx, sync)
+	syncResult, err := o.executeSyncProjections(ctx, sync)
 	if err != nil {
 		return result, err
 	}
-	result.Projections = projections
+	result.Projections = append(result.Projections, syncResult...)
 
-	otherDomainEventBooks, otherProjections, err := o.sendSyncSagas(ctx, sync)
+	otherDomainEventBooks, otherProjections, err := o.executeSyncSagas(ctx, sync)
 	if err != nil {
 		return result, err
 	}
@@ -112,7 +113,7 @@ func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook)
 	return result, nil
 }
 
-func (o Server) sendSyncSagas(ctx context.Context, sync *evented_core.EventBook) (eventBooks []*evented_core.EventBook, projections []*evented_core.Projection, err error) {
+func (o Server) executeSyncSagas(ctx context.Context, sync *evented_core.EventBook) (eventBooks []*evented_core.EventBook, projections []*evented_core.Projection, err error) {
 	for _, syncSaga := range o.transports.GetSaga() {
 		response, err := syncSaga.HandleSync(ctx, sync)
 		if err != nil {
@@ -125,16 +126,17 @@ func (o Server) sendSyncSagas(ctx context.Context, sync *evented_core.EventBook)
 	return eventBooks, projections, nil
 }
 
-func (o Server) sendSyncProjections(ctx context.Context, sync *evented_core.EventBook) (projections []*evented_core.Projection, err error) {
+func (o Server) executeSyncProjections(ctx context.Context, sync *evented_core.EventBook) (result []*evented_core.Projection, err error) {
+	result = []*evented_core.Projection{}
 	for _, syncProjector := range o.transports.GetProjections() {
 		response, err := syncProjector.HandleSync(ctx, sync)
 		if err != nil {
 			o.log.Error(err)
 			return nil, err
 		}
-		projections = append(projections, response)
+		result = append(result, response)
 	}
-	return projections, nil
+	return result, nil
 }
 
 func (o Server) extractSynchronous(originalBook *evented_core.EventBook) (synchronous *evented_core.EventBook, async *evented_core.EventBook) {

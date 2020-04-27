@@ -13,12 +13,12 @@ func (o *Configuration) OtherCommandHandlerURL() string {
 	return viper.GetString("otherCommandHandler.url")
 }
 
-func (o *Configuration) DatabaseURL() string {
-	return viper.GetString("database.url")
+func (o *Configuration) SagaURL() string {
+	return viper.GetString("saga.url")
 }
 
-func (o *Configuration) SagaURL() string {
-	return viper.GetString("target.url")
+func (o *Configuration) DatabaseURL() string {
+	return viper.GetString("database.url")
 }
 
 func (o *Configuration) DatabaseName() string {

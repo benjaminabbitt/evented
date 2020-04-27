@@ -55,7 +55,7 @@ func (s ServerSuite) Test_Handle() {
 	businessClient.On("Handle", mock2.Anything, contextualCommand).Return(s.produceBusinessResponse(commandBook), nil)
 	eventBookRepo.On("Put", mock2.Anything, s.produceBusinessResponse(commandBook)).Return(nil)
 
-	holder.On("GetProjections").Return([]projector.SyncProjectionTransporter{})
+	holder.On("GetProjections").Return([]projector.SyncProjectorTransporter{})
 	holder.On("GetSaga").Return([]saga.SyncSagaTransporter{})
 	holder.On("GetTransports").Return([]async.EventTransporter{})
 	server.Handle(context.Background(), commandBook)
@@ -112,7 +112,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 
 	mockProjector := new(projector.MockProjectorClient)
 	mockProjector.On("HandleSync", mock2.Anything, syncEventBook).Return(projection, nil)
-	holder.On("GetProjections").Return([]projector.SyncProjectionTransporter{mockProjector})
+	holder.On("GetProjections").Return([]projector.SyncProjectorTransporter{mockProjector})
 
 	sagaResult := &eventedcore.EventBook{
 		Cover:    nil,

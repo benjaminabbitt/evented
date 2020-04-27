@@ -15,10 +15,6 @@ func (o GrpcProjector) HandleSync(ctx context.Context, evts *evented_core.EventB
 	return o.client.HandleSync(ctx, evts)
 }
 
-//func (o GrpcProjector) Handle(ctx context.Context, evts *evented_core.EventBook) (empty *empty.Empty, err error) {
-//	return o.client.Handle(ctx, evts)
-//}
-
 func NewGRPCProjector(conn *grpc.ClientConn) GrpcProjector {
 	client := evented_projector_coordinator.NewProjectorCoordinatorClient(conn)
 	return GrpcProjector{

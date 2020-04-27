@@ -15,10 +15,10 @@ import (
 type ProjectorCoordinator struct {
 	Coordinator      *Coordinator
 	Domain           string //Domain of the Source
-	Log              *zap.SugaredLogger
 	ProjectorClient  evented_projector.ProjectorClient
 	EventQueryClient evented_query.EventQueryClient
 	Processed        *processed.Processed
+	Log              *zap.SugaredLogger
 }
 
 func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {

@@ -11,7 +11,7 @@ import (
 type BasicHolder struct {
 	Log         *zap.SugaredLogger
 	transports  []chan *evented_core.EventBook
-	projections []projector.SyncProjectionTransporter
+	projections []projector.SyncProjectorTransporter
 	sagas       []saga.SyncSagaTransporter
 }
 
@@ -24,8 +24,8 @@ func (th *BasicHolder) Add(i interface{}) {
 	}
 
 	switch i.(type) {
-	case projector.SyncProjectionTransporter:
-		th.projections = append(th.projections, i.(projector.SyncProjectionTransporter))
+	case projector.SyncProjectorTransporter:
+		th.projections = append(th.projections, i.(projector.SyncProjectorTransporter))
 	case saga.SyncSagaTransporter:
 		th.sagas = append(th.sagas, i.(saga.SyncSagaTransporter))
 	default:
@@ -37,7 +37,7 @@ func (th *BasicHolder) GetTransports() []chan *evented_core.EventBook {
 	return th.transports
 }
 
-func (th *BasicHolder) GetProjections() []projector.SyncProjectionTransporter {
+func (th *BasicHolder) GetProjections() []projector.SyncProjectorTransporter {
 	return th.projections
 }
 

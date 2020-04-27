@@ -14,15 +14,26 @@ import (
 )
 
 func NewSagaCoordinator(sagaClient evented_saga.SagaClient, eventQueryClient evented_query.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
+	universalCoordinator := &universal.Coordinator{
+		Processed:        processedClient,
+		EventQueryClient: eventQueryClient,
+		Log:              log,
+	}
+	universalSagaCoordinator := &universal.SagaCoordinator{
+		Coordinator:         universalCoordinator,
+		Domain:              domain,
+		SagaClient:          sagaClient,
+		OtherCommandHandler: otherCommandHandlerClient,
+	}
 	return SagaCoordinator{
-		coordinator: universal.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandlerClient, processedClient, domain, log),
+		coordinator: universalSagaCoordinator,
 		Log:         log,
 	}
 }
 
 type SagaCoordinator struct {
 	evented_saga_coordinator.UnimplementedSagaCoordinatorServer
-	coordinator universal.SagaCoordinator
+	coordinator *universal.SagaCoordinator
 	Log         *zap.SugaredLogger
 }
 

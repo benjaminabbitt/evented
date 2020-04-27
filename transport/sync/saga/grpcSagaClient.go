@@ -11,7 +11,7 @@ type GRPCSagaClient struct {
 	client evented_saga_coordinator.SagaCoordinatorClient
 }
 
-func (o GRPCSagaClient) SendSync(ctx context.Context, evts *evented_core.EventBook) (responses *evented_core.SynchronousProcessingResponse, err error) {
+func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *evented_core.EventBook) (responses *evented_core.SynchronousProcessingResponse, err error) {
 	return o.client.HandleSync(ctx, evts)
 }
 

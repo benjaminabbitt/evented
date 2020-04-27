@@ -20,9 +20,9 @@ func (o MockHolder) GetTransports() []async.EventTransporter {
 	return args.Get(0).([]async.EventTransporter)
 }
 
-func (o MockHolder) GetProjections() []projector.SyncProjectionTransporter {
+func (o MockHolder) GetProjections() []projector.SyncProjectorTransporter {
 	args := o.Called()
-	return args.Get(0).([]projector.SyncProjectionTransporter)
+	return args.Get(0).([]projector.SyncProjectorTransporter)
 }
 
 func (o MockHolder) GetSaga() []saga.SyncSagaTransporter {
