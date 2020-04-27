@@ -48,6 +48,7 @@ func (o *AMQPReceiver) ListenForever() {
 }
 
 func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, ack func() error, nack func() error) {
+	book = &evented_core.EventBook{}
 	o.Log.Info(delivery.ContentType)
 	err := proto.Unmarshal(delivery.Body, book)
 	if err != nil {

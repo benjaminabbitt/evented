@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/configuration"
+	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	evented_query "github.com/benjaminabbitt/evented/proto/query"
@@ -41,13 +41,23 @@ func main() {
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 
-	sagaCoordinator := universal.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandlerClient, processedClient, config.Domain(), log)
+	sagaCoordinator := universal.SagaCoordinator{
+		Coordinator: &universal.Coordinator{
+			Processed:        processedClient,
+			EventQueryClient: eventQueryClient,
+			Log:              log,
+		},
+		Domain:              config.Domain(),
+		SagaClient:          sagaClient,
+		OtherCommandHandler: otherCommandHandlerClient,
+		Log:                 log,
+	}
 
 	go func() {
 		for {
 			msg := <-decodedMessageChan
 			err := sagaCoordinator.Handle(ctx, msg.Book)
-			if err != nil {
+			if err == nil {
 				err := msg.Ack()
 				if err != nil {
 					log.Error(err)
@@ -72,6 +82,10 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 		Log:               log,
 		OutputChannel:     outChan,
 	}
+	err := receiverInstance.Connect()
+	if err != nil {
+		log.Error(err)
+	}
 	log.Infow("Created RabbitMQ Receiver", "url", receiverInstance.SourceURL, "queue", receiverInstance.SourceQueueName)
 	return outChan, receiverInstance
 }
@@ -86,4 +100,3 @@ func makeSagaClient(config configuration.Configuration) evented_saga.SagaClient 
 	log.Info("Client Created...")
 	return eventHandler
 }
-
