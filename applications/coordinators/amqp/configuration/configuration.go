@@ -9,8 +9,8 @@ type Configuration struct {
 	support.ConfigInit
 }
 
-func (o *Configuration) CommandHandlerURL() string {
-	return viper.GetString("commandHandler.url")
+func (o *Configuration) OtherCommandHandlerURL() string {
+	return viper.GetString("otherCommandHandler.url")
 }
 
 func (o *Configuration) QueryHandlerURL() string {

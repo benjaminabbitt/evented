@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/benjaminabbitt/evented/applications/eventQueryHandler/configuration"
+	"github.com/benjaminabbitt/evented/applications/eventQueryHandler/eventQueryServer"
 	"github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/support"
 )
@@ -21,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
-	server := NewEventQueryServer(config.EventBookTargetSize(), repo, log)
+	server := eventQueryServer.NewEventQueryServer(config.EventBookTargetSize(), repo, log)
 
 	port := config.Port()
 	log.Infow("Starting Business Server...", "port", port)

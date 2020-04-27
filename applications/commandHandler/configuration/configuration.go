@@ -31,11 +31,7 @@ func (o *Configuration) SagaURLs() (urls []string) {
 }
 
 func (o *Configuration) ProjectorURLs() (urls []string) {
-	projectorConfig := viper.GetStringSlice("sync.projectors")
-	for _, url := range projectorConfig {
-		urls = append(urls, url)
-	}
-	return urls
+	return viper.GetStringSlice("sync.projectors")
 }
 
 func (o *Configuration) SnapshotStoreType() string {

@@ -8,7 +8,6 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
-	"google.golang.org/grpc"
 )
 
 /*
@@ -24,12 +23,9 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("grpcProjectorCoordinator", log)
 
-	target := config.TargetURL()
-	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
-	log.Infof("Connected to remote %s", target)
-	if err != nil {
-		log.Error(err)
-	}
+	target := config.ProjectorURL()
+	log.Infow("Attempting to connect to Projector", "url", target)
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
 	projectorClient := evented_projector.NewProjectorClient(conn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
@@ -37,7 +33,7 @@ func main() {
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
 	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 
-	domain := config.Name()
+	domain := config.Domain()
 
 	server := projector.NewProjectorCoordinator(projectorClient, eventQueryClient, processedClient, domain, log)
 

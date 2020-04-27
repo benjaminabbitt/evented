@@ -22,11 +22,12 @@ func (o *Coordinator) RepairSequencing(ctx context.Context, eb *evented_core.Eve
 	if err != nil {
 		o.Log.Error(err)
 	}
-	if last < seq {
+	nextEventSeq := last + 1
+	if nextEventSeq < seq {
 		evtStream, err := o.EventQueryClient.GetEvents(ctx, &evented_query.Query{
 			Domain:     eb.Cover.Domain,
 			Root:       eb.Cover.Root,
-			LowerBound: seq,
+			LowerBound: last,
 		})
 		if err != nil {
 			o.Log.Error(err)

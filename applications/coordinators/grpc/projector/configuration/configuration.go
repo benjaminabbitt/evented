@@ -13,12 +13,12 @@ func (o *Configuration) DatabaseURL() string {
 	return viper.GetString("database.url")
 }
 
-func (o *Configuration) TargetURL() string {
-	return viper.GetString("target.url")
-}
-
 func (o *Configuration) DatabaseName() string {
 	return viper.GetString("database.name")
+}
+
+func (o *Configuration) ProjectorURL() string {
+	return viper.GetString("projector.url")
 }
 
 func (o *Configuration) Name() string {
@@ -31,4 +31,8 @@ func (o *Configuration) Port() uint {
 
 func (o *Configuration) QueryHandlerURL() string {
 	return viper.GetString("queryHandler.url")
+}
+
+func (o *Configuration) Domain() string {
+	return viper.GetString("domain")
 }

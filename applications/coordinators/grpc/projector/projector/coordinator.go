@@ -14,20 +14,28 @@ import (
 )
 
 func NewProjectorCoordinator(client evented_projector.ProjectorClient, eventQueryClient evented_query.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
+	universalCoordinator := &universal.Coordinator{
+		Processed:        processedClient,
+		EventQueryClient: eventQueryClient,
+		Log:              log,
+	}
+	universalProjectCoordinator := &universal.ProjectorCoordinator{
+		Coordinator:      universalCoordinator,
+		Domain:           domain,
+		ProjectorClient:  client,
+		Processed:        processedClient,
+		EventQueryClient: eventQueryClient,
+		Log:              log,
+	}
 	return ProjectorCoordinator{
-		log: log,
-		Coordinator: universal.ProjectorCoordinator{
-			ProjectorClient:  client,
-			Processed:        processedClient,
-			EventQueryClient: eventQueryClient,
-			Log:              log,
-		},
+		log:         log,
+		Coordinator: universalProjectCoordinator,
 	}
 }
 
 type ProjectorCoordinator struct {
 	evented_projector_coordinator.UnimplementedProjectorCoordinatorServer
-	Coordinator universal.ProjectorCoordinator
+	Coordinator *universal.ProjectorCoordinator
 	log         *zap.SugaredLogger
 }
 

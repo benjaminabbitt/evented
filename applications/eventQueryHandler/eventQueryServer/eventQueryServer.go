@@ -1,4 +1,4 @@
-package main
+package eventQueryServer
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"

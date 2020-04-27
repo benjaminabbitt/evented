@@ -84,6 +84,7 @@ func (o Server) Handle(ctx context.Context, in *evented_core.CommandBook) (resul
 
 func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook) (result *evented_core.SynchronousProcessingResponse, err error) {
 	result = &evented_core.SynchronousProcessingResponse{}
+	result.Books = []*evented_core.EventBook{eb}
 	err = o.eventBookRepository.Put(ctx, eb)
 	if err != nil {
 		return result, err
@@ -101,7 +102,7 @@ func (o Server) handleEventBook(ctx context.Context, eb *evented_core.EventBook)
 	if err != nil {
 		return result, err
 	}
-	result.Books = otherDomainEventBooks
+	result.Books = append(result.Books, otherDomainEventBooks...)
 	result.Projections = append(result.Projections, otherProjections...)
 
 	for _, t := range o.transports.GetTransports() {

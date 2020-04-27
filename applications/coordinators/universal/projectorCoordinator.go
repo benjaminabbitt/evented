@@ -13,7 +13,7 @@ import (
 )
 
 type ProjectorCoordinator struct {
-	Coordinator
+	Coordinator      *Coordinator
 	Domain           string //Domain of the Source
 	Log              *zap.SugaredLogger
 	ProjectorClient  evented_projector.ProjectorClient
@@ -23,9 +23,9 @@ type ProjectorCoordinator struct {
 
 func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match saga configured Domain %s", eb.Cover.Domain, o.Domain))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match projector configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
-	o.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
+	o.Coordinator.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
 		_, err := o.ProjectorClient.Handle(ctx, eb)
 		return err
 	})
@@ -34,7 +34,7 @@ func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.E
 	if err != nil {
 		o.Log.Error(err)
 	}
-	o.MarkProcessed(ctx, eb)
+	o.Coordinator.MarkProcessed(ctx, eb)
 	return reb, err
 }
 

@@ -10,14 +10,14 @@ type Configuration struct {
 }
 
 func (o *Configuration) OtherCommandHandlerURL() string {
-	return viper.GetString("otherCommandHandlerURL")
+	return viper.GetString("otherCommandHandler.url")
 }
 
 func (o *Configuration) DatabaseURL() string {
 	return viper.GetString("database.url")
 }
 
-func (o *Configuration) TargetURL() string {
+func (o *Configuration) SagaURL() string {
 	return viper.GetString("target.url")
 }
 

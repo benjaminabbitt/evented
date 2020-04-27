@@ -34,7 +34,7 @@ func main() {
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
 	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
 
-	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.CommandHandlerURL(), log)
+	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlerURL(), log)
 	otherCommandHandlerClient := evented_core.NewCommandHandlerClient(ochConn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)

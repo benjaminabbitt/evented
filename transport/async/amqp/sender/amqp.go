@@ -7,8 +7,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
-	"math"
-	"math/rand"
 	"time"
 )
 
@@ -57,25 +55,16 @@ func NewAMQPSender(ch chan *evented_core.EventBook, url string, exchangeName str
 	return client
 }
 
-///TODO: extrapolate to something more generic
 func (o *AMQPSender) connectWithBackoff() error {
 	var conn *amqp.Connection
-	var err error
-	var count uint8
-	var max int = 1000
-	var min int = 0
-	for {
-		conn, err = amqp.Dial(o.url)
-		if err == nil {
-			break
-		}
-		randOffset := time.Duration(rand.Intn(max-min)+min) * time.Millisecond
-		primaryTime := time.Duration(int(math.Pow(2, float64(count)))*1000) * time.Millisecond
-		time.Sleep(primaryTime + randOffset)
-		count++
-	}
+	// This is sufficiently ugly I may replace it at some point soon, just for readability
+	conn, err := func(conn interface{}, err error) (*amqp.Connection, error) {
+		return conn.(*amqp.Connection), err
+	}(support.WithExpBackoff(func() (interface{}, error) {
+		return amqp.Dial(o.url)
+	}, 3*time.Second))
 	o.conn = conn
-	return nil
+	return err
 }
 
 func (o *AMQPSender) Connect() error {

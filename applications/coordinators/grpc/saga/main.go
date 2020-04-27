@@ -25,9 +25,9 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("grpcSagaCoordinator", log)
 
-	target := config.TargetURL()
-	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
-	log.Infof("Connected to remote %s", target)
+	sagaURL := config.SagaURL()
+	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log)
+	log.Infof("Connected to remote %s", sagaURL)
 	sagaClient := evented_saga.NewSagaClient(sagaConn)
 
 	ochUrl := config.OtherCommandHandlerURL()

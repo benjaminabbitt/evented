@@ -61,7 +61,7 @@ func main() {
 
 	server := framework.NewServer(
 		repo,
-		*handlers,
+		handlers,
 		businessClient,
 		log,
 	)
@@ -75,6 +75,10 @@ func setupSnapshotRepo(config configuration.Configuration) (repo snapshots.Snaps
 func setupServiceBus(config configuration.Configuration) (ch chan *evented_core.EventBook) {
 	ch = make(chan *evented_core.EventBook)
 	trans := sender.NewAMQPSender(ch, config.TransportURL(), config.TransportExchange(), log)
+	err := trans.Connect()
+	if err != nil {
+		log.Error(err)
+	}
 	trans.Run()
 	return ch
 }

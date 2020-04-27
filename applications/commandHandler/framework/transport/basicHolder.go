@@ -15,7 +15,7 @@ type BasicHolder struct {
 	sagas       []saga.SyncSagaTransporter
 }
 
-func (th BasicHolder) Add(i interface{}) {
+func (th *BasicHolder) Add(i interface{}) {
 	switch i.(type) {
 	case chan *evented_core.EventBook:
 		th.transports = append(th.transports, i.(chan *evented_core.EventBook))
@@ -33,15 +33,15 @@ func (th BasicHolder) Add(i interface{}) {
 	}
 }
 
-func (th BasicHolder) GetTransports() []chan *evented_core.EventBook {
+func (th *BasicHolder) GetTransports() []chan *evented_core.EventBook {
 	return th.transports
 }
 
-func (th BasicHolder) GetProjections() []projector.SyncProjectionTransporter {
+func (th *BasicHolder) GetProjections() []projector.SyncProjectionTransporter {
 	return th.projections
 }
 
-func (th BasicHolder) GetSaga() []saga.SyncSagaTransporter {
+func (th *BasicHolder) GetSaga() []saga.SyncSagaTransporter {
 	return th.sagas
 }
 

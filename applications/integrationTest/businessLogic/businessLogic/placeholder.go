@@ -32,7 +32,7 @@ func (o *PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *evented
 			Sequence:    &eventedcore.EventPage_Num{Num: commandPage.Sequence},
 			CreatedAt:   ts,
 			Event:       nil,
-			Synchronous: false,
+			Synchronous: true,
 		}
 		eventPages = append(eventPages, eventPage)
 	}
