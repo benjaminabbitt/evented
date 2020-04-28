@@ -8,7 +8,6 @@ import (
 	eventedcore "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/benjaminabbitt/evented/transport/async"
 	"github.com/benjaminabbitt/evented/transport/async/mock"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -57,7 +56,7 @@ func (s ServerSuite) Test_Handle() {
 
 	holder.On("GetProjections").Return([]projector.SyncProjectorTransporter{})
 	holder.On("GetSaga").Return([]saga.SyncSagaTransporter{})
-	holder.On("GetTransports").Return([]async.EventTransporter{})
+	holder.On("GetTransports").Return([]chan *eventedcore.EventBook{})
 	server.Handle(context.Background(), commandBook)
 	holder.AssertExpectations(s.T())
 	businessClient.AssertExpectations(s.T())
@@ -114,10 +113,7 @@ func (s ServerSuite) Test_HandleWithTransports() {
 	mockProjector.On("HandleSync", mock2.Anything, syncEventBook).Return(projection, nil)
 	holder.On("GetProjections").Return([]projector.SyncProjectorTransporter{mockProjector})
 
-	sagaResult := &eventedcore.EventBook{
-		Cover:    nil,
-		Pages:    nil,
-		Snapshot: nil,
+	sagaResult := &eventedcore.SynchronousProcessingResponse{
 	}
 
 	mockSaga := new(saga.MockSagaClient)
@@ -150,12 +146,13 @@ func (s ServerSuite) Test_HandleWithTransports() {
 
 	mockTransport := new(mock.AsyncTransport)
 	mockTransport.On("Handle", mock2.Anything, asyncEventBook).Return(nil)
-	holder.On("GetTransports").Return([]async.EventTransporter{mockTransport})
-
+	ch := make(chan *eventedcore.EventBook, 10)
+	holder.On("GetTransports").Return([]chan *eventedcore.EventBook{ch})
 	server.Handle(context.Background(), commandBook)
+	test := <-ch
+	s.log.Info(test)
 	mockProjector.AssertExpectations(s.T())
 	mockSaga.AssertExpectations(s.T())
-	mockTransport.AssertExpectations(s.T())
 	holder.AssertExpectations(s.T())
 	businessClient.AssertExpectations(s.T())
 	eventBookRepo.AssertExpectations(s.T())

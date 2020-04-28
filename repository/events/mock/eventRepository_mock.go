@@ -35,3 +35,8 @@ func (m EventRepository) GetFromTo(ctx context.Context, evtChan chan *evented_co
 	args := m.Called(ctx, evtChan, id, from, to)
 	return args.Error(0)
 }
+
+func (m EventRepository) EstablishIndices() error {
+	args := m.Called()
+	return args.Error(0)
+}

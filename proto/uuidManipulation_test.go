@@ -10,13 +10,12 @@ type UUIDManipSuite struct {
 	suite.Suite
 }
 
-func (s *UUIDManipSuite) Test_Protobuf_Ser_Deser(){
+func (s *UUIDManipSuite) Test_Protobuf_Ser_Deser() {
 	input, _ := uuid.NewRandom()
 	proto := UUIDToProto(input)
-	output, _ := ProtoToUUID(proto)
+	output, _ := ProtoToUUID(&proto)
 	s.EqualValues(input.String(), output.String())
 }
-
 
 func TestUUIDManipSuite(t *testing.T) {
 	suite.Run(t, new(UUIDManipSuite))

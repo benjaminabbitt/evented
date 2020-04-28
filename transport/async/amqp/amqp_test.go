@@ -1,7 +1,6 @@
 package sender
 
 import (
-	"context"
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
@@ -17,38 +16,46 @@ import (
 
 type AmqpSuite struct {
 	suite.Suite
-	sender       *sender.AMQPSender
-	receiver     *receiver.AMQPReceiver
-	dait         *dockerTestSuite.DockerAssistedIntegrationTest
-	log          *zap.SugaredLogger
-	exchangeName string
-	queueName    string
+	sender        *sender.AMQPSender
+	receiver      *receiver.AMQPReceiver
+	dait          *dockerTestSuite.DockerAssistedIntegrationTest
+	log           *zap.SugaredLogger
+	outputChannel chan receiver.AMQPDecodedMessage
+	exchangeName  string
+	queueName     string
 }
 
 func (o *AmqpSuite) SetupSuite() {
 	o.log = support.Log()
 	o.exchangeName = "testExchange"
 	o.queueName = "testQueue"
+	o.outputChannel = make(chan receiver.AMQPDecodedMessage, 10)
 
 	o.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
-	err := o.dait.CreateNewContainer("rabbitmq:management", []uint16{4369, 5671, 5672, 25672, 15672})
+	err := o.dait.CreateNewContainer("rabbitmq:3.8.3-alpine", []uint16{4369, 5671, 5672, 25672, 15672})
 	if err != nil {
 		o.log.Error(err)
 	}
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	o.sender = sender.NewAMQPSender(url, o.exchangeName, o.log)
-	o.sender.Connect()
+	ch := make(chan *evented_core.EventBook, 10)
+	o.sender = sender.NewAMQPSender(ch, url, o.exchangeName, o.log)
+	err = o.sender.Connect()
+	if err != nil {
+		o.log.Error(err)
+	}
 
 	o.receiver = &receiver.AMQPReceiver{
 		SourceURL:         url,
 		SourceExhangeName: o.exchangeName,
 		SourceQueueName:   o.queueName,
-		DestinationSink:   nil,
 		Log:               o.log,
-		EventHandler:      nil,
+		OutputChannel:     o.outputChannel,
 	}
-	o.receiver.Connect()
+	err = o.receiver.Connect()
+	if err != nil {
+		o.log.Error(err)
+	}
 }
 
 func (o *AmqpSuite) TearDownSuite() {
@@ -65,11 +72,12 @@ func (o AmqpSuite) TestNoExceptionThrown() {
 func (o AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
 	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
+	go o.receiver.Listen()
 	_ = o.sender.Handle(eb)
-	message := o.receiver.GetMessage(context.Background())
-	o.Assert().Equal(eb.Cover.Domain, message.Cover.Domain)
-	o.Assert().Equal(eb.Cover.Root.String(), message.Cover.Root.String())
-	o.Assert().Equal(eb.Pages[0].Sequence, message.Pages[0].Sequence)
+	message := <-o.outputChannel
+	o.Assert().Equal(eb.Cover.Domain, message.Book.Cover.Domain)
+	o.Assert().Equal(eb.Cover.Root.String(), message.Book.Cover.Root.String())
+	o.Assert().Equal(eb.Pages[0].Sequence, message.Book.Pages[0].Sequence)
 
 }
 

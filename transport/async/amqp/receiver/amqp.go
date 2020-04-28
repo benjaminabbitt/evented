@@ -31,20 +31,22 @@ type AMQPReceiver struct {
 func (o *AMQPReceiver) ListenForever() {
 	forever := make(chan bool)
 
-	go func() {
-		for delivery := range o.deliveryChan {
-			eb, ack, nack := o.ExtractMessage(delivery)
-
-			o.OutputChannel <- AMQPDecodedMessage{
-				Book: eb,
-				Ack:  ack,
-				Nack: nack,
-			}
-		}
-	}()
+	go o.Listen()
 
 	o.Log.Info(" [*] Waiting for messages. To exit press CTRL+C")
 	<-forever
+}
+
+func (o *AMQPReceiver) Listen() {
+	for delivery := range o.deliveryChan {
+		eb, ack, nack := o.ExtractMessage(delivery)
+
+		o.OutputChannel <- AMQPDecodedMessage{
+			Book: eb,
+			Ack:  ack,
+			Nack: nack,
+		}
+	}
 }
 
 func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, ack func() error, nack func() error) {
