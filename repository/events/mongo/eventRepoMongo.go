@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/events"
+	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ import (
 
 type EventRepoMongo struct {
 	log            *zap.SugaredLogger
-	client         mongo.Client
+	client         mongosupport.MongoClient
 	Database       string
 	Collection     *mongo.Collection
 	CollectionName string
@@ -307,7 +308,7 @@ func NewEventRepoMongo(uri string, databaseName string, eventCollectionName stri
 	}
 	err = mongoClient.Ping(nil, readpref.Primary())
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
-	client = EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
+	client = EventRepoMongo{client: mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
 	err = client.EstablishIndices()
 	if err != nil {
 		log.Error(err)

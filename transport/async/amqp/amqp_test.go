@@ -62,12 +62,12 @@ func (o *AmqpSuite) TearDownSuite() {
 	o.dait.StopContainer()
 }
 
-func (o AmqpSuite) TestNoExceptionThrown() {
-	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
-	err := o.sender.Handle(eb)
-	o.Assert().Nil(err)
-}
+//func (o AmqpSuite) TestNoExceptionThrown() {
+//	id, _ := uuid.NewRandom()
+//	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
+//	err := o.sender.Handle(eb)
+//	o.Assert().Nil(err)
+//}
 
 func (o AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
