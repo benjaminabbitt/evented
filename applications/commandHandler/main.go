@@ -35,11 +35,7 @@ func main() {
 	eventRepo, _ := setupEventRepo(config, log)
 	ssRepo := setupSnapshotRepo(config)
 
-	repo := eventBook.RepositoryBasic{
-		EventRepo:    eventRepo,
-		SnapshotRepo: ssRepo,
-		Domain:       config.Domain(),
-	}
+	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, config.Domain(), log)
 
 	handlers := transport.NewTransportHolder(log)
 

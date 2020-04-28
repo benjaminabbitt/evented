@@ -10,15 +10,25 @@ import (
 	"go.uber.org/zap"
 )
 
+func MakeRepositoryBasic(eventRepo events.EventStorer, snapshotRepo snapshots.SnapshotStorer, domain string, log *zap.SugaredLogger) *RepositoryBasic {
+	return &RepositoryBasic{
+		log:                   log,
+		EventRepo:             eventRepo,
+		SnapshotRepo:          snapshotRepo,
+		Domain:                domain,
+		EventPageReturnStream: make(chan *eventedcore.EventPage, 10),
+	}
+}
+
 type RepositoryBasic struct {
-	log          *zap.SugaredLogger
-	EventRepo    events.EventStorer
-	SnapshotRepo snapshots.SnapshotStorer
-	Domain       string
+	log                   *zap.SugaredLogger
+	EventRepo             events.EventStorer
+	SnapshotRepo          snapshots.SnapshotStorer
+	Domain                string
+	EventPageReturnStream chan *eventedcore.EventPage
 }
 
 func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedcore.EventBook, err error) {
-	ch := make(chan *eventedcore.EventPage, 10)
 	snapshot, err := o.SnapshotRepo.Get(ctx, id)
 	if err != nil {
 		o.log.Error(err)
@@ -27,13 +37,13 @@ func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *eventedco
 	if snapshot != nil {
 		from = snapshot.Sequence
 	}
-	err = o.EventRepo.GetFrom(ctx, ch, id, from)
+	err = o.EventRepo.GetFrom(ctx, o.EventPageReturnStream, id, from)
 	if err != nil {
 		o.log.Error(err)
 	}
 	var pages []*eventedcore.EventPage
 	for {
-		page, more := <-ch
+		page, more := <-o.EventPageReturnStream
 		if !more {
 			break
 		}
