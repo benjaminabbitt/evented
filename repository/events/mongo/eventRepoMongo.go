@@ -201,8 +201,19 @@ func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented_core.Even
 	if err != nil {
 		return err
 	}
+
+	go m.drainCursor(ctx, evtChan, cur)
+
+	if err := cur.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *evented_core.EventPage, cur *mongo.Cursor) error {
 	defer cur.Close(ctx)
-	evtChan = make(chan *evented_core.EventPage)
+	defer close(evtChan)
 	for cur.Next(ctx) {
 		var elem mongoEvent
 		err := cur.Decode(&elem)
@@ -212,11 +223,6 @@ func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented_core.Even
 		_, page := m.mepToPage(elem)
 		evtChan <- page
 	}
-
-	if err := cur.Err(); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -230,17 +236,7 @@ func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented_core.Ev
 	if err != nil {
 		return err
 	}
-	defer cur.Close(ctx)
-	evtChan = make(chan *evented_core.EventPage)
-	for cur.Next(ctx) {
-		var elem mongoEvent
-		err := cur.Decode(&elem)
-		if err != nil {
-			return err
-		}
-		_, page := m.mepToPage(elem)
-		evtChan <- page
-	}
+	go m.drainCursor(ctx, evtChan, cur)
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
@@ -259,19 +255,8 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented_core.
 	if err != nil {
 		return err
 	}
-	go func() {
-		for cur.Next(ctx) {
-			var elem mongoEvent
-			err := cur.Decode(&elem)
-			if err != nil {
-				m.log.Error(err)
-			}
-			_, page := m.mepToPage(elem)
-			evtChan <- page
-		}
-		close(evtChan)
-		cur.Close(ctx)
-	}()
+
+	go m.drainCursor(ctx, evtChan, cur)
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
@@ -291,26 +276,16 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented_cor
 	if err != nil {
 		return err
 	}
-	evtChan = make(chan *evented_core.EventPage)
-	for cur.Next(ctx) {
-		var elem mongoEvent
-		err := cur.Decode(&elem)
-		if err != nil {
-			return err
-		}
-		_, page := m.mepToPage(elem)
-		evtChan <- page
-	}
+	go m.drainCursor(ctx, evtChan, cur)
 
 	if err := cur.Err(); err != nil {
 		m.log.Fatal(err)
 	}
 
-	cur.Close(ctx)
 	return nil
 }
 
-func (m EventRepoMongo) establishIndices() error {
+func (m EventRepoMongo) EstablishIndices() error {
 	sequenceModel := mongo.IndexModel{
 		Keys: bsonx.Doc{
 			{Key: "root", Value: bsonx.Int32(1)},
@@ -332,6 +307,10 @@ func NewEventRepoMongo(uri string, databaseName string, eventCollectionName stri
 	}
 	err = mongoClient.Ping(nil, readpref.Primary())
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
-	client = &EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
+	client = EventRepoMongo{client: *mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
+	err = client.EstablishIndices()
+	if err != nil {
+		log.Error(err)
+	}
 	return client, nil
 }

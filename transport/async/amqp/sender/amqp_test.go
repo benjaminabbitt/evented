@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
+	"time"
 )
 
 type AmqpSuite struct {
@@ -23,15 +24,17 @@ func (o *AmqpSuite) SetupSuite() {
 	o.log = support.Log()
 
 	o.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
-	err := o.dait.CreateNewContainer("rabbitmq", []uint16{4369, 5671, 5672, 25672})
+	err := o.dait.CreateNewContainer("rabbitmq:3.8.3-alpine", []uint16{4369, 5671, 5672, 25672})
 	if err != nil {
 		o.log.Error(err)
 	}
-	//time.Sleep(30 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	o.client = NewAMQPSender(url, "testExchange", o.log)
+	senderCh := make(chan *evented_core.EventBook)
+	o.client = NewAMQPSender(senderCh, url, "testExchange", o.log)
+	o.client.Connect()
 }
 
 func (o *AmqpSuite) TearDownSuite() {

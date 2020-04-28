@@ -82,7 +82,7 @@ func (s *MongoIntegrationSuite) Test_Insert_Sequence() {
 	_ = s.Mongo.Add(context.Background(), id, []*evented_core.EventPage{page})
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.Get(context.Background(), ch, id)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, (<-ch).Sequence)
 }
 
 func (s *MongoIntegrationSuite) Test_Insert_Force_Preexisting_Sequence() {
@@ -106,8 +106,8 @@ func (s *MongoIntegrationSuite) Test_Insert_Force_Preexisting_Sequence() {
 	_ = s.Mongo.Add(context.Background(), id, []*evented_core.EventPage{cp})
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.Get(context.Background(), ch, id)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, <-ch)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, (<-ch).Sequence)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
 }
 
 func (s *MongoIntegrationSuite) Test_Force_With_Numbered_In_Same_Book() {
@@ -131,31 +131,31 @@ func (s *MongoIntegrationSuite) Test_Force_With_Numbered_In_Same_Book() {
 	_ = s.Mongo.Add(context.Background(), id, pages)
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.Get(context.Background(), ch, id)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, <-ch)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, (<-ch).Sequence)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
 }
 
 func (s *MongoIntegrationSuite) Test_GetTo() {
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.GetTo(context.Background(), ch, s.populatedId, 1)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, <-ch)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 0}, (<-ch).Sequence)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
 	s.Assert().Empty(ch)
 }
 
 func (s *MongoIntegrationSuite) Test_GetFrom() {
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.GetFrom(context.Background(), ch, s.populatedId, 3)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 3}, <-ch)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 4}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 3}, (<-ch).Sequence)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 4}, (<-ch).Sequence)
 	s.Assert().Empty(ch)
 }
 
 func (s *MongoIntegrationSuite) Test_GetFromTo() {
 	ch := make(chan *evented_core.EventPage)
 	_ = s.Mongo.GetFromTo(context.Background(), ch, s.populatedId, 1, 2)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, <-ch)
-	s.EqualValues(&evented_core.EventPage_Num{Num: 2}, <-ch)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
+	s.EqualValues(&evented_core.EventPage_Num{Num: 2}, (<-ch).Sequence)
 	s.Assert().Empty(ch)
 }
 
