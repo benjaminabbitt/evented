@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type MongoClient interface {
+type Client interface {
 	Connect(ctx context.Context) error
 	Disconnect(ctx context.Context) error
 	Ping(ctx context.Context, rp *readpref.ReadPref) error

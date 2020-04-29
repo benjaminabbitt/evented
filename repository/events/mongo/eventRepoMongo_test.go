@@ -7,6 +7,7 @@ import (
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
+	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
@@ -160,5 +161,49 @@ func (s *MongoIntegrationSuite) Test_GetFromTo() {
 }
 
 func TestMongoIntegrationSuite(t *testing.T) {
+	suite.Run(t, new(MongoIntegrationSuite))
+}
+
+type MongoUnitSuite struct {
+	suite.Suite
+	Mongo       events.EventStorer
+	populatedId uuid.UUID
+	log         *zap.SugaredLogger
+	collection  *mongosupport.MockMongoCollection
+	client      *mongosupport.MockMongoClient
+}
+
+func (o *MongoUnitSuite) SetupSuite() {
+	o.log = support.Log()
+	o.client = &mongosupport.MockMongoClient{}
+	o.collection = &mongosupport.MockMongoCollection{}
+
+	o.Mongo = EventRepoMongo{
+		log:            o.log,
+		client:         o.client,
+		Database:       "",
+		Collection:     o.collection,
+		CollectionName: "",
+	}
+}
+
+func (o *MongoUnitSuite) Test_Insert_Sequence() {
+	ts, _ := ptypes.TimestampProto(time.Now())
+	id, _ := uuid.NewRandom()
+	page := &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Num{Num: 0},
+		CreatedAt:   ts,
+		Event:       nil,
+		Synchronous: false,
+	}
+	pageSequence := []*evented_core.EventPage{page}
+
+	o.collection.On("InsertMany", context.Background(), id, pageSequence)
+	err := o.Mongo.Add(context.Background(), id, pageSequence)
+	o.Assert().NoError(err)
+	o.collection.AssertExpectations(o.T())
+}
+
+func TestMongoUnitSuite(t *testing.T) {
 	suite.Run(t, new(MongoIntegrationSuite))
 }

@@ -19,9 +19,9 @@ import (
 
 type EventRepoMongo struct {
 	log            *zap.SugaredLogger
-	client         mongosupport.MongoClient
+	client         mongosupport.Client
 	Database       string
-	Collection     *mongo.Collection
+	Collection     mongosupport.Collection
 	CollectionName string
 }
 
