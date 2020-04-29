@@ -20,7 +20,7 @@ func (o MockHolder) GetTransports() []chan *evented_core.EventBook {
 	return args.Get(0).([]chan *evented_core.EventBook)
 }
 
-func (o MockHolder) GetProjections() []projector.SyncProjectorTransporter {
+func (o MockHolder) GetProjectors() []projector.SyncProjectorTransporter {
 	args := o.Called()
 	return args.Get(0).([]projector.SyncProjectorTransporter)
 }

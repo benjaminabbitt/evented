@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"errors"
+	"fmt"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -15,29 +17,25 @@ type BasicHolder struct {
 	sagas       []saga.SyncSagaTransporter
 }
 
-func (th *BasicHolder) Add(i interface{}) {
+func (th *BasicHolder) Add(i interface{}) error {
 	switch i.(type) {
 	case chan *evented_core.EventBook:
 		th.transports = append(th.transports, i.(chan *evented_core.EventBook))
-	default:
-		th.Log.Infow("Attempted to add non-transport type to transport BasicHolder.  This may be a synchronous-only transport, and may be OK.")
-	}
-
-	switch i.(type) {
 	case projector.SyncProjectorTransporter:
 		th.projections = append(th.projections, i.(projector.SyncProjectorTransporter))
 	case saga.SyncSagaTransporter:
 		th.sagas = append(th.sagas, i.(saga.SyncSagaTransporter))
 	default:
-		th.Log.Infow("Attempted to add non-synchronous type to transport BasicHolder.", "type", reflect.TypeOf(i).Name())
+		return errors.New(fmt.Sprintf("Attempted to add unrecognized type %s to transport BasicHolder.", reflect.TypeOf(i).Name()))
 	}
+	return nil
 }
 
 func (th *BasicHolder) GetTransports() []chan *evented_core.EventBook {
 	return th.transports
 }
 
-func (th *BasicHolder) GetProjections() []projector.SyncProjectorTransporter {
+func (th *BasicHolder) GetProjectors() []projector.SyncProjectorTransporter {
 	return th.projections
 }
 

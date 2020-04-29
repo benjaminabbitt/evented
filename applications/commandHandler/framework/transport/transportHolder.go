@@ -9,6 +9,6 @@ import (
 type TransportHolder interface {
 	Add(i interface{})
 	GetTransports() []chan *evented_core.EventBook
-	GetProjections() []projector.SyncProjectorTransporter
+	GetProjectors() []projector.SyncProjectorTransporter
 	GetSaga() []saga.SyncSagaTransporter
 }
