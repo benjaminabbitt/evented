@@ -161,7 +161,9 @@ func (s *MongoIntegrationSuite) Test_GetFromTo() {
 }
 
 func TestMongoIntegrationSuite(t *testing.T) {
-	suite.Run(t, new(MongoIntegrationSuite))
+	if !testing.Short() {
+		suite.Run(t, new(MongoIntegrationSuite))
+	}
 }
 
 type MongoUnitSuite struct {
@@ -202,6 +204,71 @@ func (o *MongoUnitSuite) Test_Insert_Sequence() {
 	err := o.Mongo.Add(context.Background(), id, pageSequence)
 	o.Assert().NoError(err)
 	o.collection.AssertExpectations(o.T())
+}
+
+func (o *MongoUnitSuite) Test_Insert_Force() {
+	o.T().Skip("placeholder, needs to be converted to unit approach")
+	ts, _ := ptypes.TimestampProto(time.Now())
+	id, _ := uuid.NewRandom()
+	page := &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Force{Force: true},
+		CreatedAt:   ts,
+		Event:       nil,
+		Synchronous: false,
+	}
+	o.collection.On("InsertOne", context.Background(), id).Return(nil)
+	_ = o.Mongo.Add(context.Background(), id, []*evented_core.EventPage{page})
+
+}
+
+func (o *MongoUnitSuite) Test_Force_With_Numbered_In_Same_Book() {
+	o.T().Skip("placeholder, needs to be converted to unit approach")
+	ts, _ := ptypes.TimestampProto(time.Now())
+	id, _ := uuid.NewRandom()
+
+	var pages []*evented_core.EventPage
+
+	pages = append(pages, &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Num{Num: 0},
+		CreatedAt:   ts,
+		Event:       nil,
+		Synchronous: false,
+	})
+	pages = append(pages, &evented_core.EventPage{
+		Sequence:    &evented_core.EventPage_Force{Force: true},
+		CreatedAt:   ts,
+		Event:       nil,
+		Synchronous: false,
+	})
+	o.collection.On("InsertMany", context.Background())
+	_ = o.Mongo.Add(context.Background(), id, pages)
+}
+
+func (o *MongoUnitSuite) Test_GetTo() {
+	o.T().Skip("placeholder, needs to be converted to unit approach")
+	ch := make(chan *evented_core.EventPage)
+	_ = o.Mongo.GetTo(context.Background(), ch, o.populatedId, 1)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 0}, (<-ch).Sequence)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
+	o.Assert().Empty(ch)
+}
+
+func (o *MongoUnitSuite) Test_GetFrom() {
+	o.T().Skip("placeholder, needs to be converted to unit approach")
+	ch := make(chan *evented_core.EventPage)
+	_ = o.Mongo.GetFrom(context.Background(), ch, o.populatedId, 3)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 3}, (<-ch).Sequence)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 4}, (<-ch).Sequence)
+	o.Assert().Empty(ch)
+}
+
+func (o *MongoUnitSuite) Test_GetFromTo() {
+	o.T().Skip("placeholder, needs to be converted to unit approach")
+	ch := make(chan *evented_core.EventPage)
+	_ = o.Mongo.GetFromTo(context.Background(), ch, o.populatedId, 1, 2)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 1}, (<-ch).Sequence)
+	o.EqualValues(&evented_core.EventPage_Num{Num: 2}, (<-ch).Sequence)
+	o.Assert().Empty(ch)
 }
 
 func TestMongoUnitSuite(t *testing.T) {
