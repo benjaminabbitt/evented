@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	evented_core "github.com/benjaminabbitt/evented/proto/core"
 	"github.com/benjaminabbitt/evented/repository/events"
-	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -19,9 +18,9 @@ import (
 
 type EventRepoMongo struct {
 	log            *zap.SugaredLogger
-	client         mongosupport.Client
+	client         *mongo.Client
 	Database       string
-	Collection     mongosupport.Collection
+	Collection     *mongo.Collection
 	CollectionName string
 }
 
