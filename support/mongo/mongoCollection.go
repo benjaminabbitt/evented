@@ -13,7 +13,7 @@ type Collection interface {
 	BulkWrite(ctx context.Context, models []mongo.WriteModel,
 		opts ...*options.BulkWriteOptions) (*mongo.BulkWriteResult, error)
 	InsertOne(ctx context.Context, document interface{},
-		opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
+		opts ...*options.InsertOneOptions) (*SingleResult, error)
 	InsertMany(ctx context.Context, documents []interface{},
 		opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
 	DeleteOne(ctx context.Context, filter interface{},
@@ -49,6 +49,3 @@ type Collection interface {
 	Indexes() mongo.IndexView
 	Drop(ctx context.Context) error
 }
-
-
-

@@ -11,6 +11,9 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"testing"
 	"time"
@@ -207,7 +210,6 @@ func (o *MongoUnitSuite) Test_Insert_Sequence() {
 }
 
 func (o *MongoUnitSuite) Test_Insert_Force() {
-	o.T().Skip("placeholder, needs to be converted to unit approach")
 	ts, _ := ptypes.TimestampProto(time.Now())
 	id, _ := uuid.NewRandom()
 	page := &evented_core.EventPage{
@@ -216,6 +218,12 @@ func (o *MongoUnitSuite) Test_Insert_Force() {
 		Event:       nil,
 		Synchronous: false,
 	}
+	findOneResult := mongo.SingleResult{}
+	//findOneResult.On("Err").Return(nil)
+	findOneOpts := options.FindOne()
+	findOneOpts.SetSort(bson.D{{"sequence", -1}})
+	//o.collection.On("FindOne", context.Background(), bson.D{{"root", id.String()}}, mock.AnythingOfType("[]*options.FindOneOptions")).Return(findOneResult)
+	o.collection.On("FindOne", context.Background(), bson.D{{"root", id.String()}}, []*options.FindOneOptions{findOneOpts}).Return(findOneResult.(*mongo.SingleResult))
 	o.collection.On("InsertOne", context.Background(), id).Return(nil)
 	_ = o.Mongo.Add(context.Background(), id, []*evented_core.EventPage{page})
 
@@ -272,5 +280,5 @@ func (o *MongoUnitSuite) Test_GetFromTo() {
 }
 
 func TestMongoUnitSuite(t *testing.T) {
-	suite.Run(t, new(MongoIntegrationSuite))
+	suite.Run(t, new(MongoUnitSuite))
 }
