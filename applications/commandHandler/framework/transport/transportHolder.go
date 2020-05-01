@@ -7,7 +7,7 @@ import (
 )
 
 type TransportHolder interface {
-	Add(i interface{})
+	Add(i interface{}) error
 	GetTransports() []chan *evented_core.EventBook
 	GetProjectors() []projector.SyncProjectorTransporter
 	GetSaga() []saga.SyncSagaTransporter

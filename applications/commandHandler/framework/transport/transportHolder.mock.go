@@ -11,8 +11,9 @@ type MockHolder struct {
 	mock.Mock
 }
 
-func (o MockHolder) Add(i interface{}) {
-	o.Called(i)
+func (o MockHolder) Add(i interface{}) error {
+	args := o.Called(i)
+	return args.Error(0)
 }
 
 func (o MockHolder) GetTransports() []chan *evented_core.EventBook {
