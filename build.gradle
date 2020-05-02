@@ -1,6 +1,9 @@
 plugins {
     id 'java'
+    id "com.jfrog.bintray" version "1.8.5"
+    id 'java-library'
 }
+
 
 sourceSets {
     main {
@@ -10,6 +13,28 @@ sourceSets {
         }
     }
 }
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = "maven"
+        name = "evented-proto"
+        licenses = ["GPL-3.0 "]
+        vcsUrl = "https://github.com/benjaminabbitt/evented"
+    }
+    pkg {
+        version {
+            name = '0.0.1'
+            released = new Date()
+        }
+    }
+    filesSpec {
+        from 'build/libs'
+        into '.'
+    }
+}
+
 
 archivesBaseName = "evented-proto"
 version = '0.0.1'
