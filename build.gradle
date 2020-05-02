@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+sourceSets {
+    main {
+        resources {
+            include "**/*.proto"
+            srcDir "/proto"
+        }
+    }
+}
+
+archivesBaseName = "evented-proto"
+version = '0.0.1'

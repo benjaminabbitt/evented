@@ -188,3 +188,7 @@ $RECYCLE.BIN/
 
 
 config/
+
+.gradle
+.run
+build/
