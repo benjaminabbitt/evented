@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	evented_business "github.com/benjaminabbitt/evented/proto/business"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_business "github.com/benjaminabbitt/evented/proto/evented/business"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

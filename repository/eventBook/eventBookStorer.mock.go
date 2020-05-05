@@ -2,7 +2,7 @@ package eventBook
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )

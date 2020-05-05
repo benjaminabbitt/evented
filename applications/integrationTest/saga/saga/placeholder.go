@@ -2,8 +2,8 @@ package saga
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
-	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/timestamp"

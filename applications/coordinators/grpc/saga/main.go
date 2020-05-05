@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/query"
-	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
+	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"

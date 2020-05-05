@@ -1,8 +1,9 @@
 syntax = "proto3";
 package evented.business;
 option go_package = "business;evented_business";
+option java_package = "name.benjaminabbitt.evented.business";
 
-import "core/evented.proto";
+import "evented/core/evented.proto";
 
 service BusinessLogic {
     rpc Handle (evented.core.ContextualCommand) returns (evented.core.EventBook) {

@@ -3,8 +3,8 @@ package universal
 import (
 	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/query"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"
 )

@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 )
 
 type BusinessClient interface {

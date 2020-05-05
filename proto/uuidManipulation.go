@@ -1,7 +1,7 @@
 package evented_proto
 
 import (
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/google/uuid"
 )
 

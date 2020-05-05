@@ -1,8 +1,8 @@
 package projector
 
 import (
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
-	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_projector "github.com/benjaminabbitt/evented/proto/evented/projector"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/empty"

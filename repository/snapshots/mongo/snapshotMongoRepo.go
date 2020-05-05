@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"

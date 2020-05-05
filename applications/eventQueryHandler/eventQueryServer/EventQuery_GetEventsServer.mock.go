@@ -2,7 +2,7 @@ package eventQueryServer
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/metadata"
 )

@@ -6,7 +6,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/support"
 	transportMock "github.com/benjaminabbitt/evented/transport/async/mock"

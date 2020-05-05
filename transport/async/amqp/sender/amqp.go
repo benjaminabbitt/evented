@@ -2,7 +2,7 @@ package sender
 
 import (
 	"fmt"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"

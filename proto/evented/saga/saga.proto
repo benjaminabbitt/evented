@@ -2,8 +2,9 @@ syntax = "proto3";
 
 package evented.saga;
 option go_package = "saga;evented_saga";
+option java_package = "name.benjaminabbitt.evented.saga";
 
-import "core/evented.proto";
+import "evented/core/evented.proto";
 
 service Saga {
     rpc HandleSync (evented.core.EventBook) returns (evented.core.EventBook) {

@@ -2,8 +2,8 @@ package universal
 
 import (
 	"fmt"
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
-	evented_saga "github.com/benjaminabbitt/evented/proto/saga"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"

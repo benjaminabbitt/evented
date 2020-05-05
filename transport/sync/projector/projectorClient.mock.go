@@ -2,7 +2,7 @@ package projector
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/stretchr/testify/mock"
 )
 

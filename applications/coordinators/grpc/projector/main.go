@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
-	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
-	evented_query "github.com/benjaminabbitt/evented/proto/query"
+	evented_projector "github.com/benjaminabbitt/evented/proto/evented/projector"
+	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"

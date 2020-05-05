@@ -4,10 +4,10 @@ package evented_proto
 
 // To generate missing files, run `go generate` in this directory
 
-//go:generate protoc --go_out=plugins=grpc:. --proto_path=. ./core/evented.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./business/business.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./saga/saga.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./projector/projector.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./query/query.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./sagaCoordinator/sagaCoordinator.proto
-//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:. --proto_path=. ./projectorCoordinator/projectorCoordinator.proto
+//go:generate protoc --go_out=plugins=grpc:./evented/ --proto_path=. ./evented/core/evented.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/business/business.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/saga/saga.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/projector/projector.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/query/query.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/sagaCoordinator/sagaCoordinator.proto
+//go:generate protoc --go_out=plugins=grpc,Mcore/evented.proto=github.com/benjaminabbitt/evented/proto/core:./evented/ --proto_path=. ./evented/projectorCoordinator/projectorCoordinator.proto

@@ -1,8 +1,8 @@
 package businessLogic
 
 import (
-	evented_business "github.com/benjaminabbitt/evented/proto/business"
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
+	evented_business "github.com/benjaminabbitt/evented/proto/evented/business"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"

@@ -3,7 +3,9 @@ syntax = "proto3";
 package evented.projector.coordinator;
 option go_package = "projectorCoordinator;evented_projector_coordinator";
 
-import "core/evented.proto";
+option java_package = "name.benjaminabbitt.evented.projector.coordinator";
+
+import "evented/core/evented.proto";
 import "google/protobuf/empty.proto";
 
 service ProjectorCoordinator {

@@ -3,7 +3,7 @@ package support
 import (
 	"fmt"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"strings"
 )
 

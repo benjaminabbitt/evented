@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/google/uuid"
 	"go.uber.org/zap"

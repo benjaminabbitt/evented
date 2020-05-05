@@ -2,10 +2,10 @@ package projector
 
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	eventedcore "github.com/benjaminabbitt/evented/proto/core"
-	evented_projector "github.com/benjaminabbitt/evented/proto/projector"
-	evented_projector_coordinator "github.com/benjaminabbitt/evented/proto/projectorCoordinator"
-	evented_query "github.com/benjaminabbitt/evented/proto/query"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_projector "github.com/benjaminabbitt/evented/proto/evented/projector"
+	evented_projector_coordinator "github.com/benjaminabbitt/evented/proto/evented/projectorCoordinator"
+	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"

@@ -2,8 +2,8 @@ package projector
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/core"
-	evented_projector_coordinator "github.com/benjaminabbitt/evented/proto/projectorCoordinator"
+	"github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_projector_coordinator "github.com/benjaminabbitt/evented/proto/evented/projectorCoordinator"
 	"google.golang.org/grpc"
 )
 

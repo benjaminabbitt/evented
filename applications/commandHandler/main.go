@@ -5,7 +5,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/configuration"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	event_mongo "github.com/benjaminabbitt/evented/repository/events/mongo"

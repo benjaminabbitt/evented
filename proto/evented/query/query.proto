@@ -1,9 +1,9 @@
 syntax = "proto3";
 package evented.query;
 option go_package = "query;evented_query";
+option java_package = "name.benjaminabbitt.evented.core.query";
 
-
-import "core/evented.proto";
+import "evented/core/evented.proto";
 import "google/protobuf/empty.proto";
 
 service EventQuery {

@@ -2,8 +2,12 @@ plugins {
     id 'java'
     id "com.jfrog.bintray" version "1.8.5"
     id 'java-library'
+    id 'maven-publish'
 }
 
+group = "name.benjaminabbitt"
+version = "0.0.5"
+archivesBaseName = "evented-proto"
 
 sourceSets {
     main {
@@ -14,27 +18,31 @@ sourceSets {
     }
 }
 
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId 'name.benjaminabbitt'
+            artifactId 'evented-proto'
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('name', 'evented-proto')
+            }
+        }
+    }
+}
+
 bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
+    publications = ['MyPublication']
     pkg {
         repo = "maven"
         name = "evented-proto"
         licenses = ["GPL-3.0 "]
         vcsUrl = "https://github.com/benjaminabbitt/evented"
     }
-    pkg {
-        version {
-            name = '0.0.1'
-            released = new Date()
-        }
-    }
-    filesSpec {
-        from 'build/libs'
-        into '.'
-    }
 }
 
 
-archivesBaseName = "evented-proto"
-version = '0.0.1'
+

@@ -3,7 +3,7 @@ package eventBook
 import (
 	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	erMock "github.com/benjaminabbitt/evented/repository/events/mock"
 	ssMock "github.com/benjaminabbitt/evented/repository/snapshots/mock"
 	"github.com/golang/protobuf/ptypes/timestamp"

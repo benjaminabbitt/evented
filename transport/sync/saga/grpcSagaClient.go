@@ -2,8 +2,8 @@ package saga
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/core"
-	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/sagaCoordinator"
+	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
 	"google.golang.org/grpc"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/core"
+	"github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
