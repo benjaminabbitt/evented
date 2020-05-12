@@ -1,6 +1,6 @@
 syntax = "proto3";
 package evented.core;
-option go_package = "core;evented_core";
+option go_package = "github.com/benjaminabbitt/evented/proto/evented/core";
 option java_package = "name.benjaminabbitt.evented.core";
 
 import "google/protobuf/any.proto";
@@ -69,6 +69,8 @@ message ContextualCommand {
 }
 
 service CommandHandler {
-    rpc Handle (CommandBook) returns (SynchronousProcessingResponse) {}
-    rpc Record (EventBook) returns (SynchronousProcessingResponse) {}
+    rpc Handle (CommandBook) returns (SynchronousProcessingResponse) {
+    }
+    rpc Record (EventBook) returns (SynchronousProcessingResponse) {
+    }
 }

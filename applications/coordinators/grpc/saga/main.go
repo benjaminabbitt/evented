@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
-	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
+	eventedsaga "github.com/benjaminabbitt/evented/proto/evented/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -28,15 +28,15 @@ func main() {
 	sagaURL := config.SagaURL()
 	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log)
 	log.Infof("Connected to remote %s", sagaURL)
-	sagaClient := evented_saga.NewSagaClient(sagaConn)
+	sagaClient := eventedsaga.NewSagaClient(sagaConn)
 
 	ochUrl := config.OtherCommandHandlerURL()
 	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log)
-	otherCommandHandler := evented_core.NewCommandHandlerClient(otherCommandConn)
+	otherCommandHandler := eventedcore.NewCommandHandlerClient(otherCommandConn)
 
 	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
-	eventQueryClient := evented_query.NewEventQueryClient(qhConn)
+	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
 	domain := config.Domain()
 
 	server := saga.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandler, p, domain, log)

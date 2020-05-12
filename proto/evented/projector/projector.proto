@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package evented.projector;
-option go_package = "projector;evented_projector";
+option go_package = "github.com/benjaminabbitt/evented/proto/evented/projector";
 option java_package = "name.benjaminabbitt.evented.projector";
 
 import "evented/core/evented.proto";

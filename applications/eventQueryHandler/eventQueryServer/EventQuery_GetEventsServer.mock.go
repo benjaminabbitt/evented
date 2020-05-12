@@ -2,7 +2,7 @@ package eventQueryServer
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/metadata"
 )
@@ -11,7 +11,7 @@ type MockGetEventsServer struct {
 	mock.Mock
 }
 
-func (o MockGetEventsServer) Send(book *evented_core.EventBook) error {
+func (o MockGetEventsServer) Send(book *eventedcore.EventBook) error {
 	args := o.Called(book)
 	return args.Error(0)
 }

@@ -4,16 +4,16 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
-	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
-	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
+	eventedsaga "github.com/benjaminabbitt/evented/proto/evented/saga"
+	eventedsagacoordinator "github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"go.uber.org/zap"
 )
 
-func NewSagaCoordinator(sagaClient evented_saga.SagaClient, eventQueryClient evented_query.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
+func NewSagaCoordinator(sagaClient eventedsaga.SagaClient, eventQueryClient eventedquery.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
 	universalCoordinator := &universal.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -32,7 +32,7 @@ func NewSagaCoordinator(sagaClient evented_saga.SagaClient, eventQueryClient eve
 }
 
 type SagaCoordinator struct {
-	evented_saga_coordinator.UnimplementedSagaCoordinatorServer
+	eventedsagacoordinator.UnimplementedSagaCoordinatorServer
 	coordinator *universal.SagaCoordinator
 	Log         *zap.SugaredLogger
 }
@@ -46,7 +46,7 @@ func (o *SagaCoordinator) Listen(port uint) {
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.Log.Desugar())
 
-	evented_saga_coordinator.RegisterSagaCoordinatorServer(grpcServer, o)
+	eventedsagacoordinator.RegisterSagaCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.Log.Error(err)

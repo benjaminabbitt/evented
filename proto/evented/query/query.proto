@@ -1,6 +1,6 @@
 syntax = "proto3";
 package evented.query;
-option go_package = "query;evented_query";
+option go_package = "github.com/benjaminabbitt/evented/proto/evented/query";
 option java_package = "name.benjaminabbitt.evented.core.query";
 
 import "evented/core/evented.proto";

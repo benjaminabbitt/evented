@@ -2,9 +2,9 @@ package client
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 )
 
 type BusinessClient interface {
-	Handle(ctx context.Context, command *evented_core.ContextualCommand) (events *evented_core.EventBook, err error)
+	Handle(ctx context.Context, command *eventedcore.ContextualCommand) (events *eventedcore.EventBook, err error)
 }

@@ -2,29 +2,29 @@ package universal
 
 import (
 	"context"
-	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
-	evented_query "github.com/benjaminabbitt/evented/proto/evented/query"
+	eventedproto "github.com/benjaminabbitt/evented/proto"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"
 )
 
 type Coordinator struct {
 	Processed        *processed.Processed
-	EventQueryClient evented_query.EventQueryClient
+	EventQueryClient eventedquery.EventQueryClient
 	Log              *zap.SugaredLogger
 }
 
-func (o *Coordinator) RepairSequencing(ctx context.Context, eb *evented_core.EventBook, cb func(*evented_core.EventBook) error) {
-	id, err := evented_proto.ProtoToUUID(eb.Cover.Root)
+func (o *Coordinator) RepairSequencing(ctx context.Context, eb *eventedcore.EventBook, cb func(*eventedcore.EventBook) error) {
+	id, err := eventedproto.ProtoToUUID(eb.Cover.Root)
 	last, err := o.Processed.LastReceived(ctx, id)
-	seq := eb.Pages[0].Sequence.(*evented_core.EventPage_Num).Num
+	seq := eb.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num
 	if err != nil {
 		o.Log.Error(err)
 	}
 	nextEventSeq := last + 1
 	if nextEventSeq < seq {
-		evtStream, err := o.EventQueryClient.GetEvents(ctx, &evented_query.Query{
+		evtStream, err := o.EventQueryClient.GetEvents(ctx, &eventedquery.Query{
 			Domain:     eb.Cover.Domain,
 			Root:       eb.Cover.Root,
 			LowerBound: last,
@@ -47,10 +47,10 @@ func (o *Coordinator) RepairSequencing(ctx context.Context, eb *evented_core.Eve
 	}
 }
 
-func (o *Coordinator) MarkProcessed(ctx context.Context, event *evented_core.EventBook) {
-	id, err := evented_proto.ProtoToUUID(event.Cover.Root)
+func (o *Coordinator) MarkProcessed(ctx context.Context, event *eventedcore.EventBook) {
+	id, err := eventedproto.ProtoToUUID(event.Cover.Root)
 	for _, page := range event.Pages {
-		err = o.Processed.Received(ctx, id, page.Sequence.(*evented_core.EventPage_Num).Num)
+		err = o.Processed.Received(ctx, id, page.Sequence.(*eventedcore.EventPage_Num).Num)
 		if err != nil {
 			o.Log.Error(err)
 		}

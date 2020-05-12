@@ -1,6 +1,6 @@
 syntax = "proto3";
 package evented.business;
-option go_package = "business;evented_business";
+option go_package = "github.com/benjaminabbitt/evented/proto/evented/business";
 option java_package = "name.benjaminabbitt.evented.business";
 
 import "evented/core/evented.proto";

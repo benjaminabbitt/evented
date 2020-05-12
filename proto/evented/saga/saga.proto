@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package evented.saga;
-option go_package = "saga;evented_saga";
+option go_package = "github.com/benjaminabbitt/evented/proto/evented/saga";
 option java_package = "name.benjaminabbitt.evented.saga";
 
 import "evented/core/evented.proto";

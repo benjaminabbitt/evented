@@ -5,12 +5,12 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/configuration"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
-	event_mongo "github.com/benjaminabbitt/evented/repository/events/mongo"
+	eventmongo "github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
-	snapshot_mongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
+	snapshotmongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
@@ -65,11 +65,11 @@ func main() {
 }
 
 func setupSnapshotRepo(config configuration.Configuration) (repo snapshots.SnapshotStorer) {
-	return snapshot_mongo.NewSnapshotMongoRepo(config.SnapshotStoreURL(), config.SnapshotStoreDatabaseName(), log)
+	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStoreURL(), config.SnapshotStoreDatabaseName(), log)
 }
 
-func setupServiceBus(config configuration.Configuration) (ch chan *evented_core.EventBook) {
-	ch = make(chan *evented_core.EventBook)
+func setupServiceBus(config configuration.Configuration) (ch chan *eventedcore.EventBook) {
+	ch = make(chan *eventedcore.EventBook)
 	trans := sender.NewAMQPSender(ch, config.TransportURL(), config.TransportExchange(), log)
 	err := trans.Connect()
 	if err != nil {
@@ -80,7 +80,7 @@ func setupServiceBus(config configuration.Configuration) (ch chan *evented_core.
 }
 
 func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger) (repo events.EventStorer, err error) {
-	repo, err = event_mongo.NewEventRepoMongo(config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
+	repo, err = eventmongo.NewEventRepoMongo(config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
 	if err != nil {
 		return nil, err
 	}
