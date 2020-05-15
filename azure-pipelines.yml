@@ -13,5 +13,8 @@ steps:
   - script: go version
     displayName: 'Go Version'
 
+  - script: (cd proto && go generate)
+    displayName: 'Generate Protobuf'
+
   - script: go generate
     displayName: 'Generate Docker Images'

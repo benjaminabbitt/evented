@@ -1,7 +1,7 @@
 package businessLogic
 
 import (
-	evented_business "github.com/benjaminabbitt/evented/proto/evented/business"
+	eventedbusiness "github.com/benjaminabbitt/evented/proto/evented/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/ptypes"
@@ -18,7 +18,7 @@ func NewPlaceholderBusinessLogicServer(log *zap.SugaredLogger) PlaceholderBusine
 }
 
 type PlaceholderBusinessLogicServer struct {
-	evented_business.UnimplementedBusinessLogicServer
+	eventedbusiness.UnimplementedBusinessLogicServer
 	log *zap.SugaredLogger
 }
 
@@ -52,7 +52,7 @@ func (o *PlaceholderBusinessLogicServer) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpc.NewServer()
 
-	evented_business.RegisterBusinessLogicServer(grpcServer, o)
+	eventedbusiness.RegisterBusinessLogicServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)
