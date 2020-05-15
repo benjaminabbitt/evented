@@ -12,4 +12,3 @@ type Configuration struct {
 func (o *Configuration) Port() uint {
 	return viper.GetUint("port")
 }
-

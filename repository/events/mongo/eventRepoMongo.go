@@ -196,7 +196,7 @@ func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint
 }
 
 // Gets the events related to the provided ID
-func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, ) (err error) {
+func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
 	if err != nil {
 		return err

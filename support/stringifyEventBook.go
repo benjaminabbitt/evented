@@ -9,7 +9,7 @@ import (
 
 func StringifyEventBook(eb *evented_core.EventBook) string {
 	var pages string
-	for _, page := range eb.Pages{
+	for _, page := range eb.Pages {
 		seq, _ := GetSequence(page)
 		pages += fmt.Sprintf("%d,", seq)
 	}

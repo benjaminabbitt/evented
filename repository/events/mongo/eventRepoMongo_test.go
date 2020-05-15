@@ -164,4 +164,3 @@ func TestMongoIntegrationSuite(t *testing.T) {
 		suite.Run(t, new(MongoIntegrationSuite))
 	}
 }
-

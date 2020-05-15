@@ -24,7 +24,6 @@ var log *zap.SugaredLogger
 func main() {
 	log = support.Log()
 
-
 	config := configuration.Configuration{}
 	config.Initialize("commandHandler", log)
 

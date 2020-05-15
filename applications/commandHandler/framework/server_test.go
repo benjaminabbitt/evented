@@ -340,7 +340,6 @@ func (o ServerSuite) TestListenForNoErrors() {
 	o.Assert().NoError(err)
 }
 
-
 func TestServerSuite(t *testing.T) {
 	suite.Run(t, new(ServerSuite))
 }
