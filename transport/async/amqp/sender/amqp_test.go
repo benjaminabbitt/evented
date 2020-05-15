@@ -49,5 +49,7 @@ func (o AmqpSuite) TestNoExceptionThrown() {
 }
 
 func TestServerSuite(t *testing.T) {
-	suite.Run(t, new(AmqpSuite))
+	if !testing.Short() {
+		suite.Run(t, new(AmqpSuite))
+	}
 }

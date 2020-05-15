@@ -12,7 +12,11 @@ import (
 )
 
 func TestLastProcessedRepoSuite(t *testing.T) {
-	suite.Run(t, new(LastProcessedRepo))
+	if testing.Short() {
+		t.Skip("skipping docker assisted integration tests in short mode")
+	} else {
+		suite.Run(t, new(LastProcessedRepo))
+	}
 }
 
 type LastProcessedRepo struct {

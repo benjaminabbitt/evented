@@ -116,7 +116,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 		UpperBound: 2,
 	}
 	ctx := context.Background()
-	o.repos.On("GetFromTo", mock.Anything, mock.AnythingOfType("chan *evented_core.EventPage"), uuid, uint32(1), uint32(2)).Return(nil).Run(func(args mock.Arguments) {
+	o.repos.On("GetFromTo", mock.Anything, mock.Anything, uuid, uint32(1), uint32(2)).Return(nil).Run(func(args mock.Arguments) {
 		ch := args.Get(1).(chan *eventedcore.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {
@@ -151,7 +151,7 @@ func (o *QueryHandlerSuite) Test_Low() {
 		LowerBound: 1,
 	}
 	ctx := context.Background()
-	o.repos.On("GetFrom", mock.Anything, mock.AnythingOfType("chan *evented_core.EventPage"), uuid, uint32(1)).Return(nil).Run(func(args mock.Arguments) {
+	o.repos.On("GetFrom", mock.Anything, mock.Anything, uuid, uint32(1)).Return(nil).Run(func(args mock.Arguments) {
 		ch := args.Get(1).(chan *eventedcore.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {
@@ -181,11 +181,11 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 	domain := "test"
 
 	query := &eventedquery.Query{
-		Domain:     domain,
-		Root:       &protoUUID,
+		Domain: domain,
+		Root:   &protoUUID,
 	}
 	ctx := context.Background()
-	o.repos.On("Get", mock.Anything, mock.AnythingOfType("chan *evented_core.EventPage"), uuid).Return(nil).Run(func(args mock.Arguments) {
+	o.repos.On("Get", mock.Anything, mock.Anything, uuid).Return(nil).Run(func(args mock.Arguments) {
 		ch := args.Get(1).(chan *eventedcore.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {

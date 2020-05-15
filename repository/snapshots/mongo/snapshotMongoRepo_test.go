@@ -13,7 +13,9 @@ import (
 )
 
 func TestLastProcessedRepoSuite(t *testing.T) {
-	suite.Run(t, new(LastProcessedRepo))
+	if !testing.Short() {
+		suite.Run(t, new(LastProcessedRepo))
+	}
 }
 
 type LastProcessedRepo struct {
