@@ -10,15 +10,14 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  - script: echo Hello, world!
-    displayName: 'Run a one-line script'
+  - script: go version
+    displayName: 'Go Version'
 
-  - script: |
-#      export VERSION=1.14.3
-#      export OS=linux
-#      export ARCH=amd64
-#      curl https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz -o go$VERSION.$OS-$ARCH.tar.gz
-#      tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
-#      export PATH=$PATH:/usr/local/go/bin
-      go version
-    displayName: 'Run a multi-line script'
+#  - script: |
+#    #      export VERSION=1.14.3
+#    #      export OS=linux
+#    #      export ARCH=amd64
+#    #      curl https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz -o go$VERSION.$OS-$ARCH.tar.gz
+#    #      tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
+#    #      export PATH=$PATH:/usr/local/go/bin
+#    displayName: 'Run a multi-line script'
