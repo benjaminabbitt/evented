@@ -22,9 +22,9 @@ func (o *Configuration) DatabaseCollection() string {
 }
 
 func (o *Configuration) Port() uint {
-	return viper.GetUint("port")
+	return uint(viper.GetInt64("port"))
 }
 
 func (o *Configuration) EventBookTargetSize() uint {
-	return viper.GetUint("targetSize")
+	return uint(viper.GetInt64("targetSize"))
 }

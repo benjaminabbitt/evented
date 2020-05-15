@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 )
 
 type Configuration struct {
@@ -15,7 +16,7 @@ func (o *Configuration) BusinessURL() string {
 }
 
 func (o *Configuration) Port() uint {
-	return viper.GetUint("port")
+	return uint(viper.GetInt64("port"))
 }
 
 func (o *Configuration) Domain() string {
