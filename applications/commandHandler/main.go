@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/configuration"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
@@ -17,6 +18,10 @@ import (
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"net"
 )
 
 var log *zap.SugaredLogger
@@ -54,7 +59,10 @@ func main() {
 		log.Infow("Connection with Projector Successful.", "url", url)
 	}
 
-	handlers.Add(setupServiceBus(config))
+	err := handlers.Add(setupServiceBus(config))
+	if err != nil {
+		log.Error(err)
+	}
 
 	server := framework.NewServer(
 		repo,
@@ -62,7 +70,26 @@ func main() {
 		businessClient,
 		log,
 	)
-	server.Listen(config.Port())
+
+	log.Infow("Opening port", "port", config.Port())
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port()))
+	if err != nil {
+		log.Error(err)
+	}
+	log.Infow("Creating GRPC Server")
+	rpc := grpc.NewServer()
+	log.Infow("Registering Command Handler with GRPC")
+	eventedcore.RegisterCommandHandlerServer(rpc, server)
+
+	health := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(rpc, health)
+	health.Resume()
+	log.Infow("Handler registered.")
+	log.Infow("Serving...")
+	err = rpc.Serve(lis)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func setupSnapshotRepo(config configuration.Configuration) (repo snapshots.SnapshotStorer) {

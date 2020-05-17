@@ -1,27 +1,41 @@
-# build stage
-FROM golang:alpine AS build-env
-RUN adduser --disabled-password --uid 10001 scratchuser
-RUN apk --no-cache add build-base git bzr mercurial gcc curl
-ENV GO111MODULE=on
-RUN go get google.golang.org/grpc@v1.28.1
-RUN go get github.com/golang/protobuf/protoc-gen-go
-COPY . /src
+FROM evented-base AS app-build
+COPY --from=evented-base /root/.cache /root/.cache
+RUN cd /src && CGO_ENABLED=0 go build -o app ./applications/commandHandler
 
-RUN apk update && apk add --no-cache libc6-compat protobuf grpc protobuf-dev
+FROM scratch-foundation AS final
+COPY --from=app-build /src/app /bin/
 
-RUN cd /src/proto && go generate
-RUN cd /src && CGO_ENABLED=0 go build -o goapp ./applications/commandHandler
-
-## final stage
-FROM scratch
-
-#copy & configure scratch user
-COPY --from=build-env /etc/passwd /etc/passwd
-USER scratchuser
+#FROM scratchBase
+###application setup
+#COPY --from=eventQueryHandler /src/app /bin/
+###Health setup
+#COPY --from=build-env /bin/grpc_health_probe /bin/grpc_health_probe
+#ENTRYPOINT ["/bin/app"]
 #
-##application setup
-WORKDIR /app
-COPY --from=build-env /src/goapp /app/
-
-
-ENTRYPOINT ["/app/goapp"]
+#FROM scratchBase
+###application setup
+#COPY --from=asyncProjector /src/app /bin/
+###Health setup
+#COPY --from=build-env /bin/grpc_health_probe /bin/grpc_health_probe
+#ENTRYPOINT ["/bin/app"]
+#
+#FROM scratchBase
+###application setup
+#COPY --from=asyncSaga /src/app /bin/
+###Health setup
+#COPY --from=build-env /bin/grpc_health_probe /bin/grpc_health_probe
+#ENTRYPOINT ["/bin/app"]
+#
+#FROM scratchBase
+###application setup
+#COPY --from=syncProjector /src/app /bin/
+###Health setup
+#COPY --from=build-env /bin/grpc_health_probe /bin/grpc_health_probe
+#ENTRYPOINT ["/bin/app"]
+#
+#FROM scratchBase
+###application setup
+#COPY --from=syncSaga /src/app /bin/
+###Health setup
+#COPY --from=build-env /bin/grpc_health_probe /bin/grpc_health_probe
+#ENTRYPOINT ["/bin/app"]

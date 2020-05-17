@@ -1,27 +1,6 @@
-# build stage
-FROM golang:alpine AS build-env
-RUN adduser --disabled-password --uid 10001 scratchuser
-RUN apk --no-cache add build-base git bzr mercurial gcc curl
-ENV GO111MODULE=on
-RUN go get google.golang.org/grpc@v1.28.1
-RUN go get github.com/golang/protobuf/protoc-gen-go
-COPY . /src
+FROM evented-base AS app-build
+COPY --from=evented-base /root/.cache /root/.cache
+RUN cd /src && CGO_ENABLED=0 go build -o app ./applications/commandHandler
 
-RUN apk update && apk add --no-cache libc6-compat protobuf grpc protobuf-dev
-
-RUN cd /src/proto && go generate
-RUN cd /src && CGO_ENABLED=0 go build -o goapp ./applications/eventQueryHandler
-
-## final stage
-FROM scratch
-
-#copy & configure scratch user
-COPY --from=build-env /etc/passwd /etc/passwd
-USER scratchuser
-#
-##application setup
-WORKDIR /app
-COPY --from=build-env /src/goapp /app/
-
-
-ENTRYPOINT ["/app/goapp"]
+FROM scratch-foundation AS final
+COPY --from=app-build /src/app /bin/

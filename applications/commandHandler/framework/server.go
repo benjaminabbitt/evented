@@ -3,7 +3,6 @@ package framework
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
@@ -12,7 +11,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"net"
 )
 
 func NewServer(eventBookRepository eventBook.EventBookStorer, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
@@ -24,26 +22,7 @@ func NewServer(eventBookRepository eventBook.EventBookStorer, transports transpo
 	}
 }
 
-func (o *Server) Listen(port uint) error {
-	o.log.Infow("Opening port", "port", port)
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		o.log.Error(err)
-		return err
-	}
-	o.log.Infow("Creating GRPC Server")
-	o.server = grpc.NewServer()
-	o.log.Infow("Registering Command Handler with GRPC")
-	eventedcore.RegisterCommandHandlerServer(o.server, o)
-	o.log.Infow("Handler registered.")
-	o.log.Infow("Serving...")
-	err = o.server.Serve(lis)
-	if err != nil {
-		o.log.Error(err)
-		return err
-	}
-	return nil
-}
+
 
 func (o *Server) Earmuffs() {
 	o.server.GracefulStop()
