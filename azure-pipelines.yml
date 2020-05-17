@@ -13,8 +13,8 @@ steps:
   - script: go version
     displayName: 'Go Version'
 
-  - script: go test ./...
-    displayName: 'Go Test'
+#  - script: go test ./...
+#    displayName: 'Go Test'
 
   - script: go generate
     displayName: 'Generate Docker Images'
