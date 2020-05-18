@@ -66,5 +66,4 @@ func (o *ConfigInit) Initialize(name string, log *zap.SugaredLogger) {
 			}
 		}
 	}
-
 }

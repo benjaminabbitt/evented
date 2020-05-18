@@ -22,8 +22,6 @@ func NewServer(eventBookRepository eventBook.EventBookStorer, transports transpo
 	}
 }
 
-
-
 func (o *Server) Earmuffs() {
 	o.server.GracefulStop()
 }
