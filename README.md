@@ -30,7 +30,7 @@ First and a half languages are languages that the first class libraries should w
 
 * Kotlin (JVM)
 * Javascript (Node)
-* R# (CLR)
+* F# (CLR)
 * Scala (JVM) -- Much synergy with this framework and Akka
 
 ### Second class languages
