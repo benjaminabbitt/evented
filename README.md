@@ -14,12 +14,10 @@ A complete architectural diagram (start below, under Architecture to be stepped/
 ### First class languages
 First class languages have two tiers of abstraction and levels at which the developer can implement the business, projection, and saga logic.  Tier A is the same as the second class languages.  Tier B is a managed, language-specific tier that abstracts away common things like logging, configuration, some GRPC work, and other cross-cutting concerns.
 
-First class languages are:
-
 * Go
-* Java (JVM)
+* [Java (JVM)](https://github.com/benjaminabbitt/evented-url)
 
-The following languages will be first class as time allows the first class frameworks to be built with them.
+Future:
 
 * C# (CLR)
 * Typescript (Node)
