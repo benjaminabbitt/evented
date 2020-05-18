@@ -10,6 +10,8 @@ A complete architectural diagram (start below, under Architecture to be stepped/
 
 ![Full Architectural Diagram](https://github.com/benjaminabbitt/evented/blob/master/Evented.svg)
 
+Evented aims to be compliant with the [Reactive Manifesto](https://www.reactivemanifesto.org/)
+
 ## Languages
 ### First class languages
 First class languages have two tiers of abstraction and levels at which the developer can implement the business, projection, and saga logic.  Tier A is the same as the second class languages.  Tier B is a managed, language-specific tier that abstracts away common things like logging, configuration, some GRPC work, and other cross-cutting concerns.
