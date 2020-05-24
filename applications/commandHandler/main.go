@@ -17,10 +17,13 @@ import (
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
+	opentracing "github.com/opentracing/opentracing-go"
+	config "github.com/uber/jaeger-client-go/config"
+	zap2jaeger "github.com/uber/jaeger-client-go/log/zap"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"io"
 	"net"
 )
 
@@ -32,14 +35,18 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("commandHandler", log)
 
+	tracer, closer := setupJaeger(*config.AppName)
+	initSpan := tracer.StartSpan("Init")
+	defer closer.Close()
+
 	businessAddress := config.BusinessURL()
 	commandHandlerPort := config.Port()
 	log.Infow("Starting Command Handler", "port", commandHandlerPort)
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 	log.Infow("Command Handler Started", "port", commandHandlerPort)
 
-	eventRepo, _ := setupEventRepo(config, log)
-	ssRepo := setupSnapshotRepo(config)
+	eventRepo, _ := setupEventRepo(config, log, initSpan)
+	ssRepo := setupSnapshotRepo(config, initSpan)
 
 	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, config.Domain(), log)
 
@@ -47,19 +54,19 @@ func main() {
 
 	for _, url := range config.SagaURLs() {
 		log.Infow("Connecting with Saga... ", "url", url)
-		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log)
+		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
 		handlers.Add(saga.NewGRPCSagaClient(sagaConn))
 		log.Infow("Connection with Saga Successful", "url", url)
 	}
 
 	for _, url := range config.ProjectorURLs() {
 		log.Infow("Connecting with Projector... ", "url", url)
-		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log)
+		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
 		handlers.Add(projector.NewGRPCProjector(projectorConn))
 		log.Infow("Connection with Projector Successful.", "url", url)
 	}
 
-	err := handlers.Add(setupServiceBus(config))
+	err := handlers.Add(setupServiceBus(config, initSpan))
 	if err != nil {
 		log.Error(err)
 	}
@@ -77,7 +84,7 @@ func main() {
 		log.Error(err)
 	}
 	log.Infow("Creating GRPC Server")
-	rpc := grpc.NewServer()
+	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 	log.Infow("Registering Command Handler with GRPC")
 	eventedcore.RegisterCommandHandlerServer(rpc, server)
 
@@ -86,17 +93,22 @@ func main() {
 	health.Resume()
 	log.Infow("Handler registered.")
 	log.Infow("Serving...")
+	initSpan.Finish()
 	err = rpc.Serve(lis)
 	if err != nil {
 		log.Error(err)
 	}
 }
 
-func setupSnapshotRepo(config configuration.Configuration) (repo snapshots.SnapshotStorer) {
+func setupSnapshotRepo(config configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
+	childSpan := span.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
+	defer childSpan.Finish()
 	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStoreURL(), config.SnapshotStoreDatabaseName(), log)
 }
 
-func setupServiceBus(config configuration.Configuration) (ch chan *eventedcore.EventBook) {
+func setupServiceBus(config configuration.Configuration, span opentracing.Span) (ch chan *eventedcore.EventBook) {
+	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
+	defer childSpan.Finish()
 	ch = make(chan *eventedcore.EventBook)
 	trans := sender.NewAMQPSender(ch, config.TransportURL(), config.TransportExchange(), log)
 	err := trans.Connect()
@@ -107,10 +119,30 @@ func setupServiceBus(config configuration.Configuration) (ch chan *eventedcore.E
 	return ch
 }
 
-func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger) (repo events.EventStorer, err error) {
+func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
+	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
+	defer childSpan.Finish()
+	defer span.Finish()
 	repo, err = eventmongo.NewEventRepoMongo(config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
 	if err != nil {
 		return nil, err
 	}
 	return repo, nil
+}
+
+func setupJaeger(service string) (opentracing.Tracer, io.Closer) {
+	cfg := &config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+	tracer, closer, err := cfg.New(service, config.Logger(zap2jaeger.NewLogger(log.Desugar())))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+	}
+	return tracer, closer
 }

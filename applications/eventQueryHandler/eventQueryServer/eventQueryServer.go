@@ -6,10 +6,11 @@ import (
 	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 func NewEventQueryServer(maxSize uint, repos events.EventStorer, log *zap.SugaredLogger) DefaultEventQueryServer {
@@ -90,9 +91,9 @@ func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server event
 	panic("implement me")
 }
 
-func (o *DefaultEventQueryServer) Listen(port uint) error {
+func (o *DefaultEventQueryServer) Listen(port uint, tracer opentracing.Tracer) error {
 	lis := support.CreateListener(port, o.log)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), tracer)
 
 	eventedquery.RegisterEventQueryServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

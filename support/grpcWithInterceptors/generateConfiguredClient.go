@@ -3,13 +3,15 @@ package grpcWithInterceptors
 import (
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"time"
 )
 
-func GenerateConfiguredConn(target string, log *zap.SugaredLogger) *grpc.ClientConn {
+func GenerateConfiguredConn(target string, log *zap.SugaredLogger, tracer opentracing.Tracer) *grpc.ClientConn {
 
 	var customFunc grpc_zap.CodeToLevel
 	zapLogOpts := []grpc_zap.Option{
@@ -24,6 +26,10 @@ func GenerateConfiguredConn(target string, log *zap.SugaredLogger) *grpc.ClientC
 	conn, err := grpc.Dial(target,
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
+		grpc.WithUnaryInterceptor(
+			otgrpc.OpenTracingClientInterceptor(tracer)),
+		grpc.WithStreamInterceptor(
+			otgrpc.OpenTracingStreamClientInterceptor(tracer)),
 		grpc.WithUnaryInterceptor(grpc_zap.UnaryClientInterceptor(log.Desugar(), zapLogOpts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
 		grpc.WithStreamInterceptor(grpc_zap.StreamClientInterceptor(log.Desugar(), zapLogOpts...)),
