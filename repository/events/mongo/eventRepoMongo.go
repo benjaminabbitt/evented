@@ -300,8 +300,8 @@ func (m EventRepoMongo) EstablishIndices() error {
 	return nil
 }
 
-func NewEventRepoMongo(uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventStorer, err error) {
-	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
+func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventStorer, err error) {
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}

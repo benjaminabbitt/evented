@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/configuration"
@@ -37,6 +38,7 @@ func main() {
 
 	tracer, closer := setupJaeger(*config.AppName)
 	initSpan := tracer.StartSpan("Init")
+	defer initSpan.Finish()
 	defer closer.Close()
 
 	businessAddress := config.BusinessURL()
@@ -55,14 +57,20 @@ func main() {
 	for _, url := range config.SagaURLs() {
 		log.Infow("Connecting with Saga... ", "url", url)
 		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
-		handlers.Add(saga.NewGRPCSagaClient(sagaConn))
+		err := handlers.Add(saga.NewGRPCSagaClient(sagaConn))
+		if err != nil {
+			log.Error(err)
+		}
 		log.Infow("Connection with Saga Successful", "url", url)
 	}
 
 	for _, url := range config.ProjectorURLs() {
 		log.Infow("Connecting with Projector... ", "url", url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
-		handlers.Add(projector.NewGRPCProjector(projectorConn))
+		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
+		if err != nil {
+			log.Error(err)
+		}
 		log.Infow("Connection with Projector Successful.", "url", url)
 	}
 
@@ -122,8 +130,7 @@ func setupServiceBus(config configuration.Configuration, span opentracing.Span) 
 func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	defer span.Finish()
-	repo, err = eventmongo.NewEventRepoMongo(config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
+	repo, err = eventmongo.NewEventRepoMongo(context.Background(), config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
 	if err != nil {
 		return nil, err
 	}
