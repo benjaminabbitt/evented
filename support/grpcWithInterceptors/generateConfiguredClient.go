@@ -20,18 +20,20 @@ func GenerateConfiguredConn(target string, log *zap.SugaredLogger, tracer opentr
 	grpc_zap.ReplaceGrpcLogger(log.Desugar())
 
 	retryOpts := []grpc_retry.CallOption{
-		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(100 * time.Millisecond)),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinearWithJitter(100*time.Millisecond, 0.10)),
 		grpc_retry.WithCodes(codes.NotFound, codes.Aborted, codes.Unavailable, codes.Unimplemented, codes.Unknown),
 	}
 	conn, err := grpc.Dial(target,
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
+
 		grpc.WithUnaryInterceptor(
 			otgrpc.OpenTracingClientInterceptor(tracer)),
-		grpc.WithStreamInterceptor(
-			otgrpc.OpenTracingStreamClientInterceptor(tracer)),
 		grpc.WithUnaryInterceptor(grpc_zap.UnaryClientInterceptor(log.Desugar(), zapLogOpts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
+
+		grpc.WithStreamInterceptor(
+			otgrpc.OpenTracingStreamClientInterceptor(tracer)),
 		grpc.WithStreamInterceptor(grpc_zap.StreamClientInterceptor(log.Desugar(), zapLogOpts...)),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(retryOpts...)),
 	)

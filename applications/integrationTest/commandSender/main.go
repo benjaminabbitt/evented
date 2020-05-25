@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go/config"
+	zap2jaeger "github.com/uber/jaeger-client-go/log/zap"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
+	"io"
+	"time"
 )
-
-var log *zap.SugaredLogger
 
 func main() {
 	log := support.Log()
@@ -23,14 +27,18 @@ func main() {
 	log.Info("Starting...")
 	target := config.CommandHandlerURL()
 	log.Info(target)
-	conn, err := grpc.Dial(target, grpc.WithInsecure(), grpc.WithBlock())
+	tracer, closer := setupJaeger("commandSender", log)
+	defer closer.Close()
+
+	span := tracer.StartSpan("test")
+	time.Sleep(1 * time.Second)
+	span.Finish()
+
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Infof("Connected to remote %s", target)
-	if err != nil {
-		log.Error(err)
-	}
 	ch := evented_core.NewCommandHandlerClient(conn)
 	log.Info("Client Created...")
-	id, err := uuid.NewRandom()
+	id, _ := uuid.NewRandom()
 	protoId := evented_proto.UUIDToProto(id)
 
 	for i := 0; i <= 1; i++ {
@@ -50,4 +58,21 @@ func main() {
 	}
 
 	log.Info("Done!")
+}
+
+func setupJaeger(service string, log *zap.SugaredLogger) (opentracing.Tracer, io.Closer) {
+	cfg := &config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+	tracer, closer, err := cfg.New(service, config.Logger(zap2jaeger.NewLogger(log.Desugar())))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+	}
+	return tracer, closer
 }
