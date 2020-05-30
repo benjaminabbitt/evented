@@ -8,13 +8,15 @@ import (
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
-func NewPlaceholderSagaLogic(log *zap.SugaredLogger) PlaceholderSagaLogic {
+func NewPlaceholderSagaLogic(log *zap.SugaredLogger, tracer *opentracing.Tracer) PlaceholderSagaLogic {
 	return PlaceholderSagaLogic{
-		log: log,
+		log:    log,
+		tracer: tracer,
 	}
 }
 
@@ -22,6 +24,7 @@ type PlaceholderSagaLogic struct {
 	evented_saga.UnimplementedSagaServer
 	eventDomain string
 	log         *zap.SugaredLogger
+	tracer      *opentracing.Tracer
 }
 
 func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.EventBook, error) {
@@ -53,7 +56,7 @@ func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *eventedcore.E
 
 func (o *PlaceholderSagaLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
 	evented_saga.RegisterSagaServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

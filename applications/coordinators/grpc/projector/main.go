@@ -8,6 +8,7 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 )
 
 /*
@@ -23,19 +24,22 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("grpcProjectorCoordinator", log)
 
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+
 	target := config.ProjectorURL()
 	log.Infow("Attempting to connect to Projector", "url", target)
-	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	projectorClient := eventedprojector.NewProjectorClient(conn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
-	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
 
 	domain := config.Domain()
 
-	server := projector.NewProjectorCoordinator(projectorClient, eventQueryClient, processedClient, domain, log)
+	server := projector.NewProjectorCoordinator(projectorClient, eventQueryClient, processedClient, domain, log, &tracer)
 
 	port := config.Port()
 	log.Infow("Starting Projector Proxy Server...", "port", port)

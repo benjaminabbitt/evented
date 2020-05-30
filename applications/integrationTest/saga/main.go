@@ -4,6 +4,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/saga/saga"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +19,11 @@ func main() {
 
 	config := configuration.Configuration{}
 	config.Initialize("saga", log)
-	server := saga.NewPlaceholderSagaLogic(log)
+
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+
+	server := saga.NewPlaceholderSagaLogic(log, &tracer)
 
 	port := config.Port()
 	log.Infow("Starting Saga Server...", "port", port)

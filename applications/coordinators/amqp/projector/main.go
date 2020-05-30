@@ -10,6 +10,7 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"
 	"go.uber.org/zap"
 )
@@ -30,7 +31,10 @@ func main() {
 
 	projectorClient := makeProjectorClient(config)
 
-	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
@@ -89,7 +93,9 @@ func makeProjectorClient(config configuration.Configuration) eventedprojector.Pr
 	log.Info("Starting...")
 	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
-	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
 	eventHandler := eventedprojector.NewProjectorClient(conn)
 	log.Info("Client Created...")

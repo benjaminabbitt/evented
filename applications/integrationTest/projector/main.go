@@ -4,6 +4,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/integrationTest/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/projector/projector"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,10 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("projector", log)
 
-	server := projector.NewPlaceholderProjectorLogic(log)
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+
+	server := projector.NewPlaceholderProjectorLogic(log, &tracer)
 
 	port := config.Port()
 	log.Infow("Starting Projector Server...", "port", port)

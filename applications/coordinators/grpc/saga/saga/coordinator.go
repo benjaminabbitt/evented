@@ -10,10 +10,11 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 )
 
-func NewSagaCoordinator(sagaClient eventedsaga.SagaClient, eventQueryClient eventedquery.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) SagaCoordinator {
+func NewSagaCoordinator(sagaClient eventedsaga.SagaClient, eventQueryClient eventedquery.EventQueryClient, otherCommandHandlerClient eventedcore.CommandHandlerClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) SagaCoordinator {
 	universalCoordinator := &universal.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -28,6 +29,7 @@ func NewSagaCoordinator(sagaClient eventedsaga.SagaClient, eventQueryClient even
 	return SagaCoordinator{
 		coordinator: universalSagaCoordinator,
 		Log:         log,
+		Tracer:      tracer,
 	}
 }
 
@@ -35,6 +37,7 @@ type SagaCoordinator struct {
 	eventedsagacoordinator.UnimplementedSagaCoordinatorServer
 	coordinator *universal.SagaCoordinator
 	Log         *zap.SugaredLogger
+	Tracer      *opentracing.Tracer
 }
 
 func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.SynchronousProcessingResponse, error) {
@@ -44,7 +47,7 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventB
 func (o *SagaCoordinator) Listen(port uint) {
 	lis := support.CreateListener(port, o.Log)
 
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.Log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.Log.Desugar(), *o.Tracer)
 
 	eventedsagacoordinator.RegisterSagaCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

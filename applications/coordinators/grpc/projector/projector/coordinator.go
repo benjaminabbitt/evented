@@ -9,11 +9,12 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
-func NewProjectorCoordinator(client eventedprojector.ProjectorClient, eventQueryClient eventedquery.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger) ProjectorCoordinator {
+func NewProjectorCoordinator(client eventedprojector.ProjectorClient, eventQueryClient eventedquery.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) ProjectorCoordinator {
 	universalCoordinator := &universal.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -30,6 +31,7 @@ func NewProjectorCoordinator(client eventedprojector.ProjectorClient, eventQuery
 	return ProjectorCoordinator{
 		log:         log,
 		Coordinator: universalProjectCoordinator,
+		tracer:      tracer,
 	}
 }
 
@@ -37,6 +39,7 @@ type ProjectorCoordinator struct {
 	eventedprojectorcoordinator.UnimplementedProjectorCoordinatorServer
 	Coordinator *universal.ProjectorCoordinator
 	log         *zap.SugaredLogger
+	tracer      *opentracing.Tracer
 }
 
 func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
@@ -46,7 +49,7 @@ func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.E
 func (o *ProjectorCoordinator) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
 	eventedprojectorcoordinator.RegisterProjectorCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

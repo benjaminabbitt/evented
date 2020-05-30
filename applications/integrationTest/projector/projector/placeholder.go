@@ -6,13 +6,15 @@ import (
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
-func NewPlaceholderProjectorLogic(log *zap.SugaredLogger) PlaceholderProjectorLogic {
+func NewPlaceholderProjectorLogic(log *zap.SugaredLogger, tracer *opentracing.Tracer) PlaceholderProjectorLogic {
 	return PlaceholderProjectorLogic{
-		log: log,
+		log:    log,
+		tracer: tracer,
 	}
 }
 
@@ -20,6 +22,7 @@ type PlaceholderProjectorLogic struct {
 	evented_projector.UnimplementedProjectorServer
 	eventDomain string
 	log         *zap.SugaredLogger
+	tracer      *opentracing.Tracer
 }
 
 func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*empty.Empty, error) {
@@ -41,7 +44,7 @@ func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *eventedc
 
 func (o *PlaceholderProjectorLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar())
+	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
 	evented_projector.RegisterProjectorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)

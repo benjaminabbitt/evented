@@ -9,6 +9,7 @@ import (
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 )
 
 /*
@@ -25,21 +26,24 @@ func main() {
 	config := configuration.Configuration{}
 	config.Initialize("grpcSagaCoordinator", log)
 
+	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	defer closer.Close()
+
 	sagaURL := config.SagaURL()
-	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log)
+	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log, tracer)
 	log.Infof("Connected to remote %s", sagaURL)
 	sagaClient := eventedsaga.NewSagaClient(sagaConn)
 
 	ochUrl := config.OtherCommandHandlerURL()
-	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log)
+	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log, tracer)
 	otherCommandHandler := eventedcore.NewCommandHandlerClient(otherCommandConn)
 
 	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
-	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log)
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
 	domain := config.Domain()
 
-	server := saga.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandler, p, domain, log)
+	server := saga.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandler, p, domain, log, &tracer)
 
 	port := config.Port()
 	log.Infow("Starting Saga Proxy Server...", "port", port)

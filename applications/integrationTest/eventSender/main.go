@@ -10,6 +10,7 @@ import (
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
+	"github.com/uber/jaeger-client-go"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +27,14 @@ func main() {
 	target := config.EventHandlerURL()
 	log.Info(target)
 
-	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log)
+	tracer, closer := jaeger.NewTracer(*config.AppName,
+		jaeger.NewConstSampler(true),
+		jaeger.NewInMemoryReporter(),
+	)
+
+	defer closer.Close()
+
+	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 
 	log.Infof("Connected to remote %s", target)
 

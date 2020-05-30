@@ -2,18 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go/config"
-	zap2jaeger "github.com/uber/jaeger-client-go/log/zap"
-	"go.uber.org/zap"
-	"io"
 	"time"
 )
 
@@ -27,7 +22,7 @@ func main() {
 	log.Info("Starting...")
 	target := config.CommandHandlerURL()
 	log.Info(target)
-	tracer, closer := setupJaeger("commandSender", log)
+	tracer, closer := jaeger.SetupJaeger("commandSender", log)
 	defer closer.Close()
 
 	span := tracer.StartSpan("test")
@@ -58,21 +53,4 @@ func main() {
 	}
 
 	log.Info("Done!")
-}
-
-func setupJaeger(service string, log *zap.SugaredLogger) (opentracing.Tracer, io.Closer) {
-	cfg := &config.Configuration{
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &config.ReporterConfig{
-			LogSpans: true,
-		},
-	}
-	tracer, closer, err := cfg.New(service, config.Logger(zap2jaeger.NewLogger(log.Desugar())))
-	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-	}
-	return tracer, closer
 }
