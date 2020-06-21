@@ -23,7 +23,7 @@ type PlaceholderBusinessLogicServer struct {
 	log *zap.SugaredLogger
 }
 
-func (o *PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error) {
+func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error) {
 	o.log.Infow("Business Logic Handle", "contextualCommand", in)
 	var eventPages []*eventedcore.EventPage
 	//TODO: harden
@@ -49,7 +49,7 @@ func (o *PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *evented
 	return eventBook, nil
 }
 
-func (o *PlaceholderBusinessLogicServer) Listen(port uint, tracer opentracing.Tracer) {
+func (o PlaceholderBusinessLogicServer) Listen(port uint, tracer opentracing.Tracer) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), tracer)
 

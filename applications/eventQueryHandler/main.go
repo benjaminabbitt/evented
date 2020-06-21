@@ -14,7 +14,7 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("eventQueryHandlerTest", log)
+	config.Initialize(log)
 
 	mongoUrl := config.DatabaseURL()
 	databaseName := config.DatabaseName()
@@ -26,7 +26,7 @@ func main() {
 	}
 	server := eventQueryServer.NewEventQueryServer(config.EventBookTargetSize(), repo, log)
 
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	port := config.Port()

@@ -21,13 +21,13 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("EventSender", log)
+	config.Initialize(log)
 
 	log.Info("Starting...")
 	target := config.EventHandlerURL()
 	log.Info(target)
 
-	tracer, closer := jaeger.NewTracer(*config.AppName,
+	tracer, closer := jaeger.NewTracer(config.AppName(),
 		jaeger.NewConstSampler(true),
 		jaeger.NewInMemoryReporter(),
 	)

@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: 1747
       protocol: TCP
-      name: http
+      name: evented
   selector:
     {{- include "commandHandler.selectorLabels" . | nindent 4 }}

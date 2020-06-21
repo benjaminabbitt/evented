@@ -17,12 +17,12 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("commandSender", log)
+	config.Initialize(log)
 
 	log.Info("Starting...")
 	target := config.CommandHandlerURL()
 	log.Info(target)
-	tracer, closer := jaeger.SetupJaeger("commandSender", log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	span := tracer.StartSpan("test")

@@ -22,9 +22,9 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("grpcProjectorCoordinator", log)
+	config.Initialize(log)
 
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	target := config.ProjectorURL()

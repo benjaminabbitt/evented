@@ -61,6 +61,7 @@ func (o *AMQPSender) connectWithBackoff() error {
 	conn, err := func(conn interface{}, err error) (*amqp.Connection, error) {
 		return conn.(*amqp.Connection), err
 	}(support.WithExpBackoff(func() (interface{}, error) {
+		//TODO: better error handling here
 		return amqp.Dial(o.url)
 	}, 3*time.Second))
 	o.conn = conn

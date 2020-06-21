@@ -25,13 +25,13 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("amqpEventCoordinator", log)
+	config.Initialize(log)
 
 	ctx := context.Background()
 
 	projectorClient := makeProjectorClient(config)
 
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
@@ -93,7 +93,7 @@ func makeProjectorClient(config configuration.Configuration) eventedprojector.Pr
 	log.Info("Starting...")
 	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))

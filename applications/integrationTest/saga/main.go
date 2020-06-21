@@ -18,9 +18,9 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("saga", log)
+	config.Initialize(log)
 
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	server := saga.NewPlaceholderSagaLogic(log, &tracer)

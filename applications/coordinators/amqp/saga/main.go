@@ -27,11 +27,11 @@ func main() {
 	defer log.Sync()
 
 	config := configuration.Configuration{}
-	config.Initialize("amqpEventCoordinator", log)
+	config.Initialize(log)
 
 	ctx := context.Background()
 
-	tracer, closer := jaeger.SetupJaeger(*config.AppName, log)
+	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
 	sagaClient := makeSagaClient(config, tracer)

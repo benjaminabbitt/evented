@@ -14,10 +14,12 @@ import (
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	snapshotmongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
+	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	config "github.com/uber/jaeger-client-go/config"
 	zap2jaeger "github.com/uber/jaeger-client-go/log/zap"
@@ -34,11 +36,12 @@ func main() {
 	log = support.Log()
 
 	config := configuration.Configuration{}
-	config.Initialize("commandHandler", log)
+	config.Initialize(log)
 
-	tracer, closer := setupJaeger(*config.AppName)
+	setupConsul(log, config)
+
+	tracer, closer := setupJaeger(config.AppName())
 	initSpan := tracer.StartSpan("Init")
-	defer initSpan.Finish()
 	defer closer.Close()
 
 	businessAddress := config.BusinessURL()
@@ -152,4 +155,17 @@ func setupJaeger(service string) (opentracing.Tracer, io.Closer) {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
 	}
 	return tracer, closer
+}
+
+func setupConsul(log *zap.SugaredLogger, config configuration.Configuration) {
+
+	c := consul.EventedConsul{Log: log, ConsulHost: config.ConsulHost()}
+	id, err := uuid.NewRandom()
+	if err != nil {
+		log.Error(err)
+	}
+	err = c.Register(config.AppName(), id.String(), config.Port())
+	if err != nil {
+		log.Error(err)
+	}
 }
