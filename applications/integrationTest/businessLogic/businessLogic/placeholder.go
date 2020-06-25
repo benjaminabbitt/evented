@@ -4,9 +4,7 @@ import (
 	eventedbusiness "github.com/benjaminabbitt/evented/proto/evented/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"time"
@@ -49,13 +47,3 @@ func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedc
 	return eventBook, nil
 }
 
-func (o PlaceholderBusinessLogicServer) Listen(port uint, tracer opentracing.Tracer) {
-	lis := support.CreateListener(port, o.log)
-	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), tracer)
-
-	eventedbusiness.RegisterBusinessLogicServer(grpcServer, o)
-	err := grpcServer.Serve(lis)
-	if err != nil {
-		o.log.Error(err)
-	}
-}

@@ -1,8 +1,11 @@
 package support
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"net/http"
 )
 
 type ConfigInit struct {
@@ -30,17 +33,24 @@ func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
 	o.name = viper.GetString("APP_NAME")
 
 	log.Infow("Attempting to reach Consul K/V", "host", o.consulHost, "key", o.consulKey)
+	resp, err := http.Get(fmt.Sprintf("http://%s/v1/kv/%s", o.consulHost, o.consulKey))
+	if err != nil {
+		log.Error(err)
+	}
 
-	var err error
+	body, err := ioutil.ReadAll(resp.Body)
+	log.Info(string(body))
+	_ = resp.Body.Close()
+
 	err = viper.AddRemoteProvider("consul", o.consulHost, o.consulKey)
 	if err != nil {
 		log.Error(err)
 	}
-
 	viper.SetConfigType("yaml")
-
 	err = viper.ReadRemoteConfig()
 	if err != nil {
 		log.Error(err)
 	}
+
+	log.Infow("Read consul.", "Proof", viper.GetString("proof"))
 }

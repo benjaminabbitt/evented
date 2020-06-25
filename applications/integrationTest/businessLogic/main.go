@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/businessLogic"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/configuration"
 	"github.com/benjaminabbitt/evented/proto/evented/business"
@@ -13,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"net"
 )
 
 var log *zap.SugaredLogger
@@ -30,8 +32,13 @@ func main() {
 		jaeger.NewConstSampler(true),
 		jaeger.NewInMemoryReporter(),
 	)
-
 	defer closer.Close()
+
+	log.Infow("Opening port", "port", config.Port())
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port()))
+	if err != nil {
+		log.Error(err)
+	}
 
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 
@@ -42,9 +49,11 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(rpc, health)
 	health.Resume()
 
-	port := config.Port()
-	log.Infow("Starting Business Server...", "port", port)
-	server.Listen(port, tracer)
+	log.Infow("Starting Business Server...")
+	err = rpc.Serve(lis)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func setupConsul(config configuration.Configuration) {
@@ -54,6 +63,6 @@ func setupConsul(config configuration.Configuration) {
 	if err != nil {
 		log.Error(err)
 	}
-	consul.Register(config.AppName(), id.String(), config.Port())
+	consul.Register("test2", id.String(), config.Port())
 
 }
