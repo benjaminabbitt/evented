@@ -1,6 +1,6 @@
 apiVersion: v2
-name: sample-business
-description: A Helm chart for Kubernetes
+name: evented-consumer
+description: The projection and saga component and plumbing of the evented framework.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

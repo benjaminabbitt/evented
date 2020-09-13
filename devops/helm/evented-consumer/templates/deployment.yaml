@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "evented-projection.fullname" . }}
+  labels:
+  {{- include "evented-projection.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+  {{- include "evented-projection.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+    {{- include "evented-projection.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "evented-projection.serviceAccountName" . }}
+      securityContext:
+      {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ include "evented-projection.name" . }}
+          securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.consumer.image.image }}:{{ .Values.consumer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.consumer.image.pullPolicy }}
+          {{if .Values.consumer.network.externalEnabled}}
+          ports:
+            - name: evented
+              containerPort: {{ .Values.consumer.network.port }}
+              protocol: TCP
+          {{ end }}
+          env:
+            - name: CONSUL_HOST
+              value: {{ .Values.bootstrap.consul.host }}
+            - name: CONSUL_KEY
+              value: {{ .Values.bootstrap.consul.key | default .Chart.Name }}
+            - name: GRPC_PORT
+              value: {{ .Values.consumer.network.port }}
+          livenessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=:{{ .Values.consumer.network.port }}" ]
+            initialDelaySeconds: 10
+          readinessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=:{{ .Values.consumer.network.port }}" ]
+          resources:
+        {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{include "evented-projection.name" . }}{{ print "-" .Chart.Name "-" .Values.coordinator.type "-coordinator"}}
+          image: {{ .Values.coordinator.image.image }}:{{ .Values.coordinator.image.tag }}
+          imagePullPolicy: {{ .Values.coordinator.image.pullPolicy }}
+          env:
+            - name: CONSUL_HOST
+              value: {{ .Values.bootstrap.consul.host }}
+            - name: CONSUL_KEY
+              value: {{ .Values.bootstrap.consul.key }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+  {{- toYaml . | nindent 8 }}
+  {{- end }}
