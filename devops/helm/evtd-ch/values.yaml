@@ -104,3 +104,7 @@ bootstrap:
   consul:
     host: consul.service.consul:8500
     key: test
+
+defaults:
+  commandHandlerName: ch
+  businessLogicName: bl

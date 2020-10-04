@@ -28,7 +28,7 @@ spec:
       securityContext:
       {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{(printf "%s-%s" .Values.domain .Values.name)}}
+        - name: {{(printf "%s-%s-%s" .Values.domain .Values.name .Values.defaults.commandHandlerName)}}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.commandhandler.image.image }}:{{ .Values.commandhandler.image.tag | default .Chart.AppVersion }}"
@@ -53,8 +53,8 @@ spec:
               command: [ "/bin/grpc_health_probe", "-addr=:{{ .Values.commandhandler.grpc.port }}" ]
             initialDelaySeconds: {{ .Values.commandhandler.probes.liveness.initialDelaySeconds }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-        - name: {{ (printf "%s-%s" .Values.domain .Values.name)}}
+        {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ (printf "%s-%s-%s" .Values.domain .Values.name .Values.defaults.businessLogicName)}}
           imagePullPolicy: {{.Values.businesslogic.image.pullPolicy}}
           image: {{ (printf "%s:%s" .Values.businesslogic.image.image .Values.businesslogic.image.tag) }}
           env:

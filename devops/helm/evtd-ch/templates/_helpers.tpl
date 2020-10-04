@@ -3,7 +3,7 @@
 Expand the name of the chart.
 */}}
 {{- define "commandHandler.name" -}}
-{{- default .Chart.Name .Values.name | trunc 63 | trimSuffix "-" }}
+{{- default .Values.domain .Values.name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -15,11 +15,11 @@ If release name contains chart name it will be used as a full name.
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.name }}
+{{- $name := printf "%s-%s" .Values.domain .Values.name }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" $name .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -41,13 +41,15 @@ helm.sh/chart: {{ include "commandHandler.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+evented/domain: {{.Values.domain}}
+evented/name: {{.Values.name}}
 {{- end }}
 
 {{/*
 Selector labels
 */}}
 {{- define "commandHandler.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "commandHandler.name" . }}
+app.kubernetes.io/name: {{ include "commandHandler.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
