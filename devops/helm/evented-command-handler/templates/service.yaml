@@ -13,3 +13,4 @@ spec:
       name: evented
   selector:
     {{- include "commandHandler.selectorLabels" . | nindent 4 }}
+
