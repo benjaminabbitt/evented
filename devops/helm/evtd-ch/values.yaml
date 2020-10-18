@@ -2,15 +2,14 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-domain: domain
-name: name
+domain: foo_domain
+name: foo_name
 
 commandhandler:
   image:
-    image: evented-commandhandler
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
+    image: "evented-commandhandler"
     tag: latest
+    pullPolicy: IfNotPresent
   grpc:
     port: 1747
   probes:
@@ -21,11 +20,11 @@ commandhandler:
 
 businesslogic:
   image:
-    image: ""
-    pullPolicy: IfNotPresent
+    image: "business_logic_image_name"
     tag: latest
+    pullPolicy: IfNotPresent
   grpc:
-    port: 1748
+    port: 1747
   probes:
     liveness:
       initialDelaySeconds: 10
@@ -50,7 +49,7 @@ podSecurityContext: { }
 # fsGroup: 2000
 
 securityContext: { }
-  # capabilities:
+# capabilities:
 #   drop:
 #   - ALL
 # readOnlyRootFilesystem: true
@@ -78,8 +77,8 @@ resources: { }
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
+# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+# limits:
 #   cpu: 100m
 #   memory: 128Mi
 # requests:
@@ -103,7 +102,7 @@ affinity: { }
 bootstrap:
   consul:
     host: consul.service.consul:8500
-    key: test
+#    key: test
 
 defaults:
   commandHandlerName: ch

@@ -28,7 +28,7 @@ spec:
       securityContext:
       {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{(printf "%s-%s-%s" .Values.domain .Values.name .Values.defaults.commandHandlerName)}}
+        - name: {{include "commandHandler.name" .}}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.commandhandler.image.image }}:{{ .Values.commandhandler.image.tag | default .Chart.AppVersion }}"
@@ -41,9 +41,9 @@ spec:
             - name: CONSUL_HOST
               value: {{ .Values.bootstrap.consul.host }}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key | default (printf "%s-%s" .Values.domain .Values.name) }}
+              value: {{ .Values.bootstrap.consul.key | default (include "commandHandler.name" .)}}
             - name: APP_NAME
-              value: {{ (printf "%s-%s" .Values.domain .Values.name)}}
+              value: {{ include "commandHandler.baseName" .}}
           readinessProbe:
             initialDelaySeconds: {{ .Values.commandhandler.probes.readiness.initialDelaySeconds }}
             exec:
@@ -54,14 +54,14 @@ spec:
             initialDelaySeconds: {{ .Values.commandhandler.probes.liveness.initialDelaySeconds }}
           resources:
         {{- toYaml .Values.resources | nindent 12 }}
-        - name: {{ (printf "%s-%s-%s" .Values.domain .Values.name .Values.defaults.businessLogicName)}}
+        - name: {{ include "businessLogic.name" .}}
           imagePullPolicy: {{.Values.businesslogic.image.pullPolicy}}
           image: {{ (printf "%s:%s" .Values.businesslogic.image.image .Values.businesslogic.image.tag) }}
           env:
             - name: CONSUL_HOST
               value: {{ .Values.bootstrap.consul.host}}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key | default (printf "%s-%s" .Values.domain .Values.name) }}
+              value: {{ .Values.bootstrap.consul.key  | default (include "businessLogic.name" .) }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
       {{- toYaml . | nindent 8 }}
