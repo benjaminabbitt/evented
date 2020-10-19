@@ -11,7 +11,7 @@ ui:
     type: 'LoadBalancer'
 server:
   replicas: 1
-  bootstrapExpect: 1
+  bootstrapExpect: 1 #must be <= server.replicas
   affinity: |
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
