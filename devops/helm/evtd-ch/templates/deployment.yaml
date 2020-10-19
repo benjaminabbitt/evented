@@ -54,14 +54,14 @@ spec:
             initialDelaySeconds: {{ .Values.commandhandler.probes.liveness.initialDelaySeconds }}
           resources:
         {{- toYaml .Values.resources | nindent 12 }}
-        - name: {{ include "businessLogic.name" .}}
+        - name: {{ include "commandHandler.businessLogicName" .}}
           imagePullPolicy: {{.Values.businesslogic.image.pullPolicy}}
           image: {{ (printf "%s:%s" .Values.businesslogic.image.image .Values.businesslogic.image.tag) }}
           env:
             - name: CONSUL_HOST
               value: {{ .Values.bootstrap.consul.host}}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key  | default (include "businessLogic.name" .) }}
+              value: {{ .Values.bootstrap.consul.key  | default (include "commandHandler.businessLogicName" .) }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
       {{- toYaml . | nindent 8 }}

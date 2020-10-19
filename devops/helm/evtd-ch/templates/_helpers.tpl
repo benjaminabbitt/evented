@@ -4,11 +4,11 @@ Expand the name of the chart.
 */}}
 
 {{- define "commandHandler.baseName" -}}
-{{- printf "%s.%s" .Values.domain .Values.name -}}
+{{- printf "%s-%s" .Values.domain .Values.name -}}
 {{- end }}
 
 {{- define "commandHandler.name" -}}
-{{- printf "%s.%s.%s" .Values.domain .Values.name .Values.defaults.commandHandlerName | trunc 63  }}
+{{- printf "%s-%s" (include "commandHandler.baseName" .) .Values.defaults.commandHandlerName | trunc 63  }}
 {{- end }}
 
 {{/*
@@ -20,12 +20,12 @@ If release name contains chart name it will be used as a full name.
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" (include "commandHandler.baseName" .) .Release.Name | trunc 63  }}
+{{- printf "%s-%s" (include "commandHandler.name" .) .Release.Name | trunc 63  }}
 {{- end }}
 {{- end }}
 
-{{- define "businessLogic.name" -}}
-{{- printf "%s.%s" (include "commandHandler.baseName" .) .Values.defaults.businessLogicName | trunc 63 -}}
+{{- define "commandHandler.businessLogicName" -}}
+{{- printf "%s-%s" (include "commandHandler.baseName" .) .Values.defaults.businessLogicName | trunc 63 -}}
 {{- end }}
 
 {{/*

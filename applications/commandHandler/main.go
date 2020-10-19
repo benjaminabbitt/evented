@@ -35,29 +35,29 @@ var log *zap.SugaredLogger
 func main() {
 	log = support.Log()
 
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	conf := configuration.Configuration{}
+	conf.Initialize(log)
 
-	setupConsul(log, config)
+	setupConsul(log, conf)
 
-	tracer, closer := setupJaeger(config.AppName())
+	tracer, closer := setupJaeger(conf.AppName())
 	initSpan := tracer.StartSpan("Init")
 	defer closer.Close()
 
-	businessAddress := config.BusinessURL()
-	commandHandlerPort := config.Port()
+	businessAddress := conf.BusinessURL()
+	commandHandlerPort := conf.Port()
 	log.Infow("Starting Command Handler", "port", commandHandlerPort)
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 	log.Infow("Command Handler Started", "port", commandHandlerPort)
 
-	eventRepo, _ := setupEventRepo(config, log, initSpan)
-	ssRepo := setupSnapshotRepo(config, initSpan)
+	eventRepo, _ := setupEventRepo(conf, log, initSpan)
+	ssRepo := setupSnapshotRepo(conf, initSpan)
 
-	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, config.Domain(), log)
+	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, conf.Domain(), log)
 
 	handlers := transport.NewTransportHolder(log)
 
-	for _, url := range config.SagaURLs() {
+	for _, url := range conf.SagaURLs() {
 		log.Infow("Connecting with Saga... ", "url", url)
 		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
 		err := handlers.Add(saga.NewGRPCSagaClient(sagaConn))
@@ -67,7 +67,7 @@ func main() {
 		log.Infow("Connection with Saga Successful", "url", url)
 	}
 
-	for _, url := range config.ProjectorURLs() {
+	for _, url := range conf.ProjectorURLs() {
 		log.Infow("Connecting with Projector... ", "url", url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
 		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
@@ -77,7 +77,7 @@ func main() {
 		log.Infow("Connection with Projector Successful.", "url", url)
 	}
 
-	err := handlers.Add(setupServiceBus(config, initSpan))
+	err := handlers.Add(setupServiceBus(conf, initSpan))
 	if err != nil {
 		log.Error(err)
 	}
@@ -88,27 +88,62 @@ func main() {
 		businessClient,
 		log,
 	)
-
-	log.Infow("Opening port", "port", config.Port())
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port()))
-	if err != nil {
-		log.Error(err)
-	}
+	addrs := getExternalAddrs()
+	log.Infow("Opening port on addresses", "port", conf.Port(), "addrs", addrs)
+	listeners := listen(addrs, conf.Port())
 	log.Infow("Creating GRPC Server")
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 	log.Infow("Registering Command Handler with GRPC")
 	eventedcore.RegisterCommandHandlerServer(rpc, server)
 
-	health := health.NewServer()
-	grpc_health_v1.RegisterHealthServer(rpc, health)
-	health.Resume()
+	healthServer := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(rpc, healthServer)
+	healthServer.Resume()
 	log.Infow("Handler registered.")
 	log.Infow("Serving...")
 	initSpan.Finish()
-	err = rpc.Serve(lis)
-	if err != nil {
-		log.Error(err)
+	for _, listener := range listeners {
+		err = rpc.Serve(listener)
+		if err != nil {
+			log.Error(err)
+		}
 	}
+}
+
+func listen(externalAddrs []string, port uint) (listeners []net.Listener) {
+	for _, addr := range externalAddrs {
+		listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
+		if err != nil {
+			listeners = append(listeners, listener)
+		}
+	}
+	return listeners
+}
+
+func getExternalAddrs() (externalAddrs []string) {
+	ifaces, err := net.Interfaces()
+	if err == nil {
+		for _, i := range ifaces {
+			addrs, _ := i.Addrs()
+			for _, addr := range addrs {
+				switch v := addr.(type) {
+				case *net.IPNet:
+					externalAddrs = addIfNotLoopback(v.IP, externalAddrs)
+				case *net.IPAddr:
+					externalAddrs = addIfNotLoopback(v.IP, externalAddrs)
+				}
+			}
+		}
+	}
+	return externalAddrs
+}
+
+func addIfNotLoopback(addr net.IP, externalAddrs []string) (rExternalAddrs []string) {
+	rExternalAddrs = externalAddrs
+	if !addr.IsLoopback() {
+		rExternalAddrs = append(rExternalAddrs, addr.String())
+	}
+	return rExternalAddrs
 }
 
 func setupSnapshotRepo(config configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {

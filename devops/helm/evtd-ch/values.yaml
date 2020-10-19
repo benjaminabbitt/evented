@@ -2,8 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-domain: foo_domain
-name: foo_name
+# TODO: add validation
+# domain and name are used to create DNS-1123 subdomains, so must consist only of [a-z, -, .].  Regex is [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
+domain: testdomain
+name: testname
 
 commandhandler:
   image:
@@ -76,7 +78,7 @@ ingress:
 resources: { }
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
 # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
 # limits:
 #   cpu: 100m
