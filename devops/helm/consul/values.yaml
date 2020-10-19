@@ -1,0 +1,23 @@
+# values.yaml
+global:
+  name: consul
+  datacenter: hashidc1
+#connectInject:
+#  enabled: true
+syncCatalog:
+  enabled: true
+ui:
+  service:
+    type: 'LoadBalancer'
+server:
+  replicas: 1
+  bootstrapExpect: 1
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: "{{ .Release.Name }}"
+              component: server
+          topologyKey: kubernetes.io/hostname
