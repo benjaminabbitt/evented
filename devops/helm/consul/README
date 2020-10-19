@@ -12,8 +12,15 @@ NAME                CHART VERSION   APP VERSION DESCRIPTION
 hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
 
 
-
-
 $ helm install consul hashicorp/consul -f config.yaml
 
-$ kubectl port-forward service/consul-server 8500:8500
+
+Determine IP of Consul for DNS
+
+$ kubectl get svc consul-dns -o jsonpath='{.spec.clusterIP}'
+
+Edit dnsConfigMap.yaml with IP
+
+$kubectl apply -f .\dnsConfigMap.yaml
+
+$kubectl apply -f .\verifyDNS.yaml

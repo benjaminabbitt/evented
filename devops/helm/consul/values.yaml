@@ -1,7 +1,8 @@
 # values.yaml
 global:
   name: consul
-  datacenter: hashidc1
+  domain: evented
+  datacenter: evented
 #connectInject:
 #  enabled: true
 syncCatalog:
