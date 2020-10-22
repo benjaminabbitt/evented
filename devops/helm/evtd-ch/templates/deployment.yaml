@@ -62,6 +62,10 @@ spec:
               value: {{ .Values.bootstrap.consul.host}}
             - name: CONSUL_KEY
               value: {{ .Values.bootstrap.consul.key  | default (include "commandHandler.businessLogicName" .) }}
+            - name: JWT_SECRET
+              value: {{ .Values.bootstrap.jwt.key}}
+            - name: APP_NAME
+              value: {{include "commandHandler.businessLogicName" .}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
       {{- toYaml . | nindent 8 }}

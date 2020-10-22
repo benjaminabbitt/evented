@@ -1,3 +1,7 @@
 env:
   - name: CONSUL_HOST
     value: consul-server
+
+booostrap:
+  jwt:
+    key: Test

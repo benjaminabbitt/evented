@@ -24,3 +24,5 @@ Edit dnsConfigMap.yaml with IP
 $kubectl apply -f .\dnsConfigMap.yaml
 
 $kubectl apply -f .\verifyDNS.yaml
+
+$ kubectl get pods --show-all | grep dns
