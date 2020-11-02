@@ -31,7 +31,7 @@ spec:
         - name: {{include "commandHandler.name" .}}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.commandhandler.image.image }}:{{ .Values.commandhandler.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.commandhandler.image.name }}:{{ .Values.commandhandler.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.commandhandler.image.pullPolicy }}
           ports:
             - name: evented
@@ -41,7 +41,7 @@ spec:
             - name: CONSUL_HOST
               value: {{ .Values.bootstrap.consul.host }}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key | default (include "commandHandler.name" .)}}
+              value: {{ .Values.commandhandler.configuration.key | default (include "commandHandler.name" .) }}
             - name: APP_NAME
               value: {{ include "commandHandler.baseName" .}}
           readinessProbe:
@@ -56,12 +56,12 @@ spec:
         {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ include "commandHandler.businessLogicName" .}}
           imagePullPolicy: {{.Values.businesslogic.image.pullPolicy}}
-          image: {{ (printf "%s:%s" .Values.businesslogic.image.image .Values.businesslogic.image.tag) }}
+          image: {{ (printf "%s:%s" .Values.businesslogic.image.name .Values.businesslogic.image.tag) }}
           env:
             - name: CONSUL_HOST
               value: {{ .Values.bootstrap.consul.host}}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key  | default (include "commandHandler.businessLogicName" .) }}
+              value: {{ .Values.businesslogic.configuration.key  | default (include "commandHandler.businessLogicName" .) }}
             - name: JWT_SECRET
               value: {{ .Values.bootstrap.jwt.key}}
             - name: APP_NAME

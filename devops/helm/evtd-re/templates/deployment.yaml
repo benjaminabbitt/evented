@@ -31,7 +31,7 @@ spec:
         - name: {{ include "evented-projection.name" . }}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.consumer.image.image }}:{{ .Values.consumer.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.consumer.image.name }}:{{ .Values.consumer.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.consumer.image.pullPolicy }}
           {{if .Values.consumer.network.externalEnabled}}
           ports:
@@ -56,7 +56,7 @@ spec:
           resources:
         {{- toYaml .Values.resources | nindent 12 }}
         - name: {{include "evented-projection.name" . }}{{ print "-" .Chart.Name "-" .Values.coordinator.type "-coordinator"}}
-          image: {{ .Values.coordinator.image.image }}:{{ .Values.coordinator.image.tag }}
+          image: {{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}
           imagePullPolicy: {{ .Values.coordinator.image.pullPolicy }}
           env:
             - name: CONSUL_HOST

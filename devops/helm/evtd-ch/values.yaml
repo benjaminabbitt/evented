@@ -4,16 +4,18 @@
 
 # TODO: add validation
 # domain and name are used to create DNS-1123 subdomains, so must consist only of [a-z, -, .].  Regex is [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
-domain: testdomain
-name: testname
+domain: domain
+name: business-logic
 
 commandhandler:
   image:
-    image: "evented-commandhandler"
+    name: evented-commandhandler
     tag: latest
     pullPolicy: IfNotPresent
   grpc:
     port: 1747
+  configuration:
+    key:
   probes:
     liveness:
       initialDelaySeconds: 10
@@ -22,11 +24,13 @@ commandhandler:
 
 businesslogic:
   image:
-    image: "business_logic_image_name"
+    name: business_logic_image_name
     tag: latest
     pullPolicy: IfNotPresent
   grpc:
     port: 1747
+  configuration:
+    key:
   probes:
     liveness:
       initialDelaySeconds: 10
@@ -76,7 +80,7 @@ ingress:
   #      - chart-example.local
 
 resources: { }
-  # We usually recommend not to specify default resources and to leave this as a conscious
+# We usually recommend not to specify default resources and to leave this as a conscious
 # choice for the user. This also increases chances charts run on environments with little
 # resources, such as Minikube. If you do want to specify resources, uncomment the following
 # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
@@ -103,8 +107,8 @@ affinity: { }
 
 bootstrap:
   consul:
-    host: consul.service.consul:8500
-    #key: nonsense
+    host: consul-server
+    port: 8500
   jwt:
     key: test
 
