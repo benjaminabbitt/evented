@@ -105,12 +105,9 @@ tolerations: [ ]
 
 affinity: { }
 
-bootstrap:
-  consul:
-    host: consul-server
-    port: 8500
-  jwt:
-    key: test
+consul:
+  host: consul-server
+  port: 8500
 
 defaults:
   commandHandlerName: ch

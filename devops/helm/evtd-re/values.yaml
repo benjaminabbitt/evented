@@ -57,7 +57,6 @@ tolerations: [ ]
 
 affinity: { }
 
-bootstrap:
-  consul:
-    host: consul.service.consul:8500
-    key: ""
+consul:
+  host: consul.service.consul:8500
+  key:

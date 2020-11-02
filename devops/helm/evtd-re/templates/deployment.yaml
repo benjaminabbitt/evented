@@ -41,9 +41,9 @@ spec:
           {{ end }}
           env:
             - name: CONSUL_HOST
-              value: {{ .Values.bootstrap.consul.host }}
+              value: {{ .Values.consul.host }}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key | default .Chart.Name }}
+              value: {{ .Values.consul.key | default .Chart.Name }}
             - name: GRPC_PORT
               value: {{ .Values.consumer.network.port }}
           livenessProbe:
@@ -60,9 +60,9 @@ spec:
           imagePullPolicy: {{ .Values.coordinator.image.pullPolicy }}
           env:
             - name: CONSUL_HOST
-              value: {{ .Values.bootstrap.consul.host }}
+              value: {{ .Values.consul.host }}
             - name: CONSUL_KEY
-              value: {{ .Values.bootstrap.consul.key }}
+              value: {{ .Values.consul.key }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
       {{- toYaml . | nindent 8 }}
