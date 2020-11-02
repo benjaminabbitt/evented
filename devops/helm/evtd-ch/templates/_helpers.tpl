@@ -4,7 +4,7 @@ Expand the name of the chart.
 */}}
 
 {{- define "commandHandler.baseName" -}}
-{{- printf "%s-%s" .Values.domain .Values.name -}}
+{{- printf .Values.domain -}}
 {{- end }}
 
 {{- define "commandHandler.name" -}}

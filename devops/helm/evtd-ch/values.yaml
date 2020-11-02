@@ -5,7 +5,7 @@
 # TODO: add validation
 # domain and name are used to create DNS-1123 subdomains, so must consist only of [a-z, -, .].  Regex is [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
 domain: domain
-name: business-logic
+name: domain
 
 commandhandler:
   image:
