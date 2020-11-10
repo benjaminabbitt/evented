@@ -27,16 +27,17 @@ Future:
 * Typescript (Node)
 * Python
 
-### First and a half
-First and a half languages are languages that the first class libraries should work with, but will not be tested.  Some efforts may be made to make using these languages easier with the first class language support libraries.
+### Second class languages
+First and a half languages are languages that the first class libraries should work with, but will not have automated test suites.  Some efforts may be made to make using these languages easier with the first class language support libraries.  These may be promoted (looking at you, Kotlin) to first tier in the future.
 
 * Kotlin (JVM)
 * Javascript (Node)
 * F# (CLR)
 * Scala (JVM) -- Much synergy with this framework and Akka
 
-### Second class languages
-Second class languages will work by implementing GRPC endpoints based on the provided protocol buffer definitions.  
+### Third class languages
+Third class languages will work by implementing GRPC endpoints based on the provided protocol buffer definitions.  Support libraries and examples will not be available for them at this time, but they will work if they implement the GRPC contracts.  I welcome examples and documentation for these to be provided by the community.
+
 * C++
 * Dart
 * Objective C
@@ -67,13 +68,13 @@ No, GRPC allows the clients (you, a user of the framework) to write in a myriad 
 No, but it will certainly help structure your application.  Sometimes, domain driven design vocabulary is used within the Evented system, but I endeavour to keep its use as minimal as possible.
 
 ### Use Event Sourcing?
-No, but it will help, and the framework makes it as easy as possible.  The framework will require you to use events, but you do not have to use event sourcing.  The business logic can be passed a serialized snapshot and a single-event list for every execution and return a new snapshot which the framework will store.
+No, but it will help, and the framework makes it as easy as possible.  The framework will require you to use events, but you do not have to use event sourcing.  The business logic can be passed a serialized snapshot of the business state and a single-event list for every execution and return a new snapshot which the framework will persist.
 
 ## I have questions.  Why did you...?
 ### Use Go?
 A few factors:
 * I wanted something that had robust support for GRPC, so that framework users can program in the language and runtime of their choosing.
-* Go can and does compile to static executable code, reducing container sizes.  Other options were unattractive (except for Rust, which looks great, but doesn't have first-class support for GRPC)
+* Go compiles to static executable code, reducing container sizes.  Other options were unattractive (except for Rust, which looks great, but doesn't have first-party support for GRPC at the time of this writing).
 * I wanted to learn Go, as it is gaining steam in the DevOps community.
 
 ### Use the generated protobuf/grpc data models throughout all layers of the application?  Isn't that bad architecture?
