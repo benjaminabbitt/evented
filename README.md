@@ -1,6 +1,8 @@
 # Evented Framework
-# WIP
-This is a work in progress.  Please star, and come back in the future.  Depending on professional workload, tentative release at the end of 2020.
+# Not Dead
+This is a work in progress.  Please star, and come back in the future.  Depending on personal and professional workload, tentative release at the end of 2020.
+
+Note:  My family is moving, so work on this is slow.  I am continuing to work slowly, as time allows.  I hope for a more concentrated push in mid 2021.
 
 ## What is this thing?
 
