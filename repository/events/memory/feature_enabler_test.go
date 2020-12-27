@@ -12,9 +12,11 @@ func init() {
 }
 
 type Empty struct{}
+
 func TestMain(m *testing.M) {
 	format := cucumber.GetFormat()
 	opts := cucumber.GetOptions(format)
+	opts.Paths = []string{"../"}
 	suite := godog.TestSuite{
 		Name:                 reflect.TypeOf(Empty{}).PkgPath(),
 		TestSuiteInitializer: InitializeTestSuite,
