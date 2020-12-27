@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/repository/events"
+	evented_memory_ops "github.com/benjaminabbitt/evented/repository/events"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -38,7 +38,7 @@ func (m EventRepoMongo) pageToMEP(root uuid.UUID, page *evented_core.EventPage) 
 
 	return mongoEvent{
 		MongoId:     mongoId,
-		Sequence:    m.getSequence(page),
+		Sequence:    evented_memory_ops.GetSequence(m.log, page),
 		CreatedAt:   page.CreatedAt,
 		Event:       page.Event,
 		Synchronous: page.Synchronous,
@@ -51,16 +51,7 @@ func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, p
 	return m.pageToMEP(root, page)
 }
 
-func (m EventRepoMongo) getSequence(page *evented_core.EventPage) uint32 {
-	var sequence uint32
-	switch s := page.Sequence.(type) {
-	case *evented_core.EventPage_Num:
-		sequence = s.Num
-	default:
-		m.log.Error("Attempted to retreive sequence from event without sequence set.  This should not happen")
-	}
-	return sequence
-}
+
 
 func (m EventRepoMongo) generateId(root uuid.UUID, page *evented_core.EventPage) [12]byte {
 	var mongoId [12]byte
@@ -70,7 +61,7 @@ func (m EventRepoMongo) generateId(root uuid.UUID, page *evented_core.EventPage)
 	}
 
 	var sequenceBytes [4]byte
-	binary.BigEndian.PutUint32(sequenceBytes[:], m.getSequence(page))
+	binary.BigEndian.PutUint32(sequenceBytes[:], evented_memory_ops.GetSequence(m.log, page))
 
 	for i, v := range sequenceBytes {
 		mongoId[i+8] = v
@@ -103,7 +94,7 @@ func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented
 	var forced *evented_core.EventPage
 	remainingEvents := events
 	for {
-		numbered, forced, remainingEvents = m.extractUntilFirstForced(remainingEvents)
+		numbered, forced, remainingEvents = evented_memory_ops.ExtractUntilFirstForced(remainingEvents)
 		if len(numbered) > 0 {
 			err := m.insert(ctx, id, numbered)
 			if err != nil {
@@ -123,15 +114,7 @@ func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented
 	return nil
 }
 
-func (m EventRepoMongo) extractUntilFirstForced(events []*evented_core.EventPage) (numbered []*evented_core.EventPage, forced *evented_core.EventPage, remainder []*evented_core.EventPage) {
-	for idx, page := range events {
-		switch page.GetSequence().(type) {
-		case *evented_core.EventPage_Force:
-			return events[:idx], page, events[idx+1:]
-		}
-	}
-	return events, nil, nil
-}
+
 
 func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) error {
 	var err error
@@ -300,7 +283,7 @@ func (m EventRepoMongo) EstablishIndices() error {
 	return nil
 }
 
-func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client events.EventStorer, err error) {
+func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client evented_memory_ops.EventStorer, err error) {
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err

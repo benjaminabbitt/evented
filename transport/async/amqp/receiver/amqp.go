@@ -3,11 +3,10 @@ package receiver
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/support"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
-	"time"
 )
 
 type AMQPDecodedMessage struct {
@@ -56,8 +55,8 @@ func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_cor
 	if err != nil {
 		o.Log.Error(err)
 	}
-	if book == nil || book.Cover == nil {
-		o.Log.Errorw("Book or Cover is nil, this should not be possible here", "book", book, "cover", book.Cover)
+	if book.Cover == nil {
+		o.Log.Errorw("Cover is nil, this should not be possible here", "book", book, "cover", book.Cover)
 	}
 	uuid, err := evented_proto.ProtoToUUID(book.Cover.GetRoot())
 	if err != nil {
@@ -67,20 +66,15 @@ func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_cor
 	return book, func() error { return o.ch.Ack(delivery.DeliveryTag, false) }, func() error { return o.ch.Nack(delivery.DeliveryTag, false, true) }
 }
 
-func (o *AMQPReceiver) connectWithBackoff() error {
-	var conn *amqp.Connection
-	// This is sufficiently ugly I may replace it at some point soon, just for readability
-	conn, err := func(conn interface{}, err error) (*amqp.Connection, error) {
-		return conn.(*amqp.Connection), err
-	}(support.WithExpBackoff(func() (interface{}, error) {
-		return amqp.Dial(o.SourceURL)
-	}, 3*time.Second))
-	o.conn = conn
-	return err
-}
-
 func (o *AMQPReceiver) Connect() error {
-	err := o.connectWithBackoff()
+	err := backoff.Retry(func() error {
+		var err error
+		var conn *amqp.Connection
+		conn, err = amqp.Dial(o.SourceURL)
+		o.conn = conn
+		return err
+	}, backoff.NewExponentialBackOff())
+
 	if err != nil {
 		o.Log.Error(err)
 	}

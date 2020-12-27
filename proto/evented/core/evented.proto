@@ -15,10 +15,6 @@ message Cover {
     UUID root = 1;
 }
 
-message ForceSequence {
-    EventPage page = 1;
-}
-
 message EventPage {
     oneof sequence {
         uint32 num = 1;
@@ -36,8 +32,8 @@ message Snapshot {
 
 message EventBook {
     Cover cover = 1;
-    repeated EventPage pages = 2;
-    Snapshot snapshot = 3;
+    Snapshot snapshot = 2;
+    repeated EventPage pages = 3;
 }
 
 message Projection {
@@ -64,32 +60,26 @@ message CommandBook {
 }
 
 message ContextualCommand {
+    // Passed from command handler to business, consists of everything that the business needs to execute/evaluate the command
     EventBook events = 1;
     CommandBook command = 2;
 }
 
-service CommandHandler {
-    rpc Handle (CommandBook) returns (SynchronousProcessingResponse) {
-    }
-    rpc Record (EventBook) returns (SynchronousProcessingResponse) {
-    }
-}
-
-message HealthCheckRequest {
-    string service = 1;
-}
-
-message HealthCheckResponse {
-    enum ServingStatus {
-        UNKNOWN = 0;
-        SERVING = 1;
-        NOT_SERVING = 2;
-    }
-    ServingStatus status = 1;
-}
-
-service Health {
-    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
-
-    rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
-}
+//message HealthCheckRequest {
+//    string service = 1;
+//}
+//
+//message HealthCheckResponse {
+//    enum ServingStatus {
+//        UNKNOWN = 0;
+//        SERVING = 1;
+//        NOT_SERVING = 2;
+//    }
+//    ServingStatus status = 1;
+//}
+//
+//service Health {
+//    rpc Check (HealthCheckRequest) returns (HealthCheckResponse);
+//
+//    rpc Watch (HealthCheckRequest) returns (stream HealthCheckResponse);
+//}

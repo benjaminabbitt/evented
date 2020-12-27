@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
-	eventedprojector "github.com/benjaminabbitt/evented/proto/evented/projector"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
+	projector2 "github.com/benjaminabbitt/evented/proto/evented/projector/projector"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -30,7 +30,7 @@ func main() {
 	target := config.ProjectorURL()
 	log.Infow("Attempting to connect to Projector", "url", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
-	projectorClient := eventedprojector.NewProjectorClient(conn)
+	projectorClient := projector2.NewProjectorClient(conn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 

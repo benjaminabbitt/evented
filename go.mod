@@ -5,7 +5,8 @@ go 1.14
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/alash3al/go-pubsub v0.0.0-20200412052039-02569461a126
-	github.com/cucumber/godog v0.9.0
+	github.com/cenkalti/backoff/v4 v4.1.0
+	github.com/cucumber/godog v0.10.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1
@@ -23,7 +24,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	go.mongodb.org/mongo-driver v1.3.1

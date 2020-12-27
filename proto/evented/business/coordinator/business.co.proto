@@ -5,7 +5,7 @@ option java_package = "name.benjaminabbitt.evented.business";
 
 import "evented/core/evented.proto";
 
-service CommandHandler {
+service BusinessCoordinator {
     rpc Handle (evented.core.CommandBook) returns (evented.core.SynchronousProcessingResponse) {
     }
     rpc Record (evented.core.EventBook) returns (evented.core.SynchronousProcessingResponse) {

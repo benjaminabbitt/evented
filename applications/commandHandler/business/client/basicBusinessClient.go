@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	eventedbusiness "github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/evented/business/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -14,13 +14,13 @@ func NewBusinessClient(target string, log *zap.SugaredLogger) (client BasicBusin
 	log.Infow("Connected", "target", target)
 	return BasicBusinessClient{
 		log,
-		eventedbusiness.NewBusinessLogicClient(conn),
+		business.NewBusinessLogicClient(conn),
 	}, nil
 }
 
 type BasicBusinessClient struct {
 	log *zap.SugaredLogger
-	bl  eventedbusiness.BusinessLogicClient
+	bl  business.BusinessLogicClient
 }
 
 func (client BasicBusinessClient) Handle(ctx context.Context, command *eventedcore.ContextualCommand) (events *eventedcore.EventBook, err error) {

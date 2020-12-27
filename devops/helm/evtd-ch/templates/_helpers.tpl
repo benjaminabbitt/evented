@@ -8,7 +8,7 @@ Expand the name of the chart.
 {{- end }}
 
 {{- define "commandHandler.name" -}}
-{{- printf "%s-%s" (include "commandHandler.baseName" .) .Values.defaults.commandHandlerName | trunc 63  }}
+{{- printf "%s" (include "commandHandler.baseName" .) | trunc 63  }}
 {{- end }}
 
 {{/*

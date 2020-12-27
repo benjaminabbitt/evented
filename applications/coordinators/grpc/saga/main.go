@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
-	eventedsaga "github.com/benjaminabbitt/evented/proto/evented/saga"
+	saga2 "github.com/benjaminabbitt/evented/proto/evented/saga/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -32,7 +32,7 @@ func main() {
 	sagaURL := config.SagaURL()
 	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log, tracer)
 	log.Infof("Connected to remote %s", sagaURL)
-	sagaClient := eventedsaga.NewSagaClient(sagaConn)
+	sagaClient := saga2.NewSagaClient(sagaConn)
 
 	ochUrl := config.OtherCommandHandlerURL()
 	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log, tracer)

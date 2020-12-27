@@ -24,11 +24,11 @@ commandhandler:
 
 businesslogic:
   image:
-    name: business_logic_image_name
+    name: business-logic
     tag: latest
     pullPolicy: IfNotPresent
   grpc:
-    port: 1747
+    port: 1748
   configuration:
     key:
   probes:
@@ -110,5 +110,4 @@ consul:
   port: 8500
 
 defaults:
-  commandHandlerName: ch
   businessLogicName: bl

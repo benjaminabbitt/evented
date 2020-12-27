@@ -3,9 +3,9 @@ package universal
 import (
 	"context"
 	"fmt"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	eventedprojector "github.com/benjaminabbitt/evented/proto/evented/projector"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
+	"github.com/benjaminabbitt/evented/proto/evented/projector/projector"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -15,7 +15,7 @@ import (
 type ProjectorCoordinator struct {
 	Coordinator      *Coordinator
 	Domain           string //Domain of the Source
-	ProjectorClient  eventedprojector.ProjectorClient
+	ProjectorClient  projector.ProjectorClient
 	EventQueryClient eventedquery.EventQueryClient
 	Processed        *processed.Processed
 	Log              *zap.SugaredLogger

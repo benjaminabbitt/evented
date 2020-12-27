@@ -2,8 +2,8 @@ package eventQueryServer
 
 import (
 	eventedproto "github.com/benjaminabbitt/evented/proto"
+	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"

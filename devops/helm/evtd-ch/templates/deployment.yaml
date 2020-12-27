@@ -39,7 +39,7 @@ spec:
               protocol: TCP
           env:
             - name: CONSUL_HOST
-              value: {{ .Values.consul.host }}
+              value: {{ .Values.consul.host }}:{{.Values.consul.port}}
             - name: CONSUL_KEY
               value: {{ .Values.commandhandler.configuration.key | default (include "commandHandler.name" .) }}
             - name: APP_NAME
@@ -59,7 +59,7 @@ spec:
           image: {{ (printf "%s:%s" .Values.businesslogic.image.name .Values.businesslogic.image.tag) }}
           env:
             - name: CONSUL_HOST
-              value: {{ .Values.consul.host}}
+              value: {{ .Values.consul.host}}:{{.Values.consul.port}}
             - name: CONSUL_KEY
               value: {{ .Values.businesslogic.configuration.key  | default (include "commandHandler.businessLogicName" .) }}
             - name: APP_NAME

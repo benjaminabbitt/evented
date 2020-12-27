@@ -6,14 +6,16 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
+	business "github.com/benjaminabbitt/evented/proto/evented/business/coordinator"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-func NewServer(eventBookRepository eventBook.EventBookStorer, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
+func NewServer(eventBookRepository eventBook.Storer, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
 	return Server{
 		log:                 log,
 		eventBookRepository: eventBookRepository,
@@ -22,14 +24,14 @@ func NewServer(eventBookRepository eventBook.EventBookStorer, transports transpo
 	}
 }
 
-func (o *Server) Earmuffs() {
+func (o *Server) Shutdown() {
 	o.server.GracefulStop()
 }
 
 type Server struct {
-	eventedcore.UnimplementedCommandHandlerServer
+	business.UnimplementedBusinessCoordinatorServer
 	log                 *zap.SugaredLogger
-	eventBookRepository eventBook.EventBookStorer
+	eventBookRepository eventBook.Storer
 	transports          transport.TransportHolder
 	businessClient      client.BusinessClient
 	server              *grpc.Server
@@ -50,7 +52,11 @@ func (o Server) Handle(ctx context.Context, in *eventedcore.CommandBook) (result
 		Command: in,
 	}
 
-	businessResponse, err := o.businessClient.Handle(ctx, contextualCommand)
+	var businessResponse *eventedcore.EventBook
+	err = backoff.Retry(func() error {
+		businessResponse, err = o.businessClient.Handle(ctx, contextualCommand)
+		return err
+	}, backoff.NewExponentialBackOff())
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +105,12 @@ func (o Server) handleEventBook(ctx context.Context, eb *eventedcore.EventBook) 
 
 func (o Server) executeSyncSagas(ctx context.Context, sync *eventedcore.EventBook) (eventBooks []*eventedcore.EventBook, projections []*eventedcore.Projection, rerr error) {
 	for _, syncSaga := range o.transports.GetSaga() {
-		response, err := syncSaga.HandleSync(ctx, sync)
+		var response *eventedcore.SynchronousProcessingResponse
+		var err error
+		backoff.Retry(func() error {
+			response, err = syncSaga.HandleSync(ctx, sync)
+			return err
+		}, backoff.NewExponentialBackOff())
 		if err != nil {
 			o.log.Error(err)
 			rerr = multierror.Append(rerr, err)
@@ -114,7 +125,12 @@ func (o Server) executeSyncSagas(ctx context.Context, sync *eventedcore.EventBoo
 func (o Server) executeSyncProjections(ctx context.Context, sync *eventedcore.EventBook) (result []*eventedcore.Projection, rerr error) {
 	result = []*eventedcore.Projection{}
 	for _, syncProjector := range o.transports.GetProjectors() {
-		response, err := syncProjector.HandleSync(ctx, sync)
+		var response *eventedcore.Projection
+		var err error
+		backoff.Retry(func() error {
+			response, err = syncProjector.HandleSync(ctx, sync)
+			return err
+		}, backoff.NewExponentialBackOff())
 		if err != nil {
 			o.log.Error(err)
 			rerr = multierror.Append(rerr, err)

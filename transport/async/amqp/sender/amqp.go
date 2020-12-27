@@ -4,10 +4,10 @@ import (
 	"fmt"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
-	"time"
 )
 
 type AMQPSender struct {
@@ -22,15 +22,17 @@ type AMQPSender struct {
 func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	o.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", o.exchangeName)
-	err = o.amqpch.Publish(
-		o.exchangeName,
-		"",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: fmt.Sprintf("application/protobuf;proto=%T", evts),
-			Body:        []byte(body),
-		})
+	err = backoff.Retry(func() error {
+		return o.amqpch.Publish(
+			o.exchangeName,
+			"",
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: fmt.Sprintf("application/protobuf;proto=%T", evts),
+				Body:        []byte(body),
+			})
+	}, backoff.NewExponentialBackOff())
 	return nil
 }
 
@@ -55,21 +57,13 @@ func NewAMQPSender(ch chan *evented_core.EventBook, url string, exchangeName str
 	return client
 }
 
-func (o *AMQPSender) connectWithBackoff() error {
-	var conn *amqp.Connection
-	// This is sufficiently ugly I may replace it at some point soon, just for readability
-	conn, err := func(conn interface{}, err error) (*amqp.Connection, error) {
-		return conn.(*amqp.Connection), err
-	}(support.WithExpBackoff(func() (interface{}, error) {
-		//TODO: better error handling here
-		return amqp.Dial(o.url)
-	}, 3*time.Second))
-	o.conn = conn
-	return err
-}
-
 func (o *AMQPSender) Connect() error {
-	err := o.connectWithBackoff()
+	err := backoff.Retry(func() error {
+		var err error
+		o.conn, err = amqp.Dial(o.url)
+		return err
+	}, backoff.NewExponentialBackOff())
+
 	if err != nil {
 		o.log.Error(err)
 	}

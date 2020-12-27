@@ -1,7 +1,7 @@
 package businessLogic
 
 import (
-	eventedbusiness "github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/evented/business/business"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/ptypes"
@@ -17,7 +17,7 @@ func NewPlaceholderBusinessLogicServer(log *zap.SugaredLogger) PlaceholderBusine
 }
 
 type PlaceholderBusinessLogicServer struct {
-	eventedbusiness.UnimplementedBusinessLogicServer
+	business.UnimplementedBusinessLogicServer
 	log *zap.SugaredLogger
 }
 

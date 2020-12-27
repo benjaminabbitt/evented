@@ -1,17 +1,16 @@
 package support
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"net/http"
 )
 
 type ConfigInit struct {
-	consulHost string
-	consulKey  string
-	name       string
+	consulHost       string
+	consulKey        string
+	name             string
+	configMgmt       string
+	consulConfigType string
 }
 
 func (o *ConfigInit) AppName() string {
@@ -26,31 +25,31 @@ func (o *ConfigInit) ConsulKey() string {
 	return o.consulKey
 }
 
+const ConfigMgmtType = "CONFIG_MGMT_TYPE"
+const ConsulConfigType = "CONSUL_CONFIG_TYPE"
+
 func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
 	viper.AutomaticEnv()
-	o.consulHost = viper.GetString("CONSUL_HOST")
-	o.consulKey = viper.GetString("CONSUL_KEY")
+	viper.SetDefault(ConfigMgmtType, "consul")
+	viper.SetDefault(ConsulConfigType, "yaml")
+
+	o.configMgmt = viper.GetString(ConfigMgmtType)
 	o.name = viper.GetString("APP_NAME")
+	if o.configMgmt == "consul" {
+		o.consulHost = viper.GetString("CONSUL_HOST")
+		o.consulKey = viper.GetString("CONSUL_KEY")
+		o.consulConfigType = viper.GetString(ConsulConfigType)
+		err := viper.AddRemoteProvider("consul", o.consulHost, o.consulKey)
+		if err != nil {
+			log.Error(err)
+		}
+		viper.SetConfigType("yaml")
+		err = viper.ReadRemoteConfig()
+		if err != nil {
+			log.Error(err)
+		}
 
-	log.Infow("Attempting to reach Consul K/V", "host", o.consulHost, "key", o.consulKey)
-	resp, err := http.Get(fmt.Sprintf("http://%s/v1/kv/%s", o.consulHost, o.consulKey))
-	if err != nil {
-		log.Error(err)
+		log.Infow("Read consul.", "Proof", viper.GetString("proof"))
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	log.Info(string(body))
-	_ = resp.Body.Close()
-
-	err = viper.AddRemoteProvider("consul", o.consulHost, o.consulKey)
-	if err != nil {
-		log.Error(err)
-	}
-	viper.SetConfigType("yaml")
-	err = viper.ReadRemoteConfig()
-	if err != nil {
-		log.Error(err)
-	}
-
-	log.Infow("Read consul.", "Proof", viper.GetString("proof"))
 }

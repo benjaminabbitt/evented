@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/businessLogic"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/configuration"
-	"github.com/benjaminabbitt/evented/proto/evented/business"
+	business2 "github.com/benjaminabbitt/evented/proto/evented/business/business"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -43,7 +43,7 @@ func main() {
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 
 	server := businessLogic.NewPlaceholderBusinessLogicServer(log)
-	business.RegisterBusinessLogicServer(rpc, server)
+	business2.RegisterBusinessLogicServer(rpc, server)
 
 	health := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(rpc, health)

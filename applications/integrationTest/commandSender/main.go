@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
+	business "github.com/benjaminabbitt/evented/proto/evented/business/coordinator"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -31,7 +32,7 @@ func main() {
 
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Infof("Connected to remote %s", target)
-	ch := evented_core.NewCommandHandlerClient(conn)
+	ch := business.NewBusinessCoordinatorClient(conn)
 	log.Info("Client Created...")
 	id, _ := uuid.NewRandom()
 	protoId := evented_proto.UUIDToProto(id)

@@ -33,7 +33,7 @@ func (s *MongoIntegrationSuite) SetupSuite() {
 		s.log.Error(err)
 	}
 
-	mongo, err := NewEventRepoMongo(fmt.Sprintf("mongodb://localhost:%d", s.dait.Ports[0].PublicPort), "test", "events", s.log)
+	mongo, err := NewEventRepoMongo(context.Background(), fmt.Sprintf("mongodb://localhost:%d", s.dait.Ports[0].PublicPort), "test", "events", s.log)
 	if err != nil {
 		s.log.Error(err)
 	}

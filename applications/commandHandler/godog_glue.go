@@ -1,4 +1,4 @@
-package evented
+package main
 
 import "github.com/cucumber/godog"
 

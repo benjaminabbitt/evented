@@ -3,7 +3,7 @@ package saga
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	evented_saga "github.com/benjaminabbitt/evented/proto/evented/saga"
+	"github.com/benjaminabbitt/evented/proto/evented/saga/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -21,7 +21,7 @@ func NewPlaceholderSagaLogic(log *zap.SugaredLogger, tracer *opentracing.Tracer)
 }
 
 type PlaceholderSagaLogic struct {
-	evented_saga.UnimplementedSagaServer
+	saga.UnimplementedSagaServer
 	eventDomain string
 	log         *zap.SugaredLogger
 	tracer      *opentracing.Tracer
@@ -58,7 +58,7 @@ func (o *PlaceholderSagaLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
-	evented_saga.RegisterSagaServer(grpcServer, o)
+	saga.RegisterSagaServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)

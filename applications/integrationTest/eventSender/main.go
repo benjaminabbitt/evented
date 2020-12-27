@@ -6,7 +6,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/integrationTest/eventSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
-	evented_saga_coordinator "github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
+	sagaCoordinator "github.com/benjaminabbitt/evented/proto/evented/saga/coordinator"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
@@ -38,7 +38,7 @@ func main() {
 
 	log.Infof("Connected to remote %s", target)
 
-	sh := evented_saga_coordinator.NewSagaCoordinatorClient(conn)
+	sh := sagaCoordinator.NewSagaCoordinatorClient(conn)
 	log.Info("Client Created...")
 
 	id, err := uuid.NewRandom()

@@ -332,7 +332,7 @@ func (o ServerSuite) TestExtractSynchronousEmptyEventBook() {
 
 func (o ServerSuite) TestListenForNoErrors() {
 	var err error
-	defer o.server.Earmuffs()
+	defer o.server.Shutdown()
 	go func() {
 		err = o.server.Listen(1000)
 	}()
