@@ -86,8 +86,5 @@ func (o EventRepoMemory) send(echan chan *evented_core.EventPage, events []*even
 	for _, evt := range events {
 		echan <- evt
 	}
-}
-
-func (o EventRepoMemory) EstablishIndices() (err error) {
-	return nil
+	close(echan)
 }

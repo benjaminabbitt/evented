@@ -11,15 +11,22 @@ import (
 	"time"
 )
 
-func RunTestsWithCucumber(m *testing.M, suite godog.TestSuite, opts godog.Options) {
-	status := suite.Run()
+func RunTestsWithCucumber(suite godog.TestSuite, opts godog.Options) int {
+	return suite.Run()
+}
 
-	// Optional: Run `testing` package's logic besides godog.
-	if st := m.Run(); st > status {
-		status = st
+func RunTestsWithTesting(m *testing.M) int {
+	return m.Run()
+}
+
+func Max(elements []int) (max int) {
+	max = 0
+	for element := range elements {
+		if element > max {
+			max = element
+		}
 	}
-
-	os.Exit(status)
+	return max
 }
 
 func GetOptions(format string) godog.Options {

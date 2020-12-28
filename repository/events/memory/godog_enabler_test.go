@@ -3,6 +3,7 @@ package memory
 import (
 	"github.com/benjaminabbitt/evented/support/cucumber"
 	"github.com/cucumber/godog"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -14,6 +15,18 @@ func init() {
 type Empty struct{}
 
 func TestMain(m *testing.M) {
+	os.Exit(cucumber.Max([]int{executeCucumber(), cucumber.RunTestsWithTesting(m)}))
+}
+
+func Test_Cucumber(t *testing.T) {
+	result := executeCucumber()
+	t.Logf("Cucumber tests executed with status %d", result)
+	if result != 0 {
+		t.Fail()
+	}
+}
+
+func executeCucumber() int {
 	format := cucumber.GetFormat()
 	opts := cucumber.GetOptions(format)
 	opts.Paths = []string{"../"}
@@ -23,5 +36,5 @@ func TestMain(m *testing.M) {
 		ScenarioInitializer:  InitializeScenario,
 		Options:              &opts,
 	}
-	cucumber.RunTestsWithCucumber(m, suite, opts)
+	return cucumber.RunTestsWithCucumber(suite, opts)
 }

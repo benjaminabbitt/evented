@@ -51,8 +51,6 @@ func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, p
 	return m.pageToMEP(root, page)
 }
 
-
-
 func (m EventRepoMongo) generateId(root uuid.UUID, page *evented_core.EventPage) [12]byte {
 	var mongoId [12]byte
 	rootBin, _ := root.MarshalBinary()
@@ -113,8 +111,6 @@ func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented
 	}
 	return nil
 }
-
-
 
 func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented_core.EventPage) error {
 	var err error
@@ -268,7 +264,7 @@ func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented_cor
 	return nil
 }
 
-func (m EventRepoMongo) EstablishIndices() error {
+func (m EventRepoMongo) establishIndices() error {
 	sequenceModel := mongo.IndexModel{
 		Keys: bsonx.Doc{
 			{Key: "root", Value: bsonx.Int32(1)},
@@ -283,17 +279,18 @@ func (m EventRepoMongo) EstablishIndices() error {
 	return nil
 }
 
-func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (client evented_memory_ops.EventStorer, err error) {
+func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (repoMongo *EventRepoMongo, err error) {
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
 	err = mongoClient.Ping(nil, readpref.Primary())
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
-	client = EventRepoMongo{client: mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
-	err = client.EstablishIndices()
+	repoMongo = &EventRepoMongo{client: mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
+	err = repoMongo.establishIndices()
 	if err != nil {
 		log.Error(err)
+		return nil, err
 	}
-	return client, nil
+	return repoMongo, nil
 }
