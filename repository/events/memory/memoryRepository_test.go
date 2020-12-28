@@ -8,6 +8,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 	"github.com/golang/protobuf/ptypes"
+	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"strconv"
@@ -23,55 +24,55 @@ var sut EventRepoMemory
 
 func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^I should be able to retrieve it by its coordinates:$`, iShouldBeAbleToRetrieveItByItsCoordinates)
-	scenarioContext.Step(`^I store the sample event:$`, iStoreTheSampleEvent)
-	scenarioContext.Step(`^that we\'re working in the coordinates of a domain$`, thatWereWorkingInTheCoordinatesOfADomain)
+	scenarioContext.Step(`^I store the event:$`, iStoreTheEvent)
 }
 
 func iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
-	for _, row := range arg1.GetRows() {
-		var id uuid.UUID
-		var sequence uint32
-		for i, cell := range row.GetCells() {
-			switch i {
-			case 0:
-				id, _ = uuid.Parse(cell.Value)
-			case 1:
-				sequence, _ = cucumber.Uint64ToUint32WithErrorPassthrough(strconv.ParseUint(cell.Value, 10, 32))
-			}
-		}
-		ch := make(chan *evented_core.EventPage)
-		_ = sut.Get(context.Background(), ch, id)
-		return cucumber.AssertExpectedAndActual(assert.Equal, &evented_core.EventPage_Num{Num: sequence}, (<-ch).Sequence, "", "")
-	}
-	return nil
+	id, events := extractPickleTableToEvents(arg1)
+	ch := make(chan *evented_core.EventPage)
+	_ = sut.Get(context.Background(), ch, id)
+	return cucumber.AssertExpectedAndActual(assert.Equal, events[0], <-ch, "", "")
 }
 
-func iStoreTheSampleEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
-	for _, row := range arg1.GetRows() {
-		var id uuid.UUID
+func extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented_core.EventPage) {
+	for _, row := range arg.GetRows() {
 		var sequence uint32
+		var force bool
+		var ts *timestamppb.Timestamp
 		for i, cell := range row.GetCells() {
 			switch i {
 			case 0:
 				id, _ = uuid.Parse(cell.Value)
 			case 1:
-				sequence, _ = cucumber.Uint64ToUint32WithErrorPassthrough(strconv.ParseUint(cell.Value, 10, 32))
+				if cell.Value == "force" {
+					force = true
+				} else {
+					sequence, _ = cucumber.Uint64ToUint32WithErrorPassthrough(strconv.ParseUint(cell.Value, 10, 32))
+				}
+			case 2:
+				t, _ := time.Parse(time.RFC3339Nano, cell.Value)
+				ts, _ = ptypes.TimestampProto(t)
 			}
-		}
-		ts, _ := ptypes.TimestampProto(time.Now())
 
-		page := &evented_core.EventPage{
-			Sequence:    &evented_core.EventPage_Num{Num: sequence},
+		}
+
+		event := &evented_core.EventPage{
 			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: false,
 		}
-
-		_ = sut.Add(context.Background(), id, []*evented_core.EventPage{page})
+		if force {
+			event.Sequence = &evented_core.EventPage_Force{}
+		} else {
+			event.Sequence = &evented_core.EventPage_Num{Num: sequence}
+		}
+		events = append(events, event)
 	}
-	return nil
+	return id, events
 }
 
-func thatWereWorkingInTheCoordinatesOfADomain() error {
+func iStoreTheEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
+	id, events := extractPickleTableToEvents(arg1)
+	_ = sut.Add(context.Background(), id, events)
 	return nil
 }
