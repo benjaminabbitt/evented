@@ -16,35 +16,37 @@ import (
 	"time"
 )
 
-var log *zap.SugaredLogger
-var sut EventRepoMemory
-var id uuid.UUID
-var events []*evented_core.EventPage
-
-func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	log = support.Log()
+type MemoryRepositorySuite struct {
+	log    *zap.SugaredLogger
+	sut    EventRepoMemory
+	id     uuid.UUID
+	events []*evented_core.EventPage
 }
 
-func InitializeScenario(s *godog.ScenarioContext) {
-	sut, _ = NewEventRepoMemory(log)
-	s.Step(`^I should be able to retrieve it by its coordinates:$`, iShouldBeAbleToRetrieveItByItsCoordinates)
-	s.Step(`^I store the event:$`, iStoreTheEvent)
-	s.Step(`^a populated database:$`, aPopulatedDatabase)
-	s.Step(`^I should get these events:$`, iShouldGetTheseEvents)
-	s.Step(`^I retrieve a subset of events ending at event (\d+)$`, iRetrieveASubsetOfEventsEndingAtEvent)
-	s.Step(`^I retrieve a subset of events from (\d+) to (\d+)$`, iRetrieveASubsetOfEventsFromTo)
-	s.Step(`^I retrieve a subset of events starting from value (\d+)$`, iRetrieveASubsetOfEventsStartingFromValue)
-	s.Step(`^I retrieve all events$`, iRetrieveAllEvents)
+func (s *MemoryRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	s.log = support.Log()
 }
 
-func iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
-	id, events := extractPickleTableToEvents(arg1)
+func (suite *MemoryRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
+	suite.sut, _ = NewEventRepoMemory(suite.log)
+	s.Step(`^I should be able to retrieve it by its coordinates:$`, suite.iShouldBeAbleToRetrieveItByItsCoordinates)
+	s.Step(`^I store the event:$`, suite.iStoreTheEvent)
+	s.Step(`^a populated database:$`, suite.aPopulatedDatabase)
+	s.Step(`^I should get these events:$`, suite.iShouldGetTheseEvents)
+	s.Step(`^I retrieve a subset of events ending at event (\d+)$`, suite.iRetrieveASubsetOfEventsEndingAtEvent)
+	s.Step(`^I retrieve a subset of events from (\d+) to (\d+)$`, suite.iRetrieveASubsetOfEventsFromTo)
+	s.Step(`^I retrieve a subset of events starting from value (\d+)$`, suite.iRetrieveASubsetOfEventsStartingFromValue)
+	s.Step(`^I retrieve all events$`, suite.iRetrieveAllEvents)
+}
+
+func (s *MemoryRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
+	id, events := s.extractPickleTableToEvents(arg1)
 	ch := make(chan *evented_core.EventPage)
-	_ = sut.Get(context.Background(), ch, id)
+	_ = s.sut.Get(context.Background(), ch, id)
 	return cucumber.AssertExpectedAndActual(assert.Equal, events[0], <-ch, "", "")
 }
 
-func extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented_core.EventPage) {
+func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented_core.EventPage) {
 	for i, row := range arg.GetRows() {
 		if i == 0 { //header
 			continue
@@ -84,54 +86,54 @@ func extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (i
 	return id, events
 }
 
-func iStoreTheEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
-	id, events = extractPickleTableToEvents(arg1)
-	_ = sut.Add(context.Background(), id, events)
+func (s *MemoryRepositorySuite) iStoreTheEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
+	s.id, s.events = s.extractPickleTableToEvents(arg1)
+	_ = s.sut.Add(context.Background(), s.id, s.events)
 	return nil
 }
 
-func aPopulatedDatabase(arg1 *messages.PickleStepArgument_PickleTable) error {
-	id, events = extractPickleTableToEvents(arg1)
-	_ = sut.Add(context.Background(), id, events)
+func (s *MemoryRepositorySuite) aPopulatedDatabase(arg1 *messages.PickleStepArgument_PickleTable) error {
+	s.id, s.events = s.extractPickleTableToEvents(arg1)
+	_ = s.sut.Add(context.Background(), s.id, s.events)
 	return nil
 }
 
-func iShouldGetTheseEvents(arg1 *messages.PickleStepArgument_PickleTable) error {
-	_, expectedEvents := extractPickleTableToEvents(arg1)
-	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, events, "", "")
+func (s *MemoryRepositorySuite) iShouldGetTheseEvents(arg1 *messages.PickleStepArgument_PickleTable) error {
+	_, expectedEvents := s.extractPickleTableToEvents(arg1)
+	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, s.events, "", "")
 }
 
-func drainChannel(ch chan *evented_core.EventPage) (pages []*evented_core.EventPage) {
+func (s *MemoryRepositorySuite) drainChannel(ch chan *evented_core.EventPage) (pages []*evented_core.EventPage) {
 	for page := range ch {
 		pages = append(pages, page)
 	}
 	return pages
 }
 
-func iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
+func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
 	ch := make(chan *evented_core.EventPage)
-	_ = sut.GetTo(context.Background(), ch, id, uint32(end))
-	events = drainChannel(ch)
+	_ = s.sut.GetTo(context.Background(), ch, s.id, uint32(end))
+	s.events = s.drainChannel(ch)
 	return nil
 }
 
-func iRetrieveASubsetOfEventsFromTo(start, end int) error {
+func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsFromTo(start, end int) error {
 	ch := make(chan *evented_core.EventPage)
-	_ = sut.GetFromTo(context.Background(), ch, id, uint32(start), uint32(end))
-	events = drainChannel(ch)
+	_ = s.sut.GetFromTo(context.Background(), ch, s.id, uint32(start), uint32(end))
+	s.events = s.drainChannel(ch)
 	return nil
 }
 
-func iRetrieveASubsetOfEventsStartingFromValue(start int) error {
+func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsStartingFromValue(start int) error {
 	ch := make(chan *evented_core.EventPage)
-	_ = sut.GetFrom(context.Background(), ch, id, uint32(start))
-	events = drainChannel(ch)
+	_ = s.sut.GetFrom(context.Background(), ch, s.id, uint32(start))
+	s.events = s.drainChannel(ch)
 	return nil
 }
 
-func iRetrieveAllEvents() error {
+func (s *MemoryRepositorySuite) iRetrieveAllEvents() error {
 	ch := make(chan *evented_core.EventPage)
-	_ = sut.Get(context.Background(), ch, id)
-	events = drainChannel(ch)
+	_ = s.sut.Get(context.Background(), ch, s.id)
+	s.events = s.drainChannel(ch)
 	return nil
 }
