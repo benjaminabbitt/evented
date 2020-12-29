@@ -210,7 +210,7 @@ func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *evented_c
 func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
-		{"sequence", bson.D{{"$lte", to}}},
+		{"sequence", bson.D{{"$lt", to}}},
 	})
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented_core.
 func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented_core.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
-		{"sequence", bson.D{{"$lte", to}}},
+		{"sequence", bson.D{{"$lt", to}}},
 		{"sequence", bson.D{{"$gte", from}}},
 	})
 	if err != nil {
