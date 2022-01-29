@@ -24,7 +24,7 @@ func (o *AmqpSuite) SetupSuite() {
 	o.log = support.Log()
 
 	o.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
-	err := o.dait.CreateNewContainer("rabbitmq:3.8.3-alpine", []uint16{4369, 5671, 5672, 25672})
+	err := o.dait.CreateNewContainer("rabbitmq:3.9.13-alpine", []uint16{4369, 5671, 5672, 25672})
 	if err != nil {
 		o.log.Error(err)
 	}
@@ -34,11 +34,17 @@ func (o *AmqpSuite) SetupSuite() {
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
 	senderCh := make(chan evented.EventBook)
 	o.client = NewAMQPSender(senderCh, url, "testExchange", o.log)
-	o.client.Connect()
+	err = o.client.Connect()
+	if err != nil {
+		o.log.Error(err)
+	}
 }
 
 func (o *AmqpSuite) TearDownSuite() {
-	o.dait.StopContainer()
+	err := o.dait.StopContainer()
+	if err != nil {
+		o.log.Error(err)
+	}
 }
 
 func (o AmqpSuite) TestNoExceptionThrown() {
