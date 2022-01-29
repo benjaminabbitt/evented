@@ -3,7 +3,7 @@ module github.com/benjaminabbitt/evented
 go 1.17
 
 require (
-	github.com/cenkalti/backoff/v4 v4.1.0
+	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/cucumber/godog v0.12.4
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v1.13.1
