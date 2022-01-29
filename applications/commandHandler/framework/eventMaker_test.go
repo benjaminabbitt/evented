@@ -2,7 +2,7 @@ package framework
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -16,8 +16,8 @@ type EventMakerSuite struct {
 }
 
 func (o *EventMakerSuite) TestNewEventPage() {
-	expected := &evented_core.EventPage{
-		Sequence:    &evented_core.EventPage_Num{Num: 0},
+	expected := &core.EventPage{
+		Sequence:    &core.EventPage_Num{Num: 0},
 		CreatedAt:   &timestamp.Timestamp{},
 		Event:       nil,
 		Synchronous: false,
@@ -27,8 +27,8 @@ func (o *EventMakerSuite) TestNewEventPage() {
 
 func (o *EventMakerSuite) TestNewEmptyEventPage() {
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
-	page := &evented_core.EventPage{
-		Sequence:    &evented_core.EventPage_Num{Num: 0},
+	page := &core.EventPage{
+		Sequence:    &core.EventPage_Num{Num: 0},
 		Synchronous: false,
 		CreatedAt:   &timestamp.Timestamp{},
 		Event:       anyEmpty,
@@ -39,9 +39,9 @@ func (o *EventMakerSuite) TestNewEmptyEventPage() {
 func (o *EventMakerSuite) TestNewEventBook() {
 	id, _ := uuid.NewRandom()
 	protoUUID := evented_proto.UUIDToProto(id)
-	pages := []*evented_core.EventPage{NewEmptyEventPage(0, false)}
-	eventBook := &evented_core.EventBook{
-		Cover: &evented_core.Cover{
+	pages := []*core.EventPage{NewEmptyEventPage(0, false)}
+	eventBook := &core.EventBook{
+		Cover: &core.Cover{
 			Domain: "",
 			Root:   &protoUUID,
 		},

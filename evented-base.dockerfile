@@ -13,7 +13,7 @@ RUN adduser --disabled-password --uid 10747 evented
 RUN apk --no-cache add build-base git bzr mercurial gcc curl
 
 ENV GO111MODULE=on
-RUN go get google.golang.org/grpc@v1.28.1
+RUN go get google.golang.org/grpc@v1.43.0
 RUN go get github.com/golang/protobuf/protoc-gen-go
 
 COPY . /src

@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/evented/business/business"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -23,6 +23,6 @@ type BasicBusinessClient struct {
 	bl  business.BusinessLogicClient
 }
 
-func (client BasicBusinessClient) Handle(ctx context.Context, command *eventedcore.ContextualCommand) (events *eventedcore.EventBook, err error) {
+func (client BasicBusinessClient) Handle(ctx context.Context, command *core.ContextualCommand) (events *core.EventBook, err error) {
 	return client.bl.Handle(ctx, command)
 }

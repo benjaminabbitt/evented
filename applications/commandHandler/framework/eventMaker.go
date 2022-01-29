@@ -2,7 +2,7 @@ package framework
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -10,29 +10,29 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewEventPage(sequence uint32, sync bool, eventDetails *any.Any) *evented_core.EventPage {
-	return &evented_core.EventPage{
-		Sequence:    &evented_core.EventPage_Num{Num: sequence},
+func NewEventPage(sequence uint32, sync bool, eventDetails *any.Any) *core.EventPage {
+	return &core.EventPage{
+		Sequence:    &core.EventPage_Num{Num: sequence},
 		Synchronous: sync,
 		CreatedAt:   &timestamp.Timestamp{},
 		Event:       eventDetails,
 	}
 }
 
-func NewEmptyEventPage(sequence uint32, sync bool) *evented_core.EventPage {
+func NewEmptyEventPage(sequence uint32, sync bool) *core.EventPage {
 	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
-	return &evented_core.EventPage{
-		Sequence:    &evented_core.EventPage_Num{Num: sequence},
+	return &core.EventPage{
+		Sequence:    &core.EventPage_Num{Num: sequence},
 		Synchronous: sync,
 		CreatedAt:   &timestamp.Timestamp{},
 		Event:       anyEmpty,
 	}
 }
 
-func NewEventBook(id uuid.UUID, domain string, events []*evented_core.EventPage, snapshot *evented_core.Snapshot) *evented_core.EventBook {
+func NewEventBook(id uuid.UUID, domain string, events []*core.EventPage, snapshot *core.Snapshot) *core.EventBook {
 	protoUUID := evented_proto.UUIDToProto(id)
-	return &evented_core.EventBook{
-		Cover: &evented_core.Cover{
+	return &core.EventBook{
+		Cover: &core.Cover{
 			Domain: domain,
 			Root:   &protoUUID,
 		},
