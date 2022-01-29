@@ -1,7 +1,7 @@
 package events
 
 import (
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"go.uber.org/zap"
 )
 

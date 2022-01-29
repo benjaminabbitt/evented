@@ -3,6 +3,7 @@ package eventBook
 import (
 	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
 	erMock "github.com/benjaminabbitt/evented/repository/events/mock"
 	ssMock "github.com/benjaminabbitt/evented/repository/snapshots/mock"

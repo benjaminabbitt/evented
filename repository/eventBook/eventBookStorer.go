@@ -2,7 +2,7 @@ package eventBook
 
 import (
 	"context"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/google/uuid"
 )
 

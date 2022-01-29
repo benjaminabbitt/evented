@@ -2,6 +2,7 @@ package snapshots
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
 	"github.com/google/uuid"
 )

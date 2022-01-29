@@ -2,7 +2,7 @@ package events
 
 import (
 	"context"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/google/uuid"
 )
 
@@ -16,6 +16,6 @@ type EventStorer interface {
 
 	GetFrom(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) (err error)
 
-	//Note that GetTo treats the to parameter as an exclusive upper bound, like Go slices.
+	//Note that GetFromTo treats the to parameter as an exclusive upper bound, like Go slices.
 	GetFromTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) (err error)
 }

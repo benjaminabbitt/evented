@@ -11,8 +11,6 @@ type Configuration struct {
 	support.ConfigInit
 }
 
-
-
 func (o *Configuration) BusinessURL() string {
 	return viper.GetString("business.url")
 }

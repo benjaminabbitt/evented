@@ -3,7 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/cucumber"

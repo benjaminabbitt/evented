@@ -3,6 +3,7 @@ package universal
 import (
 	"context"
 	"fmt"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"

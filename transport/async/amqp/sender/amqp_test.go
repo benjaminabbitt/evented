@@ -3,7 +3,7 @@ package sender
 import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
 	"github.com/google/uuid"
@@ -32,7 +32,7 @@ func (o *AmqpSuite) SetupSuite() {
 
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	senderCh := make(chan *evented.EventBook)
+	senderCh := make(chan evented.EventBook)
 	o.client = NewAMQPSender(senderCh, url, "testExchange", o.log)
 	o.client.Connect()
 }

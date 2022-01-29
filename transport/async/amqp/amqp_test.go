@@ -3,7 +3,7 @@ package sender
 import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"

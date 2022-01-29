@@ -2,9 +2,7 @@ package universal
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -14,8 +12,8 @@ import (
 type SagaCoordinator struct {
 	Coordinator         *Coordinator
 	Domain              string
-	SagaClient          saga.SagaClient
-	OtherCommandHandler business.BusinessCoordinatorClient
+	SagaClient          evented.SagaClient
+	OtherCommandHandler evented.BusinessCoordinatorClient
 	Log                 *zap.SugaredLogger
 }
 

@@ -3,10 +3,7 @@ package saga
 import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -14,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewSagaCoordinator(sagaClient saga.SagaClient, eventQueryClient evented.EventQueryClient, otherCommandHandlerClient business.BusinessCoordinatorClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
+func NewSagaCoordinator(sagaClient evented.SagaClient, eventQueryClient evented.EventQueryClient, otherCommandHandlerClient evented.BusinessCoordinatorClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
 	universalCoordinator := &universal.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -34,7 +31,7 @@ func NewSagaCoordinator(sagaClient saga.SagaClient, eventQueryClient evented.Eve
 }
 
 type Coordinator struct {
-	sagaCoordinator.UnimplementedSagaCoordinatorServer
+	evented.UnimplementedSagaCoordinatorServer
 	coordinator *universal.SagaCoordinator
 	Log         *zap.SugaredLogger
 	Tracer      *opentracing.Tracer
@@ -49,7 +46,7 @@ func (o *Coordinator) Listen(port uint) {
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.Log.Desugar(), *o.Tracer)
 
-	sagaCoordinator.RegisterSagaCoordinatorServer(grpcServer, o)
+	evented.RegisterSagaCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.Log.Error(err)

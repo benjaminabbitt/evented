@@ -2,7 +2,7 @@ package async
 
 import (
 	"context"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 )
 
 type EventTransporter interface {

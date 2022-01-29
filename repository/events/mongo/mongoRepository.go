@@ -3,7 +3,7 @@ package mongo
 import (
 	"context"
 	"encoding/binary"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	evented_memory_ops "github.com/benjaminabbitt/evented/repository/events"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
