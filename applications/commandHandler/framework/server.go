@@ -127,7 +127,7 @@ func (o *Server) executeSyncProjections(ctx context.Context, sync *evented.Event
 		var response *evented.Projection
 		var err error
 		backoff.Retry(func() error {
-			response, err = syncevented.HandleSync(ctx, sync)
+			response, err = syncProjector.HandleSync(ctx, sync)
 			return err
 		}, backoff.NewExponentialBackOff())
 		if err != nil {

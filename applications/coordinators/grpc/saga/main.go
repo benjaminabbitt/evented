@@ -36,7 +36,7 @@ func main() {
 	ochUrl := config.OtherCommandHandlerURL()
 	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log, tracer)
 	//TODO: fix
-	otherCommandHandler := NewCommandHandlerClient(otherCommandConn)
+	otherCommandHandler := evented.NewBusinessCoordinatorClient(otherCommandConn)
 
 	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)

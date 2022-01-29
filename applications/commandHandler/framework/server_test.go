@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"testing"
-	"time"
 )
 
 type ServerSuite struct {
@@ -328,16 +327,6 @@ func (o ServerSuite) TestExtractSynchronousEmptyEventBook() {
 	book := o.produceCommandBook()
 	_, err := o.server.Handle(o.ctx, book)
 	o.Assert().Error(err)
-}
-
-func (o ServerSuite) TestListenForNoErrors() {
-	var err error
-	defer o.server.Shutdown()
-	go func() {
-		err = o.server.Listen(1000)
-	}()
-	time.Sleep(1 * time.Second)
-	o.Assert().NoError(err)
 }
 
 func TestServerSuite(t *testing.T) {

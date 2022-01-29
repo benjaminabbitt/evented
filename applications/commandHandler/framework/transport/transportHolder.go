@@ -8,6 +8,6 @@ import (
 type TransportHolder interface {
 	Add(i interface{}) error
 	GetTransports() []chan *evented.EventBook
-	GetProjectors() []evented.SyncProjectorTransporter
+	GetProjectors() []evented.ProjectorClient
 	GetSaga() []saga.SyncSagaTransporter
 }
