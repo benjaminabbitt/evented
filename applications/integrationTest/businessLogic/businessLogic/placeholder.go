@@ -1,13 +1,12 @@
 package businessLogic
 
 import (
-	"github.com/benjaminabbitt/evented/proto/evented/business/business"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"time"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func NewPlaceholderBusinessLogicServer(log *zap.SugaredLogger) PlaceholderBusinessLogicServer {
@@ -21,14 +20,14 @@ type PlaceholderBusinessLogicServer struct {
 	log *zap.SugaredLogger
 }
 
-func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedcore.ContextualCommand) (*eventedcore.EventBook, error) {
+func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *core.ContextualCommand) (*core.EventBook, error) {
 	o.log.Infow("Business Logic Handle", "contextualCommand", in)
-	var eventPages []*eventedcore.EventPage
+	var eventPages []*core.EventPage
 	//TODO: harden
-	ts, _ := ptypes.TimestampProto(time.Now())
+	ts := timestamppb.Now()
 	for _, commandPage := range in.Command.Pages {
-		eventPage := &eventedcore.EventPage{
-			Sequence:    &eventedcore.EventPage_Num{Num: commandPage.Sequence},
+		eventPage := &core.EventPage{
+			Sequence:    &core.EventPage_Num{Num: commandPage.Sequence},
 			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: true,
@@ -36,7 +35,7 @@ func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedc
 		eventPages = append(eventPages, eventPage)
 	}
 
-	eventBook := &eventedcore.EventBook{
+	eventBook := &core.EventBook{
 		Cover:    in.Command.Cover,
 		Pages:    eventPages,
 		Snapshot: nil,
@@ -46,4 +45,3 @@ func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *eventedc
 
 	return eventBook, nil
 }
-

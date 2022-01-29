@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	business "github.com/benjaminabbitt/evented/proto/evented/business/coordinator"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	"github.com/benjaminabbitt/evented/proto/evented/saga/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -37,7 +37,7 @@ func main() {
 	sagaClient := makeSagaClient(config, tracer)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
+	eventQueryClient := query.NewEventQueryClient(qhConn)
 
 	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlerURL(), log, tracer)
 	otherCommandHandlerClient := business.NewBusinessCoordinatorClient(ochConn)

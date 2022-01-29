@@ -1,7 +1,7 @@
 package transport
 
 import (
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -35,8 +35,8 @@ func (o *BasicHolderSuite) TestSyncSagaHandling() {
 }
 
 func (o *BasicHolderSuite) TestTransportHandling() {
-	ch := make(chan *evented_core.EventBook)
-	chSet := []chan *evented_core.EventBook{ch}
+	ch := make(chan *core.EventBook)
+	chSet := []chan *core.EventBook{ch}
 	err := o.holder.Add(ch)
 	o.Assert().Equal(chSet, o.holder.GetTransports())
 	o.Assert().NoError(err)

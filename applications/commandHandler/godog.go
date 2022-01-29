@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag" // godog v0.10.0 and earlier
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"os"
@@ -14,7 +13,7 @@ var opts = godog.Options{
 }
 
 func init() {
-	godog.BindFlags("godog.", flag.CommandLine, &opts)
+	godog.BindCommandLineFlags("godog.", &opts)
 }
 
 func TestMain(m *testing.M) {
@@ -28,14 +27,14 @@ func TestMain(m *testing.M) {
 
 	opts := godog.Options{
 		Format: format,
-		Paths:     []string{"features"},
+		Paths:  []string{"features"},
 	}
 
 	status := godog.TestSuite{
-		Name: "godogs",
+		Name:                 "godogs",
 		TestSuiteInitializer: InitializeTestSuite,
 		ScenarioInitializer:  InitializeScenario,
-		Options: &opts,
+		Options:              &opts,
 	}.Run()
 
 	// Optional: Run `testing` package's logic besides godog.

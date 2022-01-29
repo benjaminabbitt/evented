@@ -2,9 +2,9 @@ package universal
 
 import (
 	"fmt"
-	business "github.com/benjaminabbitt/evented/proto/evented/business/coordinator"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/evented/saga/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -19,12 +19,12 @@ type SagaCoordinator struct {
 	Log                 *zap.SugaredLogger
 }
 
-func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.SynchronousProcessingResponse, error) {
+func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *core.EventBook) (*core.SynchronousProcessingResponse, error) {
 	if eb.Cover.Domain != o.Domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match saga configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
 
-	o.Coordinator.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
+	o.Coordinator.RepairSequencing(ctx, eb, func(eb *core.EventBook) error {
 		_, err := o.SagaClient.Handle(ctx, eb)
 		return err
 	})
@@ -42,7 +42,7 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventB
 	return commandHandlerResponse, err
 }
 
-func (o *SagaCoordinator) Handle(ctx context.Context, eb *eventedcore.EventBook) (err error) {
+func (o *SagaCoordinator) Handle(ctx context.Context, eb *core.EventBook) (err error) {
 	_, err = o.HandleSync(ctx, eb)
 	return err
 }

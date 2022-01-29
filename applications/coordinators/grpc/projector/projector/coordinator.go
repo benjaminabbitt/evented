@@ -2,10 +2,10 @@ package projector
 
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	projectorCoordinator "github.com/benjaminabbitt/evented/proto/evented/projector/coordinator"
-	"github.com/benjaminabbitt/evented/proto/evented/projector/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projectorCoordinator"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func NewProjectorCoordinator(client projector.ProjectorClient, eventQueryClient eventedquery.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
+func NewProjectorCoordinator(client projector.ProjectorClient, eventQueryClient query.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
 	universalCoordinator := &universal.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -42,7 +42,7 @@ type Coordinator struct {
 	tracer      *opentracing.Tracer
 }
 
-func (o *Coordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
+func (o *Coordinator) HandleSync(ctx context.Context, eb *core.EventBook) (*core.Projection, error) {
 	return o.Coordinator.HandleSync(ctx, eb)
 }
 

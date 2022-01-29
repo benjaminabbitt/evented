@@ -1,7 +1,7 @@
 package transport
 
 import (
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"github.com/stretchr/testify/mock"
@@ -16,9 +16,9 @@ func (o MockHolder) Add(i interface{}) error {
 	return args.Error(0)
 }
 
-func (o MockHolder) GetTransports() []chan *evented_core.EventBook {
+func (o MockHolder) GetTransports() []chan *core.EventBook {
 	args := o.Called()
-	return args.Get(0).([]chan *evented_core.EventBook)
+	return args.Get(0).([]chan *core.EventBook)
 }
 
 func (o MockHolder) GetProjectors() []projector.SyncProjectorTransporter {

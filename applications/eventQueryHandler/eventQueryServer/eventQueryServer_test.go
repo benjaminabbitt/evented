@@ -5,17 +5,17 @@ import (
 	"crypto/rand"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
 	mer "github.com/benjaminabbitt/evented/repository/events/mock"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	uuid2 "github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
 
@@ -38,7 +38,7 @@ func (o *QueryHandlerSuite) SetupTest() {
 	}
 }
 
-func sumPages(pages []*eventedcore.EventPage) uint32 {
+func sumPages(pages []*core.EventPage) uint32 {
 	size := uint32(0)
 	for _, page := range pages {
 		size += uint32(proto.Size(page))
@@ -50,12 +50,12 @@ func sumPages(pages []*eventedcore.EventPage) uint32 {
 func (o *QueryHandlerSuite) TestMemoryApproximation() {
 	uuid, _ := uuid2.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(uuid)
-	cover := &eventedcore.Cover{
+	cover := &core.Cover{
 		Root:   &protoUUID,
 		Domain: "test",
 	}
 
-	book := &eventedcore.EventBook{
+	book := &core.EventBook{
 		Cover:    cover,
 		Pages:    nil,
 		Snapshot: nil,
@@ -63,34 +63,34 @@ func (o *QueryHandlerSuite) TestMemoryApproximation() {
 
 	e1 := make([]byte, 16)
 	rand.Read(e1)
-	pba := &eventedquery.TestByteArray{
+	pba := &query.TestByteArray{
 		Bytes: e1,
 	}
-	a1, _ := ptypes.MarshalAny(pba)
+	a1, _ := anypb.New(pba)
 
 	e2 := make([]byte, 32)
 	rand.Read(e2)
-	pba2 := &eventedquery.TestByteArray{
+	pba2 := &query.TestByteArray{
 		Bytes: e2,
 	}
-	a2, _ := ptypes.MarshalAny(pba2)
+	a2, _ := anypb.New(pba2)
 
-	pages := []*eventedcore.EventPage{
-		&eventedcore.EventPage{
-			Sequence:    &eventedcore.EventPage_Num{Num: 1},
-			CreatedAt:   &timestamp.Timestamp{},
+	pages := []*core.EventPage{
+		{
+			Sequence:    &core.EventPage_Num{Num: 1},
+			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       a1,
 			Synchronous: false,
 		},
-		&eventedcore.EventPage{
-			Sequence:    &eventedcore.EventPage_Num{Num: 2},
-			CreatedAt:   &timestamp.Timestamp{},
+		{
+			Sequence:    &core.EventPage_Num{Num: 2},
+			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       a2,
 			Synchronous: false,
 		},
 	}
 
-	book2 := &eventedcore.EventBook{
+	book2 := &core.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: nil,
@@ -109,7 +109,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 	domain := "test"
 
 	//evtChan := make(chan *evented_core.EventPage)
-	query := &eventedquery.Query{
+	query := &query.Query{
 		Domain:     domain,
 		Root:       &protoUUID,
 		LowerBound: 1,
@@ -117,7 +117,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 	}
 	ctx := context.Background()
 	o.repos.On("GetFromTo", mock.Anything, mock.Anything, uuid, uint32(1), uint32(2)).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *eventedcore.EventPage)
+		ch := args.Get(1).(chan *core.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {
 			ch <- page
@@ -128,8 +128,8 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 	queryResponse := MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*eventedcore.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num)
+		book := args.Get(0).(*core.EventBook)
+		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*core.EventPage_Num).Num)
 		o.Assert().Equal(domain, book.Cover.Domain)
 		o.Assert().Equal(&protoUUID, book.Cover.Root)
 	})
@@ -145,14 +145,14 @@ func (o *QueryHandlerSuite) Test_Low() {
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	domain := "test"
 
-	query := &eventedquery.Query{
+	query := &query.Query{
 		Domain:     domain,
 		Root:       &protoUUID,
 		LowerBound: 1,
 	}
 	ctx := context.Background()
 	o.repos.On("GetFrom", mock.Anything, mock.Anything, uuid, uint32(1)).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *eventedcore.EventPage)
+		ch := args.Get(1).(chan *core.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {
 			ch <- page
@@ -163,8 +163,8 @@ func (o *QueryHandlerSuite) Test_Low() {
 	queryResponse := MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*eventedcore.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num)
+		book := args.Get(0).(*core.EventBook)
+		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*core.EventPage_Num).Num)
 		o.Assert().Equal(domain, book.Cover.Domain)
 		o.Assert().Equal(&protoUUID, book.Cover.Root)
 	})
@@ -180,13 +180,13 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	domain := "test"
 
-	query := &eventedquery.Query{
+	query := &query.Query{
 		Domain: domain,
 		Root:   &protoUUID,
 	}
 	ctx := context.Background()
 	o.repos.On("Get", mock.Anything, mock.Anything, uuid).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *eventedcore.EventPage)
+		ch := args.Get(1).(chan *core.EventPage)
 		page := framework.NewEmptyEventPage(1, false)
 		go func() {
 			ch <- page
@@ -197,8 +197,8 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 	queryResponse := MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*eventedcore.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*eventedcore.EventPage_Num).Num)
+		book := args.Get(0).(*core.EventBook)
+		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*core.EventPage_Num).Num)
 		o.Assert().Equal(domain, book.Cover.Domain)
 		o.Assert().Equal(&protoUUID, book.Cover.Root)
 	})

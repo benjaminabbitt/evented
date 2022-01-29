@@ -69,7 +69,7 @@ func (o Server) Handle(ctx context.Context, in *core.CommandBook) (result *core.
 	return result, err
 }
 
-func (o Server) handleEventBook(ctx context.Context, eb *core.EventBook) (result *core.SynchronousProcessingResponse, rerr error) {
+func (o *Server) handleEventBook(ctx context.Context, eb *core.EventBook) (result *core.SynchronousProcessingResponse, rerr error) {
 	result = &core.SynchronousProcessingResponse{}
 	result.Books = []*core.EventBook{eb}
 
@@ -103,7 +103,7 @@ func (o Server) handleEventBook(ctx context.Context, eb *core.EventBook) (result
 	return result, nil
 }
 
-func (o Server) executeSyncSagas(ctx context.Context, sync *core.EventBook) (eventBooks []*core.EventBook, projections []*core.Projection, rerr error) {
+func (o *Server) executeSyncSagas(ctx context.Context, sync *core.EventBook) (eventBooks []*core.EventBook, projections []*core.Projection, rerr error) {
 	for _, syncSaga := range o.transports.GetSaga() {
 		var response *core.SynchronousProcessingResponse
 		var err error
@@ -122,7 +122,7 @@ func (o Server) executeSyncSagas(ctx context.Context, sync *core.EventBook) (eve
 	return eventBooks, projections, rerr
 }
 
-func (o Server) executeSyncProjections(ctx context.Context, sync *core.EventBook) (result []*core.Projection, rerr error) {
+func (o *Server) executeSyncProjections(ctx context.Context, sync *core.EventBook) (result []*core.Projection, rerr error) {
 	result = []*core.Projection{}
 	for _, syncProjector := range o.transports.GetProjectors() {
 		var response *core.Projection
@@ -141,7 +141,7 @@ func (o Server) executeSyncProjections(ctx context.Context, sync *core.EventBook
 	return result, rerr
 }
 
-func (o Server) extractSynchronous(originalBook *core.EventBook) (synchronous *core.EventBook, async *core.EventBook, err error) {
+func (o *Server) extractSynchronous(originalBook *core.EventBook) (synchronous *core.EventBook, async *core.EventBook, err error) {
 	if len(originalBook.Pages) == 0 {
 		return nil, nil, errors.New("event book has no pages -- not correct in this context")
 	}

@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/commandSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	business "github.com/benjaminabbitt/evented/proto/evented/business/coordinator"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/support/jaeger"
@@ -38,13 +38,13 @@ func main() {
 	protoId := evented_proto.UUIDToProto(id)
 
 	for i := 0; i <= 1; i++ {
-		pages := []*evented_core.CommandPage{&evented_core.CommandPage{
+		pages := []*core.CommandPage{&core.CommandPage{
 			Sequence:    uint32(i),
 			Synchronous: false,
 			Command:     nil,
 		}}
-		commandBook := &evented_core.CommandBook{
-			Cover: &evented_core.Cover{
+		commandBook := &core.CommandBook{
+			Cover: &core.Cover{
 				Domain: config.Domain(),
 				Root:   &protoId,
 			},

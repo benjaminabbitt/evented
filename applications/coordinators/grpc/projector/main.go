@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	projector2 "github.com/benjaminabbitt/evented/proto/evented/projector/projector"
+	projector2 "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -35,7 +35,7 @@ func main() {
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
+	eventQueryClient := query.NewEventQueryClient(qhConn)
 
 	domain := config.Domain()
 

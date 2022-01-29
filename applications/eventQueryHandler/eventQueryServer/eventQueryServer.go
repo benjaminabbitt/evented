@@ -2,8 +2,8 @@ package eventQueryServer
 
 import (
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -22,20 +22,20 @@ func NewEventQueryServer(maxSize uint, repos events.EventStorer, log *zap.Sugare
 }
 
 type DefaultEventQueryServer struct {
-	eventedquery.UnimplementedEventQueryServer
+	query.UnimplementedEventQueryServer
 	EventBookSize uint
 	eventRepos    events.EventStorer
 	log           *zap.SugaredLogger
 }
 
-func (o *DefaultEventQueryServer) GetEvents(req *eventedquery.Query, server eventedquery.EventQuery_GetEventsServer) error {
+func (o *DefaultEventQueryServer) GetEvents(req *query.Query, server query.EventQuery_GetEventsServer) error {
 	id, err := eventedproto.ProtoToUUID(req.Root)
 	if err != nil {
 		return err
 	}
-	evtChan := make(chan *eventedcore.EventPage)
-	var eventPages []*eventedcore.EventPage
-	cover := &eventedcore.Cover{
+	evtChan := make(chan *core.EventPage)
+	var eventPages []*core.EventPage
+	cover := &core.Cover{
 		Domain: req.Domain,
 		Root:   req.Root,
 	}
@@ -59,7 +59,7 @@ func (o *DefaultEventQueryServer) GetEvents(req *eventedquery.Query, server even
 				return err
 			}
 			size = 0
-			eventPages = []*eventedcore.EventPage{}
+			eventPages = []*core.EventPage{}
 		} else {
 			size += pSize
 			eventPages = append(eventPages, page)
@@ -69,8 +69,8 @@ func (o *DefaultEventQueryServer) GetEvents(req *eventedquery.Query, server even
 	return nil
 }
 
-func (o *DefaultEventQueryServer) send(cover *eventedcore.Cover, pages []*eventedcore.EventPage, server eventedquery.EventQuery_GetEventsServer) error {
-	book := &eventedcore.EventBook{
+func (o *DefaultEventQueryServer) send(cover *core.Cover, pages []*core.EventPage, server query.EventQuery_GetEventsServer) error {
+	book := &core.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: nil,
@@ -83,11 +83,11 @@ func (o *DefaultEventQueryServer) send(cover *eventedcore.Cover, pages []*evente
 	return nil
 }
 
-func (o *DefaultEventQueryServer) Synchronize(server eventedquery.EventQuery_SynchronizeServer) error {
+func (o *DefaultEventQueryServer) Synchronize(server query.EventQuery_SynchronizeServer) error {
 	panic("implement me")
 }
 
-func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server eventedquery.EventQuery_GetAggregateRootsServer) error {
+func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server query.EventQuery_GetAggregateRootsServer) error {
 	panic("implement me")
 }
 
@@ -95,7 +95,7 @@ func (o *DefaultEventQueryServer) Listen(port uint, tracer opentracing.Tracer) e
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), tracer)
 
-	eventedquery.RegisterEventQueryServer(grpcServer, o)
+	query.RegisterEventQueryServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)

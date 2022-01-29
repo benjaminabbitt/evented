@@ -3,9 +3,9 @@ package universal
 import (
 	"context"
 	"fmt"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/evented/projector/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -16,16 +16,16 @@ type ProjectorCoordinator struct {
 	Coordinator      *Coordinator
 	Domain           string //Domain of the Source
 	ProjectorClient  projector.ProjectorClient
-	EventQueryClient eventedquery.EventQueryClient
+	EventQueryClient query.EventQueryClient
 	Processed        *processed.Processed
 	Log              *zap.SugaredLogger
 }
 
-func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.EventBook) (*eventedcore.Projection, error) {
+func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *core.EventBook) (*core.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match projector configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
-	o.Coordinator.RepairSequencing(ctx, eb, func(eb *eventedcore.EventBook) error {
+	o.Coordinator.RepairSequencing(ctx, eb, func(eb *core.EventBook) error {
 		_, err := o.ProjectorClient.Handle(ctx, eb)
 		return err
 	})
@@ -38,7 +38,7 @@ func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *eventedcore.E
 	return reb, err
 }
 
-func (o *ProjectorCoordinator) Handle(ctx context.Context, eb *eventedcore.EventBook) error {
+func (o *ProjectorCoordinator) Handle(ctx context.Context, eb *core.EventBook) error {
 	_, err := o.HandleSync(ctx, eb)
 	return err
 }

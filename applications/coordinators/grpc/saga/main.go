@@ -3,9 +3,8 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/saga/saga"
-	eventedquery "github.com/benjaminabbitt/evented/proto/evented/business/query"
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	saga2 "github.com/benjaminabbitt/evented/proto/evented/saga/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
+	saga2 "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -36,11 +35,12 @@ func main() {
 
 	ochUrl := config.OtherCommandHandlerURL()
 	otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl, log, tracer)
-	otherCommandHandler := eventedcore.NewCommandHandlerClient(otherCommandConn)
+	//TODO: fix
+	otherCommandHandler := NewCommandHandlerClient(otherCommandConn)
 
 	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := eventedquery.NewEventQueryClient(qhConn)
+	eventQueryClient := query.NewEventQueryClient(qhConn)
 	domain := config.Domain()
 
 	server := saga.NewSagaCoordinator(sagaClient, eventQueryClient, otherCommandHandler, p, domain, log, &tracer)

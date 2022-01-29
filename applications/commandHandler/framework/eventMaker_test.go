@@ -3,11 +3,11 @@ package framework
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
 
@@ -18,7 +18,7 @@ type EventMakerSuite struct {
 func (o *EventMakerSuite) TestNewEventPage() {
 	expected := &core.EventPage{
 		Sequence:    &core.EventPage_Num{Num: 0},
-		CreatedAt:   &timestamp.Timestamp{},
+		CreatedAt:   &timestamppb.Timestamp{},
 		Event:       nil,
 		Synchronous: false,
 	}
@@ -26,11 +26,11 @@ func (o *EventMakerSuite) TestNewEventPage() {
 }
 
 func (o *EventMakerSuite) TestNewEmptyEventPage() {
-	anyEmpty, _ := ptypes.MarshalAny(&empty.Empty{})
+	anyEmpty, _ := anypb.New(&emptypb.Empty{})
 	page := &core.EventPage{
 		Sequence:    &core.EventPage_Num{Num: 0},
 		Synchronous: false,
-		CreatedAt:   &timestamp.Timestamp{},
+		CreatedAt:   &timestamppb.Timestamp{},
 		Event:       anyEmpty,
 	}
 	o.Assert().Equal(page, NewEmptyEventPage(0, false))

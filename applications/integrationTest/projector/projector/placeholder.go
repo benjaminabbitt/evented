@@ -1,8 +1,8 @@
 package projector
 
 import (
-	eventedcore "github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/evented/projector/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -25,15 +25,15 @@ type PlaceholderProjectorLogic struct {
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *eventedcore.EventBook) (*empty.Empty, error) {
+func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *core.EventBook) (*empty.Empty, error) {
 	_, err := o.HandleSync(ctx, in)
 	return &empty.Empty{}, err
 }
 
-func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *eventedcore.EventBook) (*eventedcore.Projection, error) {
+func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *core.EventBook) (*core.Projection, error) {
 	lastSequenceIndex := len(in.Pages) - 1
-	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*eventedcore.EventPage_Num).Num
-	projection := &eventedcore.Projection{
+	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*core.EventPage_Num).Num
+	projection := &core.Projection{
 		Cover:      in.Cover,
 		Projector:  "test",
 		Sequence:   lastSequence,
