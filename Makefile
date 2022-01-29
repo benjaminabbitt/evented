@@ -12,3 +12,5 @@ generate:
 #	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/projector/projector/evented.proto -l go -o gen
 #	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/saga/coordinator/saga.co.proto -l go -o gen
 #	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/saga/saga/saga.proto -l go -o gen
+
+build:

@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(eventBookRepository eventBook.Storer, transports transport.TransportHolder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
+func NewServer(eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
 	return Server{
 		log:                 log,
 		eventBookRepository: eventBookRepository,
@@ -31,7 +31,7 @@ type Server struct {
 	evented.UnimplementedBusinessCoordinatorServer
 	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Storer
-	transports          transport.TransportHolder
+	transports          transport.Holder
 	businessClient      client.BusinessClient
 	server              *grpc.Server
 }

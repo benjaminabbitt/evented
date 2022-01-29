@@ -18,6 +18,7 @@ import (
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
+	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
@@ -71,7 +72,7 @@ func main() {
 	for _, url := range conf.ProjectorURLs() {
 		log.Infow("Connecting with evented... ", "url", url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
-		err := handlers.Add(evented.NewGRPCProjector(projectorConn))
+		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
 		if err != nil {
 			log.Error(err)
 		}

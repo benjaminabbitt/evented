@@ -5,7 +5,7 @@ import (
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 )
 
-type TransportHolder interface {
+type Holder interface {
 	Add(i interface{}) error
 	GetTransports() []chan *evented.EventBook
 	GetProjectors() []evented.ProjectorClient
