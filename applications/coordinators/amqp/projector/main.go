@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	projector2 "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -35,7 +34,7 @@ func main() {
 	defer closer.Close()
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := query.NewEventQueryClient(qhConn)
+	eventQueryClient := evented.NewEventQueryClient(qhConn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
@@ -89,7 +88,7 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 	return outChan, receiverInstance
 }
 
-func makeProjectorClient(config configuration.Configuration) projector2.ProjectorClient {
+func makeProjectorClient(config configuration.Configuration) evented.ProjectorClient {
 	log.Info("Starting...")
 	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
@@ -97,7 +96,7 @@ func makeProjectorClient(config configuration.Configuration) projector2.Projecto
 	defer closer.Close()
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	eventHandler := projector2.NewProjectorClient(conn)
+	eventHandler := evented.NewProjectorClient(conn)
 	log.Info("Client Created...")
 	return eventHandler
 }

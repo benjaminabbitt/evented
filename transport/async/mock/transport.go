@@ -10,7 +10,7 @@ type AsyncTransport struct {
 	mock.Mock
 }
 
-func (o *AsyncTransport) Handle(ctx context.Context, evts *core.EventBook) (err error) {
+func (o *AsyncTransport) Handle(ctx context.Context, evts *evented.EventBook) (err error) {
 	args := o.Called(ctx, evts)
 	return args.Error(0)
 }

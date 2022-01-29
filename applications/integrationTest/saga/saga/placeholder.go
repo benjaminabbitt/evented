@@ -2,8 +2,8 @@ package saga
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
@@ -21,30 +21,30 @@ func NewPlaceholderSagaLogic(log *zap.SugaredLogger, tracer *opentracing.Tracer)
 }
 
 type PlaceholderSagaLogic struct {
-	saga.UnimplementedSagaServer
+	evented.UnimplementedSagaServer
 	eventDomain string
 	log         *zap.SugaredLogger
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *core.EventBook) (*core.EventBook, error) {
+func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *evented.EventBook) (*evented.EventBook, error) {
 	return o.HandleSync(ctx, in)
 }
 
-func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *core.EventBook) (*core.EventBook, error) {
+func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.EventBook, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		o.log.Error(err)
 	}
 	root := evented_proto.UUIDToProto(id)
-	cover := core.Cover{
+	cover := evented.Cover{
 		Domain: o.eventDomain,
 		Root:   &root,
 	}
-	eb := &core.EventBook{
+	eb := &evented.EventBook{
 		Cover: &cover,
-		Pages: []*core.EventPage{&core.EventPage{
-			Sequence:    &core.EventPage_Force{Force: true},
+		Pages: []*evented.EventPage{&evented.EventPage{
+			Sequence:    &evented.EventPage_Force{Force: true},
 			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       nil,
 			Synchronous: false,
@@ -58,7 +58,7 @@ func (o *PlaceholderSagaLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
-	saga.RegisterSagaServer(grpcServer, o)
+	evented.RegisterSagaServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)

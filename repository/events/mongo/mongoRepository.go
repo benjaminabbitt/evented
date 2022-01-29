@@ -33,7 +33,7 @@ type mongoEvent struct {
 	Root        string
 }
 
-func (m EventRepoMongo) pageToMEP(root uuid.UUID, page *core.EventPage) (r mongoEvent) {
+func (m EventRepoMongo) pageToMEP(root uuid.UUID, page *evented.EventPage) (r mongoEvent) {
 	mongoId := m.generateId(root, page)
 
 	return mongoEvent{
@@ -46,12 +46,12 @@ func (m EventRepoMongo) pageToMEP(root uuid.UUID, page *core.EventPage) (r mongo
 	}
 }
 
-func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page *core.EventPage) (r mongoEvent) {
-	page.Sequence = &core.EventPage_Num{Num: sequence}
+func (m EventRepoMongo) pageToMEPWithSequence(root uuid.UUID, sequence uint32, page *evented.EventPage) (r mongoEvent) {
+	page.Sequence = &evented.EventPage_Num{Num: sequence}
 	return m.pageToMEP(root, page)
 }
 
-func (m EventRepoMongo) generateId(root uuid.UUID, page *core.EventPage) [12]byte {
+func (m EventRepoMongo) generateId(root uuid.UUID, page *evented.EventPage) [12]byte {
 	var mongoId [12]byte
 	rootBin, _ := root.MarshalBinary()
 	for i, v := range rootBin[0:7] {
@@ -67,9 +67,9 @@ func (m EventRepoMongo) generateId(root uuid.UUID, page *core.EventPage) [12]byt
 	return mongoId
 }
 
-func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page *core.EventPage) {
-	page = &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: m.Sequence},
+func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page *evented.EventPage) {
+	page = &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: m.Sequence},
 		CreatedAt:   m.CreatedAt,
 		Event:       m.Event,
 		Synchronous: m.Synchronous,
@@ -78,7 +78,7 @@ func (EventRepoMongo) mepToPage(m mongoEvent) (root uuid.UUID, page *core.EventP
 	return root, page
 }
 
-func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*core.EventPage) []interface{} {
+func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*evented.EventPage) []interface{} {
 	s := make([]interface{}, len(pages))
 	for k, v := range pages {
 		s[k] = m.pageToMEP(root, v)
@@ -87,9 +87,9 @@ func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*core.Even
 }
 
 //Adds an array of events to the data store
-func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*core.EventPage) (err error) {
-	var numbered []*core.EventPage
-	var forced *core.EventPage
+func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented.EventPage) (err error) {
+	var numbered []*evented.EventPage
+	var forced *evented.EventPage
 	remainingEvents := events
 	for {
 		numbered, forced, remainingEvents = evented_memory_ops.ExtractUntilFirstForced(remainingEvents)
@@ -112,7 +112,7 @@ func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*core.Ev
 	return nil
 }
 
-func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *core.EventPage) error {
+func (m EventRepoMongo) insertForced(ctx context.Context, id uuid.UUID, event *evented.EventPage) error {
 	var err error
 	for {
 		var seq uint32
@@ -148,7 +148,7 @@ func Any(vs []mongo.BulkWriteError, f func(writeError mongo.BulkWriteError) bool
 	return false
 }
 
-func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*core.EventPage) error {
+func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*evented.EventPage) error {
 	_, err := m.Collection.InsertMany(ctx, m.eventPagesToInterface(id, events))
 	return err
 }
@@ -175,7 +175,7 @@ func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint
 }
 
 // Gets the events related to the provided ID
-func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID) (err error) {
+func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
 	if err != nil {
 		return err
@@ -190,7 +190,7 @@ func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *core.EventPage, i
 	return nil
 }
 
-func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *core.EventPage, cur *mongo.Cursor) error {
+func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *evented.EventPage, cur *mongo.Cursor) error {
 	defer cur.Close(ctx)
 	defer close(evtChan)
 	for cur.Next(ctx) {
@@ -207,7 +207,7 @@ func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *core.Even
 
 // Gets the events related to the provided ID
 // To provides an inclusive limit to the events fetched
-func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, to uint32) (err error) {
+func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lt", to}}},
@@ -226,7 +226,7 @@ func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *core.EventPage,
 
 // Gets the events related to the provided ID
 // From provides an inclusive limit to the events fetched
-func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, from uint32) (err error) {
+func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$gte", from}}},
@@ -246,7 +246,7 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *core.EventPag
 
 // Gets the events related to the provided ID
 // From and To provide an inclusive limit to the events fetched
-func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
+func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
 		{"root", id.String()},
 		{"sequence", bson.D{{"$lt", to}}},

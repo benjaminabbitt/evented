@@ -6,8 +6,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/go-multierror"
@@ -29,7 +28,7 @@ func (o *Server) Shutdown() {
 }
 
 type Server struct {
-	business.UnimplementedBusinessCoordinatorServer
+	evented.UnimplementedBusinessCoordinatorServer
 	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Storer
 	transports          transport.TransportHolder
@@ -37,7 +36,7 @@ type Server struct {
 	server              *grpc.Server
 }
 
-func (o Server) Handle(ctx context.Context, in *core.CommandBook) (result *core.SynchronousProcessingResponse, err error) {
+func (o Server) Handle(ctx context.Context, in *evented.CommandBook) (result *evented.SynchronousProcessingResponse, err error) {
 	uuid, err := eventedproto.ProtoToUUID(in.Cover.Root)
 	if err != nil {
 		return nil, err
@@ -47,12 +46,12 @@ func (o Server) Handle(ctx context.Context, in *core.CommandBook) (result *core.
 		return nil, err
 	}
 
-	contextualCommand := &core.ContextualCommand{
+	contextualCommand := &evented.ContextualCommand{
 		Events:  priorState,
 		Command: in,
 	}
 
-	var businessResponse *core.EventBook
+	var businessResponse *evented.EventBook
 	err = backoff.Retry(func() error {
 		businessResponse, err = o.businessClient.Handle(ctx, contextualCommand)
 		return err
@@ -69,9 +68,9 @@ func (o Server) Handle(ctx context.Context, in *core.CommandBook) (result *core.
 	return result, err
 }
 
-func (o *Server) handleEventBook(ctx context.Context, eb *core.EventBook) (result *core.SynchronousProcessingResponse, rerr error) {
-	result = &core.SynchronousProcessingResponse{}
-	result.Books = []*core.EventBook{eb}
+func (o *Server) handleEventBook(ctx context.Context, eb *evented.EventBook) (result *evented.SynchronousProcessingResponse, rerr error) {
+	result = &evented.SynchronousProcessingResponse{}
+	result.Books = []*evented.EventBook{eb}
 
 	err := o.eventBookRepository.Put(ctx, eb)
 	if err != nil {
@@ -103,9 +102,9 @@ func (o *Server) handleEventBook(ctx context.Context, eb *core.EventBook) (resul
 	return result, nil
 }
 
-func (o *Server) executeSyncSagas(ctx context.Context, sync *core.EventBook) (eventBooks []*core.EventBook, projections []*core.Projection, rerr error) {
+func (o *Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) (eventBooks []*evented.EventBook, projections []*evented.Projection, rerr error) {
 	for _, syncSaga := range o.transports.GetSaga() {
-		var response *core.SynchronousProcessingResponse
+		var response *evented.SynchronousProcessingResponse
 		var err error
 		backoff.Retry(func() error {
 			response, err = syncSaga.HandleSync(ctx, sync)
@@ -122,13 +121,13 @@ func (o *Server) executeSyncSagas(ctx context.Context, sync *core.EventBook) (ev
 	return eventBooks, projections, rerr
 }
 
-func (o *Server) executeSyncProjections(ctx context.Context, sync *core.EventBook) (result []*core.Projection, rerr error) {
-	result = []*core.Projection{}
+func (o *Server) executeSyncProjections(ctx context.Context, sync *evented.EventBook) (result []*evented.Projection, rerr error) {
+	result = []*evented.Projection{}
 	for _, syncProjector := range o.transports.GetProjectors() {
-		var response *core.Projection
+		var response *evented.Projection
 		var err error
 		backoff.Retry(func() error {
-			response, err = syncProjector.HandleSync(ctx, sync)
+			response, err = syncevented.HandleSync(ctx, sync)
 			return err
 		}, backoff.NewExponentialBackOff())
 		if err != nil {
@@ -141,7 +140,7 @@ func (o *Server) executeSyncProjections(ctx context.Context, sync *core.EventBoo
 	return result, rerr
 }
 
-func (o *Server) extractSynchronous(originalBook *core.EventBook) (synchronous *core.EventBook, async *core.EventBook, err error) {
+func (o *Server) extractSynchronous(originalBook *evented.EventBook) (synchronous *evented.EventBook, async *evented.EventBook, err error) {
 	if len(originalBook.Pages) == 0 {
 		return nil, nil, errors.New("event book has no pages -- not correct in this context")
 	}
@@ -151,12 +150,12 @@ func (o *Server) extractSynchronous(originalBook *core.EventBook) (synchronous *
 			lastIdx = uint32(idx) + 1
 		}
 	}
-	synchronous = new(core.EventBook)
+	synchronous = new(evented.EventBook)
 	synchronous.Pages = originalBook.Pages[:lastIdx]
 	synchronous.Cover = originalBook.Cover
 	synchronous.Snapshot = originalBook.Snapshot
 
-	async = new(core.EventBook)
+	async = new(evented.EventBook)
 	async.Pages = originalBook.Pages[lastIdx:]
 	async.Cover = originalBook.Cover
 	async.Snapshot = nil
@@ -164,6 +163,6 @@ func (o *Server) extractSynchronous(originalBook *core.EventBook) (synchronous *
 	return synchronous, async, err
 }
 
-func (o Server) Record(ctx context.Context, in *core.EventBook) (response *core.SynchronousProcessingResponse, err error) {
+func (o Server) Record(ctx context.Context, in *evented.EventBook) (response *evented.SynchronousProcessingResponse, err error) {
 	return o.handleEventBook(ctx, in)
 }

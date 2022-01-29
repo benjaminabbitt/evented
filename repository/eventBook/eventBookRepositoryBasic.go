@@ -3,7 +3,7 @@ package eventBook
 import (
 	"context"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
 	"github.com/google/uuid"
@@ -26,8 +26,8 @@ type RepositoryBasic struct {
 	Domain       string
 }
 
-func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *core.EventBook, err error) {
-	eventPageChannel := make(chan *core.EventPage, 10)
+func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *evented.EventBook, err error) {
+	eventPageChannel := make(chan *evented.EventPage, 10)
 	snapshot, err := o.SnapshotRepo.Get(ctx, id)
 	if err != nil {
 		o.log.Error(err)
@@ -40,7 +40,7 @@ func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *core.Even
 	if err != nil {
 		o.log.Error(err)
 	}
-	var pages []*core.EventPage
+	var pages []*evented.EventPage
 	for {
 		page, more := <-eventPageChannel
 		if !more {
@@ -51,7 +51,7 @@ func (o RepositoryBasic) Get(ctx context.Context, id uuid.UUID) (book *core.Even
 	return o.makeEventBook(id, pages, snapshot), nil
 }
 
-func (o RepositoryBasic) Put(ctx context.Context, book *core.EventBook) error {
+func (o RepositoryBasic) Put(ctx context.Context, book *evented.EventBook) error {
 	root, err := eventedproto.ProtoToUUID(book.Cover.Root)
 	if err != nil {
 		o.log.Error(err)
@@ -69,45 +69,45 @@ func (o RepositoryBasic) Put(ctx context.Context, book *core.EventBook) error {
 	return err
 }
 
-func (o RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *core.EventBook, err error) {
-	ch := make(chan *core.EventPage)
+func (o RepositoryBasic) GetFromTo(ctx context.Context, id uuid.UUID, from uint32, to uint32) (book *evented.EventBook, err error) {
+	ch := make(chan *evented.EventPage)
 	err = o.EventRepo.GetFromTo(ctx, ch, id, from, to)
 	if err != nil {
 		o.log.Error(err)
 	}
-	var pages []*core.EventPage
+	var pages []*evented.EventPage
 	for page := range ch {
 		pages = append(pages, page)
 	}
 	return o.makeEventBook(id, pages, nil), nil
 }
 
-func (o RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *core.EventBook, err error) {
-	ch := make(chan *core.EventPage)
+func (o RepositoryBasic) GetFrom(ctx context.Context, id uuid.UUID, from uint32) (book *evented.EventBook, err error) {
+	ch := make(chan *evented.EventPage)
 	err = o.EventRepo.GetFrom(ctx, ch, id, from)
 	if err != nil {
 		o.log.Error(err)
 	}
-	var pages []*core.EventPage
+	var pages []*evented.EventPage
 	for page := range ch {
 		pages = append(pages, page)
 	}
 	return o.makeEventBook(id, pages, nil), nil
 }
 
-func (o RepositoryBasic) makeEventBook(root uuid.UUID, pages []*core.EventPage, snapshot *core.Snapshot) (book *core.EventBook) {
+func (o RepositoryBasic) makeEventBook(root uuid.UUID, pages []*evented.EventPage, snapshot *evented.Snapshot) (book *evented.EventBook) {
 	rootBytes, err := root.MarshalBinary()
 	if err != nil {
 		o.log.Error(err)
 	}
-	protoRoot := &core.UUID{
+	protoRoot := &evented.UUID{
 		Value: rootBytes,
 	}
-	cover := &core.Cover{
+	cover := &evented.Cover{
 		Domain: o.Domain,
 		Root:   protoRoot,
 	}
-	book = &core.EventBook{
+	book = &evented.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: snapshot,

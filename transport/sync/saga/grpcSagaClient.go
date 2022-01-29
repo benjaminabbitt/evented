@@ -2,17 +2,17 @@ package saga
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	"github.com/cenkalti/backoff/v4"
 	"google.golang.org/grpc"
 )
 
 type GRPCSagaClient struct {
-	client sagaCoordinator.SagaCoordinatorClient
+	client evented.SagaCoordinatorClient
 }
 
-func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *core.EventBook) (responses *core.SynchronousProcessingResponse, err error) {
+func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *evented.EventBook) (responses *evented.SynchronousProcessingResponse, err error) {
 	err = backoff.Retry(func() error {
 		responses, err = o.client.HandleSync(ctx, evts)
 		return err
@@ -21,6 +21,6 @@ func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *core.EventBook) (r
 }
 
 func NewGRPCSagaClient(conn *grpc.ClientConn) GRPCSagaClient {
-	client := sagaCoordinator.NewSagaCoordinatorClient(conn)
+	client := evented.NewSagaCoordinatorClient(conn)
 	return GRPCSagaClient{client: client}
 }

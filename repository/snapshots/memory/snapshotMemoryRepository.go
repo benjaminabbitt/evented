@@ -10,21 +10,21 @@ import (
 
 type SnapshotMemoryRepo struct {
 	log   *zap.SugaredLogger
-	store map[uuid.UUID]*core.Snapshot
+	store map[uuid.UUID]*evented.Snapshot
 }
 
-func (o SnapshotMemoryRepo) Get(ctx context.Context, id uuid.UUID) (snap *core.Snapshot, err error) {
+func (o SnapshotMemoryRepo) Get(ctx context.Context, id uuid.UUID) (snap *evented.Snapshot, err error) {
 	return o.store[id], nil
 }
 
-func (o SnapshotMemoryRepo) Put(ctx context.Context, id uuid.UUID, snap *core.Snapshot) (err error) {
+func (o SnapshotMemoryRepo) Put(ctx context.Context, id uuid.UUID, snap *evented.Snapshot) (err error) {
 	o.store[id] = snap
 	return nil
 }
 
 func NewSnapshotRepoMemory(log *zap.SugaredLogger) (snapshots.SnapshotStorer, error) {
 	return SnapshotMemoryRepo{
-		store: make(map[uuid.UUID]*core.Snapshot),
+		store: make(map[uuid.UUID]*evented.Snapshot),
 		log:   log,
 	}, nil
 }

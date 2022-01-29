@@ -1,8 +1,7 @@
 package businessLogic
 
 import (
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -16,18 +15,18 @@ func NewPlaceholderBusinessLogicServer(log *zap.SugaredLogger) PlaceholderBusine
 }
 
 type PlaceholderBusinessLogicServer struct {
-	business.UnimplementedBusinessLogicServer
+	evented.UnimplementedBusinessLogicServer
 	log *zap.SugaredLogger
 }
 
-func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *core.ContextualCommand) (*core.EventBook, error) {
+func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *evented.ContextualCommand) (*evented.EventBook, error) {
 	o.log.Infow("Business Logic Handle", "contextualCommand", in)
-	var eventPages []*core.EventPage
+	var eventPages []*evented.EventPage
 	//TODO: harden
 	ts := timestamppb.Now()
 	for _, commandPage := range in.Command.Pages {
-		eventPage := &core.EventPage{
-			Sequence:    &core.EventPage_Num{Num: commandPage.Sequence},
+		eventPage := &evented.EventPage{
+			Sequence:    &evented.EventPage_Num{Num: commandPage.Sequence},
 			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: true,
@@ -35,7 +34,7 @@ func (o PlaceholderBusinessLogicServer) Handle(ctx context.Context, in *core.Con
 		eventPages = append(eventPages, eventPage)
 	}
 
-	eventBook := &core.EventBook{
+	eventBook := &evented.EventBook{
 		Cover:    in.Command.Cover,
 		Pages:    eventPages,
 		Snapshot: nil,

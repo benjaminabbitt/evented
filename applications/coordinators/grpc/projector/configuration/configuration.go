@@ -18,7 +18,7 @@ func (o *Configuration) DatabaseName() string {
 }
 
 func (o *Configuration) ProjectorURL() string {
-	return viper.GetString("projector.url")
+	return viper.GetString("evented.url")
 }
 
 func (o *Configuration) Name() string {

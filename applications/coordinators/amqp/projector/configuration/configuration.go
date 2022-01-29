@@ -26,7 +26,7 @@ func (o *Configuration) AMQPQueue() string {
 }
 
 func (o *Configuration) BusinessURL() string {
-	return viper.GetString("projector.url")
+	return viper.GetString("evented.url")
 }
 
 func (o *Configuration) DatabaseURL() string {

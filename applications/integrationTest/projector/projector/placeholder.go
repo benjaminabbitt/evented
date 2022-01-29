@@ -1,8 +1,7 @@
 package projector
 
 import (
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,21 +18,21 @@ func NewPlaceholderProjectorLogic(log *zap.SugaredLogger, tracer *opentracing.Tr
 }
 
 type PlaceholderProjectorLogic struct {
-	projector.UnimplementedProjectorServer
+	evented.UnimplementedProjectorServer
 	eventDomain string
 	log         *zap.SugaredLogger
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *core.EventBook) (*empty.Empty, error) {
+func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *evented.EventBook) (*empty.Empty, error) {
 	_, err := o.HandleSync(ctx, in)
 	return &empty.Empty{}, err
 }
 
-func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *core.EventBook) (*core.Projection, error) {
+func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.Projection, error) {
 	lastSequenceIndex := len(in.Pages) - 1
-	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*core.EventPage_Num).Num
-	projection := &core.Projection{
+	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*evented.EventPage_Num).Num
+	projection := &evented.Projection{
 		Cover:      in.Cover,
 		Projector:  "test",
 		Sequence:   lastSequence,
@@ -46,7 +45,7 @@ func (o *PlaceholderProjectorLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
-	projector.RegisterProjectorServer(grpcServer, o)
+	evented.RegisterProjectorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)

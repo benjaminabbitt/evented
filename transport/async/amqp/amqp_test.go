@@ -38,7 +38,7 @@ func (o *AmqpSuite) SetupSuite() {
 	}
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	ch := make(chan *core.EventBook, 10)
+	ch := make(chan *evented.EventBook, 10)
 	o.sender = sender.NewAMQPSender(ch, url, o.exchangeName, o.log)
 	err = o.sender.Connect()
 	if err != nil {
@@ -64,14 +64,14 @@ func (o *AmqpSuite) TearDownSuite() {
 
 //func (o AmqpSuite) TestNoExceptionThrown() {
 //	id, _ := uuid.NewRandom()
-//	eb := framework.NewEventBook(id, "test", []*core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
+//	eb := framework.NewEventBook(id, "test", []*evented.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 //	err := o.sender.Handle(eb)
 //	o.Assert().Nil(err)
 //}
 
 func (o AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
+	eb := framework.NewEventBook(id, "test", []*evented.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	go o.receiver.Listen()
 	_ = o.sender.Handle(eb)
 	message := <-o.outputChannel

@@ -3,8 +3,7 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/grpc/projector/projector"
-	projector2 "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projector"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -12,10 +11,10 @@ import (
 )
 
 /*
-GRPC Server that receives Event messages and forwards them to a Sync Projector.
+GRPC Server that receives Event messages and forwards them to a Sync evented.
 Fetches missing events from the event query server, if applicable.
 Parses the result of the sync projector, updating last processed event in storage.
-Returns the result of the sync projector.
+Returns the result of the sync evented.
 */
 func main() {
 	log := support.Log()
@@ -30,12 +29,12 @@ func main() {
 	target := config.ProjectorURL()
 	log.Infow("Attempting to connect to Projector", "url", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
-	projectorClient := projector2.NewProjectorClient(conn)
+	projectorClient := evented.NewProjectorClient(conn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := query.NewEventQueryClient(qhConn)
+	eventQueryClient := evented.NewEventQueryClient(qhConn)
 
 	domain := config.Domain()
 

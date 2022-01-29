@@ -28,7 +28,7 @@ type snapshot struct {
 	state    *any.Any
 }
 
-func coreToStorage(root uuid.UUID, snap *core.Snapshot) *snapshot {
+func coreToStorage(root uuid.UUID, snap *evented.Snapshot) *snapshot {
 	mongoId, _ := mongosupport.RootToMongo(root)
 	return &snapshot{
 		MongoId:  mongoId,
@@ -39,18 +39,18 @@ func coreToStorage(root uuid.UUID, snap *core.Snapshot) *snapshot {
 
 }
 
-func storageToCore(storage *snapshot) (root uuid.UUID, snapshot *core.Snapshot, err error) {
+func storageToCore(storage *snapshot) (root uuid.UUID, snapshot *evented.Snapshot, err error) {
 	root, err = uuid.Parse(storage.Root)
 	if err != nil {
 		return uuid.New(), nil, err
 	}
-	return root, &core.Snapshot{
+	return root, &evented.Snapshot{
 		Sequence: storage.Sequence,
 		State:    storage.state,
 	}, nil
 }
 
-func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *core.Snapshot, err error) {
+func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *evented.Snapshot, err error) {
 	idBytes, err := mongosupport.RootToMongo(root)
 	singleResult := o.collection.FindOne(ctx, bson.D{{"_id", idBytes}})
 	record := &snapshot{}
@@ -71,7 +71,7 @@ func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *core.
 	return coreRecord, nil
 }
 
-func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *core.Snapshot) (err error) {
+func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evented.Snapshot) (err error) {
 	record := coreToStorage(root, snap)
 	idBytes, err := mongosupport.RootToMongo(root)
 	if snap.Sequence == 0 {

@@ -7,9 +7,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/configuration"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/repository/events/memory"
@@ -20,7 +18,6 @@ import (
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
-	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
@@ -72,9 +69,9 @@ func main() {
 	}
 
 	for _, url := range conf.ProjectorURLs() {
-		log.Infow("Connecting with Projector... ", "url", url)
+		log.Infow("Connecting with evented... ", "url", url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
-		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
+		err := handlers.Add(evented.NewGRPCProjector(projectorConn))
 		if err != nil {
 			log.Error(err)
 		}
@@ -102,7 +99,7 @@ func main() {
 	log.Infow("Creating GRPC Server")
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 	log.Infow("Registering Command Handler with GRPC")
-	business.RegisterBusinessCoordinatorServer(rpc, server)
+	evented.RegisterBusinessCoordinatorServer(rpc, server)
 
 	healthServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(rpc, healthServer)
@@ -171,10 +168,10 @@ func setupSnapshotRepo(config configuration.Configuration, span opentracing.Span
 	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStoreURL(), config.SnapshotStoreDatabaseName(), log)
 }
 
-func setupServiceBus(config configuration.Configuration, span opentracing.Span) (ch chan core.EventBook) {
+func setupServiceBus(config configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	ch = make(chan core.EventBook)
+	ch = make(chan evented.EventBook)
 	trans := sender.NewAMQPSender(ch, config.TransportURL(), config.TransportExchange(), log)
 	err := trans.Connect()
 	if err != nil {

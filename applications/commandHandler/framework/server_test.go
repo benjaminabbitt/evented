@@ -6,7 +6,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/business/client"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework/transport"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/support"
 	transportMock "github.com/benjaminabbitt/evented/transport/async/mock"
@@ -56,7 +56,7 @@ func (o ServerSuite) Test_Handle() {
 
 	eventBookRepo.On("Get", mock.Anything, id).Return(o.produceHistoricalEventBook(commandBook), nil)
 
-	contextualCommand := &core.ContextualCommand{
+	contextualCommand := &evented.ContextualCommand{
 		Events:  o.produceHistoricalEventBook(commandBook),
 		Command: commandBook,
 	}
@@ -66,7 +66,7 @@ func (o ServerSuite) Test_Handle() {
 
 	holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{})
 	holder.On("GetSaga").Return([]saga.SyncSagaTransporter{})
-	holder.On("GetTransports").Return([]chan *core.EventBook{})
+	holder.On("GetTransports").Return([]chan *evented.EventBook{})
 	server.Handle(context.Background(), commandBook)
 	holder.AssertExpectations(o.T())
 	businessClient.AssertExpectations(o.T())
@@ -80,7 +80,7 @@ func (o ServerSuite) Test_HandleWithTransports() {
 	id, _ := evented_proto.ProtoToUUID(commandBook.Cover.Root)
 	o.eventBookRepo.On("Get", mock.Anything, id).Return(o.produceHistoricalEventBook(commandBook), nil)
 
-	contextualCommand := &core.ContextualCommand{
+	contextualCommand := &evented.ContextualCommand{
 		Events:  o.produceHistoricalEventBook(commandBook),
 		Command: commandBook,
 	}
@@ -89,26 +89,26 @@ func (o ServerSuite) Test_HandleWithTransports() {
 	o.businessClient.On("Handle", mock.Anything, contextualCommand).Return(businessResponse, nil)
 	o.eventBookRepo.On("Put", mock.Anything, businessResponse).Return(nil)
 
-	var syncEventPages []*core.EventPage
-	syncEventPages = append(syncEventPages, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 0},
+	var syncEventPages []*evented.EventPage
+	syncEventPages = append(syncEventPages, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 0},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: false,
-	}, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 1},
+	}, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 1},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: true,
 	})
 
-	syncEventBook := &core.EventBook{
+	syncEventBook := &evented.EventBook{
 		Cover:    businessResponse.Cover,
 		Pages:    syncEventPages,
 		Snapshot: nil,
 	}
 
-	projection := &core.Projection{
+	projection := &evented.Projection{
 		Cover:      syncEventBook.Cover,
 		Projector:  "test",
 		Sequence:   0,
@@ -119,31 +119,31 @@ func (o ServerSuite) Test_HandleWithTransports() {
 	mockProjector.On("HandleSync", mock.Anything, syncEventBook).Return(projection, nil)
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{mockProjector})
 
-	sagaResult := &core.SynchronousProcessingResponse{}
+	sagaResult := &evented.SynchronousProcessingResponse{}
 
 	mockSaga := new(saga.MockSagaClient)
 	mockSaga.On("HandleSync", mock.Anything, syncEventBook).Return(sagaResult, nil)
 	o.holder.On("GetSaga").Return([]saga.SyncSagaTransporter{mockSaga})
 
-	var asyncEventPages []*core.EventPage
-	asyncEventPages = append(asyncEventPages, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 0},
+	var asyncEventPages []*evented.EventPage
+	asyncEventPages = append(asyncEventPages, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 0},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: false,
-	}, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 1},
+	}, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 1},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: true,
-	}, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 2},
+	}, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 2},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: false,
 	})
 
-	asyncEventBook := &core.EventBook{
+	asyncEventBook := &evented.EventBook{
 		Cover:    businessResponse.Cover,
 		Pages:    asyncEventPages,
 		Snapshot: nil,
@@ -151,8 +151,8 @@ func (o ServerSuite) Test_HandleWithTransports() {
 
 	mockTransport := new(transportMock.AsyncTransport)
 	mockTransport.On("Handle", mock.Anything, asyncEventBook).Return(nil)
-	ch := make(chan *core.EventBook, 10)
-	o.holder.On("GetTransports").Return([]chan *core.EventBook{ch})
+	ch := make(chan *evented.EventBook, 10)
+	o.holder.On("GetTransports").Return([]chan *evented.EventBook{ch})
 	o.server.Handle(context.Background(), commandBook)
 	test := <-ch
 	o.log.Info(test)
@@ -163,27 +163,27 @@ func (o ServerSuite) Test_HandleWithTransports() {
 	o.eventBookRepo.AssertExpectations(o.T())
 }
 
-func (o ServerSuite) produceBusinessResponse(commandBook *core.CommandBook) *core.EventBook {
-	var businessReturnEventPages []*core.EventPage
+func (o ServerSuite) produceBusinessResponse(commandBook *evented.CommandBook) *evented.EventBook {
+	var businessReturnEventPages []*evented.EventPage
 
-	businessReturnEventPages = append(businessReturnEventPages, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 0},
+	businessReturnEventPages = append(businessReturnEventPages, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 0},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: false,
-	}, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 1},
+	}, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 1},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: true,
-	}, &core.EventPage{
-		Sequence:    &core.EventPage_Num{Num: 2},
+	}, &evented.EventPage{
+		Sequence:    &evented.EventPage_Num{Num: 2},
 		CreatedAt:   nil,
 		Event:       nil,
 		Synchronous: false,
 	})
 
-	businessReturnEventBook := &core.EventBook{
+	businessReturnEventBook := &evented.EventBook{
 		Cover:    commandBook.Cover,
 		Pages:    businessReturnEventPages,
 		Snapshot: nil,
@@ -192,13 +192,13 @@ func (o ServerSuite) produceBusinessResponse(commandBook *core.CommandBook) *cor
 	return businessReturnEventBook
 }
 
-func (o ServerSuite) produceHistoricalEventBook(commandBook *core.CommandBook) *core.EventBook {
+func (o ServerSuite) produceHistoricalEventBook(commandBook *evented.CommandBook) *evented.EventBook {
 	eventPage := NewEmptyEventPage(0, false)
-	priorStateEventPages := []*core.EventPage{
+	priorStateEventPages := []*evented.EventPage{
 		eventPage,
 	}
 
-	eb := &core.EventBook{
+	eb := &evented.EventBook{
 		Cover:    commandBook.Cover,
 		Pages:    priorStateEventPages,
 		Snapshot: nil,
@@ -206,8 +206,8 @@ func (o ServerSuite) produceHistoricalEventBook(commandBook *core.CommandBook) *
 	return eb
 }
 
-func (o ServerSuite) produceCommandBook() *core.CommandBook {
-	page := &core.CommandPage{
+func (o ServerSuite) produceCommandBook() *evented.CommandBook {
+	page := &evented.CommandPage{
 		Sequence:    0,
 		Synchronous: false,
 		Command:     nil,
@@ -216,20 +216,20 @@ func (o ServerSuite) produceCommandBook() *core.CommandBook {
 	randomId, _ := uuid.NewRandom()
 	id := evented_proto.UUIDToProto(randomId)
 
-	cover := &core.Cover{
+	cover := &evented.Cover{
 		Domain: "test",
 		Root:   &id,
 	}
 
-	commandBook := &core.CommandBook{
+	commandBook := &evented.CommandBook{
 		Cover: cover,
-		Pages: []*core.CommandPage{page},
+		Pages: []*evented.CommandPage{page},
 	}
 	return commandBook
 }
 
 func (o ServerSuite) TestHandleUUIDCorrupt() {
-	invalidUUID := &core.UUID{Value: []byte{}}
+	invalidUUID := &evented.UUID{Value: []byte{}}
 	book := o.produceCommandBook()
 	book.Cover.Root = invalidUUID
 	_, err := o.server.Handle(o.ctx, book)
@@ -237,7 +237,7 @@ func (o ServerSuite) TestHandleUUIDCorrupt() {
 }
 
 func (o ServerSuite) TestEventBookRepositoryError() {
-	var typeCheckingBypass *core.EventBook = nil
+	var typeCheckingBypass *evented.EventBook = nil
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(typeCheckingBypass, errors.New(""))
 	book := o.produceCommandBook()
 	_, err := o.server.Handle(o.ctx, book)
@@ -245,7 +245,7 @@ func (o ServerSuite) TestEventBookRepositoryError() {
 }
 
 func (o ServerSuite) TestBusinessClientError() {
-	var eventBookTypeCheckingBypass *core.EventBook = nil
+	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, errors.New(""))
 	book := o.produceCommandBook()
@@ -253,7 +253,7 @@ func (o ServerSuite) TestBusinessClientError() {
 	o.Assert().Error(err)
 }
 func (o ServerSuite) TestEventBookRepositoryPutError() {
-	var eventBookTypeCheckingBypass *core.EventBook = nil
+	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(errors.New(""))
@@ -263,17 +263,17 @@ func (o ServerSuite) TestEventBookRepositoryPutError() {
 }
 
 func (o ServerSuite) TestHandleSyncSagaError() {
-	var eventBookTypeCheckingBypass *core.EventBook = nil
+	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	id, _ := uuid.NewRandom()
-	eventPages := []*core.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
+	eventPages := []*evented.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", eventPages, nil), nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(nil)
 	sagaTransporter := &saga.MockSagaClient{}
 	sagaTransporter2 := &saga.MockSagaClient{}
 	o.holder.On("GetSaga").Return([]saga.SyncSagaTransporter{sagaTransporter, sagaTransporter2})
-	sagaResponse := &core.SynchronousProcessingResponse{
-		Books:       []*core.EventBook{NewEventBook(id, "", eventPages, nil)},
+	sagaResponse := &evented.SynchronousProcessingResponse{
+		Books:       []*evented.EventBook{NewEventBook(id, "", eventPages, nil)},
 		Projections: nil,
 	}
 	sagaTransporter2.On("HandleSync", mock.Anything, mock.Anything).Return(sagaResponse, errors.New(""))
@@ -281,7 +281,7 @@ func (o ServerSuite) TestHandleSyncSagaError() {
 	projectorTransporter := &projector.MockProjectorClient{}
 	projectorTransporter2 := &projector.MockProjectorClient{}
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
-	var projectionTypeCheckingBypass *core.Projection = nil
+	var projectionTypeCheckingBypass *evented.Projection = nil
 	projectorTransporter.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, nil)
 	projectorTransporter2.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, nil)
 	book := o.produceCommandBook()
@@ -297,16 +297,16 @@ func (o ServerSuite) TestHandleSyncSagaError() {
 }
 
 func (o ServerSuite) TestHandleSyncProjectionError() {
-	var eventBookTypeCheckingBypass *core.EventBook = nil
+	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	id, _ := uuid.NewRandom()
-	eventPages := []*core.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
+	eventPages := []*evented.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", eventPages, nil), nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(nil)
 	projectorTransporter := &projector.MockProjectorClient{}
 	projectorTransporter2 := &projector.MockProjectorClient{}
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
-	var projectionTypeCheckingBypass *core.Projection = nil
+	var projectionTypeCheckingBypass *evented.Projection = nil
 	projectorTransporter.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, nil)
 	projectorTransporter2.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, errors.New(""))
 	book := o.produceCommandBook()
@@ -320,10 +320,10 @@ func (o ServerSuite) TestHandleSyncProjectionError() {
 }
 
 func (o ServerSuite) TestExtractSynchronousEmptyEventBook() {
-	var eventBookTypeCheckingBypass *core.EventBook = nil
+	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	id, _ := uuid.NewRandom()
-	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", []*core.EventPage{}, nil), nil)
+	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", []*evented.EventPage{}, nil), nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(nil)
 	book := o.produceCommandBook()
 	_, err := o.server.Handle(o.ctx, book)

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func StringifyEventBook(eb *core.EventBook) string {
+func StringifyEventBook(eb *evented.EventBook) string {
 	var pages string
 	for _, page := range eb.Pages {
 		seq, _ := GetSequence(page)

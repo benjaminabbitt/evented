@@ -2,7 +2,8 @@ package memory
 
 import (
 	"context"
-	core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/cucumber"
 	"github.com/cucumber/godog"
@@ -20,7 +21,7 @@ type MemoryRepositorySuite struct {
 	log    *zap.SugaredLogger
 	sut    EventRepoMemory
 	id     uuid.UUID
-	events []*core.EventPage
+	events []*evented.EventPage
 }
 
 func (s *MemoryRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
@@ -41,12 +42,12 @@ func (suite *MemoryRepositorySuite) InitializeScenario(s *godog.ScenarioContext)
 
 func (s *MemoryRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
 	id, events := s.extractPickleTableToEvents(arg1)
-	ch := make(chan *core.EventPage)
+	ch := make(chan *evented.EventPage)
 	_ = s.sut.Get(context.Background(), ch, id)
 	return cucumber.AssertExpectedAndActual(assert.Equal, events[0], <-ch, "", "")
 }
 
-func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*core.EventPage) {
+func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented.EventPage) {
 	for i, row := range arg.GetRows() {
 		if i == 0 { //header
 			continue
@@ -71,15 +72,15 @@ func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleS
 
 		}
 
-		event := &core.EventPage{
+		event := &evented.EventPage{
 			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: false,
 		}
 		if force {
-			event.Sequence = &core.EventPage_Force{}
+			event.Sequence = &evented.EventPage_Force{}
 		} else {
-			event.Sequence = &core.EventPage_Num{Num: sequence}
+			event.Sequence = &evented.EventPage_Num{Num: sequence}
 		}
 		events = append(events, event)
 	}
@@ -103,7 +104,7 @@ func (s *MemoryRepositorySuite) iShouldGetTheseEvents(arg1 *messages.PickleStepA
 	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, s.events, "", "")
 }
 
-func (s *MemoryRepositorySuite) drainChannel(ch chan *core.EventPage) (pages []*core.EventPage) {
+func (s *MemoryRepositorySuite) drainChannel(ch chan *evented.EventPage) (pages []*evented.EventPage) {
 	for page := range ch {
 		pages = append(pages, page)
 	}
@@ -111,28 +112,28 @@ func (s *MemoryRepositorySuite) drainChannel(ch chan *core.EventPage) (pages []*
 }
 
 func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
-	ch := make(chan *core.EventPage)
+	ch := make(chan *evented.EventPage)
 	_ = s.sut.GetTo(context.Background(), ch, s.id, uint32(end))
 	s.events = s.drainChannel(ch)
 	return nil
 }
 
 func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsFromTo(start, end int) error {
-	ch := make(chan *core.EventPage)
+	ch := make(chan *evented.EventPage)
 	_ = s.sut.GetFromTo(context.Background(), ch, s.id, uint32(start), uint32(end))
 	s.events = s.drainChannel(ch)
 	return nil
 }
 
 func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsStartingFromValue(start int) error {
-	ch := make(chan *core.EventPage)
+	ch := make(chan *evented.EventPage)
 	_ = s.sut.GetFrom(context.Background(), ch, s.id, uint32(start))
 	s.events = s.drainChannel(ch)
 	return nil
 }
 
 func (s *MemoryRepositorySuite) iRetrieveAllEvents() error {
-	ch := make(chan *core.EventPage)
+	ch := make(chan *evented.EventPage)
 	_ = s.sut.Get(context.Background(), ch, s.id)
 	s.events = s.drainChannel(ch)
 	return nil

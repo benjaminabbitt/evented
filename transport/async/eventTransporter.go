@@ -6,5 +6,5 @@ import (
 )
 
 type EventTransporter interface {
-	Handle(ctx context.Context, evts *core.EventBook) (err error)
+	Handle(ctx context.Context, evts *evented.EventBook) (err error)
 }

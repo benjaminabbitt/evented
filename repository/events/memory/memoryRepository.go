@@ -2,7 +2,8 @@ package memory
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	evented_memory_ops "github.com/benjaminabbitt/evented/repository/events"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -10,17 +11,17 @@ import (
 
 func NewEventRepoMemory(log *zap.SugaredLogger) (EventRepoMemory, error) {
 	return EventRepoMemory{
-		store: make(map[uuid.UUID][]*core.EventPage),
+		store: make(map[uuid.UUID][]*evented.EventPage),
 		log:   log,
 	}, nil
 }
 
 type EventRepoMemory struct {
-	store map[uuid.UUID][]*core.EventPage
+	store map[uuid.UUID][]*evented.EventPage
 	log   *zap.SugaredLogger
 }
 
-func (o EventRepoMemory) Add(ctx context.Context, id uuid.UUID, evt []*core.EventPage) (err error) {
+func (o EventRepoMemory) Add(ctx context.Context, id uuid.UUID, evt []*evented.EventPage) (err error) {
 	//TODO, assertions
 	storable, forced, remainder := evented_memory_ops.ExtractUntilFirstForced(evt)
 	o.store[id] = append(o.store[id], storable...)
@@ -61,28 +62,28 @@ func (o EventRepoMemory) getNextSequence(id uuid.UUID) uint32 {
 	}
 }
 
-func (o EventRepoMemory) Get(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID) (err error) {
+func (o EventRepoMemory) Get(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID) (err error) {
 	go o.send(evtChan, o.store[id])
 	return nil
 }
 
-func (o EventRepoMemory) GetTo(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, to uint32) (err error) {
+func (o EventRepoMemory) GetTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, to uint32) (err error) {
 	return o.GetFromTo(ctx, evtChan, id, 0, to)
 }
-func (o EventRepoMemory) GetFrom(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, from uint32) (err error) {
+func (o EventRepoMemory) GetFrom(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) (err error) {
 	return o.GetFromTo(ctx, evtChan, id, from, o.getNextSequence(id))
 }
-func (o EventRepoMemory) GetFromTo(ctx context.Context, evtChan chan *core.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
+func (o EventRepoMemory) GetFromTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
 	slice := o.filterStore(id, from, to)
 	go o.send(evtChan, slice)
 	return nil
 }
 
-func (o EventRepoMemory) filterStore(id uuid.UUID, from uint32, to uint32) []*core.EventPage {
+func (o EventRepoMemory) filterStore(id uuid.UUID, from uint32, to uint32) []*evented.EventPage {
 	return o.store[id][from:to]
 }
 
-func (o EventRepoMemory) send(echan chan *core.EventPage, events []*core.EventPage) {
+func (o EventRepoMemory) send(echan chan *evented.EventPage, events []*evented.EventPage) {
 	for _, evt := range events {
 		echan <- evt
 	}

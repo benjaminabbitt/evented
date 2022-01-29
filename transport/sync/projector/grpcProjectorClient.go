@@ -2,17 +2,17 @@ package projector
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/projectorCoordinator"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	"github.com/cenkalti/backoff/v4"
 	"google.golang.org/grpc"
 )
 
 type GrpcProjector struct {
-	client projectorCoordinator.ProjectorCoordinatorClient
+	client evented.ProjectorCoordinatorClient
 }
 
-func (o GrpcProjector) HandleSync(ctx context.Context, evts *core.EventBook) (projection *core.Projection, err error) {
+func (o GrpcProjector) HandleSync(ctx context.Context, evts *evented.EventBook) (projection *evented.Projection, err error) {
 	err = backoff.Retry(func() error {
 		projection, err = o.client.HandleSync(ctx, evts)
 		return err
@@ -21,7 +21,7 @@ func (o GrpcProjector) HandleSync(ctx context.Context, evts *core.EventBook) (pr
 }
 
 func NewGRPCProjector(conn *grpc.ClientConn) GrpcProjector {
-	client := projectorCoordinator.NewProjectorCoordinatorClient(conn)
+	client := evented.NewProjectorCoordinatorClient(conn)
 	return GrpcProjector{
 		client: client,
 	}

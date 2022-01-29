@@ -11,12 +11,12 @@ type SnapshotRepo struct {
 	mock.Mock
 }
 
-func (o SnapshotRepo) Get(ctx context.Context, id uuid.UUID) (snap *core.Snapshot, err error) {
+func (o SnapshotRepo) Get(ctx context.Context, id uuid.UUID) (snap *evented.Snapshot, err error) {
 	args := o.Called(ctx, id)
-	return args.Get(0).(*core.Snapshot), args.Error(1)
+	return args.Get(0).(*evented.Snapshot), args.Error(1)
 }
 
-func (o SnapshotRepo) Put(ctx context.Context, id uuid.UUID, snap *core.Snapshot) (err error) {
+func (o SnapshotRepo) Put(ctx context.Context, id uuid.UUID, snap *evented.Snapshot) (err error) {
 	args := o.Called(ctx, id, snap)
 	return args.Error(0)
 }

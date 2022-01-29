@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/coordinators/amqp/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/query"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/saga"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -37,10 +35,10 @@ func main() {
 	sagaClient := makeSagaClient(config, tracer)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
-	eventQueryClient := query.NewEventQueryClient(qhConn)
+	eventQueryClient := evented.NewEventQueryClient(qhConn)
 
 	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlerURL(), log, tracer)
-	otherCommandHandlerClient := business.NewBusinessCoordinatorClient(ochConn)
+	otherCommandHandlerClient := evented.NewBusinessCoordinatorClient(ochConn)
 
 	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
 
@@ -95,13 +93,13 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 	return outChan, receiverInstance
 }
 
-func makeSagaClient(config configuration.Configuration, tracer opentracing.Tracer) saga.SagaClient {
+func makeSagaClient(config configuration.Configuration, tracer opentracing.Tracer) evented.SagaClient {
 	log.Info("Starting...")
 	target := config.BusinessURL()
 	log.Infow("Attempting to connect to business at", "address", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
-	eventHandler := saga.NewSagaClient(conn)
+	eventHandler := evented.NewSagaClient(conn)
 	log.Info("Client Created...")
 	return eventHandler
 }

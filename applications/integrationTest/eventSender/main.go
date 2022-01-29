@@ -5,8 +5,8 @@ import (
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/eventSender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/sagaCoordinator"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
@@ -38,18 +38,18 @@ func main() {
 
 	log.Infof("Connected to remote %s", target)
 
-	sh := sagaCoordinator.NewSagaCoordinatorClient(conn)
+	sh := evented.NewSagaCoordinatorClient(conn)
 	log.Info("Client Created...")
 
 	id, err := uuid.NewRandom()
 	protoId := evented_proto.UUIDToProto(id)
 
-	var pages []*core.EventPage
+	var pages []*evented.EventPage
 	for i := 0; i <= 1; i++ {
 		pages = append(pages, framework.NewEventPage(uint32(i), false, nil))
 	}
-	eventBook := &core.EventBook{
-		Cover: &core.Cover{
+	eventBook := &evented.EventBook{
+		Cover: &evented.Cover{
 			Domain: config.Domain(),
 			Root:   &protoId,
 		},

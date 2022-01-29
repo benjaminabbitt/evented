@@ -1,0 +1,132 @@
+syntax = "proto3";
+package evented;
+option go_package = "github.com/benjaminabbitt/evented/proto/evented";
+option java_package = "name.benjaminabbitt.evented";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+message UUID {
+  bytes value = 1;
+}
+
+message Cover {
+  string domain = 2;
+  UUID root = 1;
+}
+
+message EventPage {
+  oneof sequence {
+    uint32 num = 1;
+    bool force = 2;
+  }
+  google.protobuf.Timestamp createdAt = 3;
+  google.protobuf.Any Event = 4;
+  bool synchronous = 5;
+}
+
+message Snapshot {
+  uint32 sequence = 2;
+  google.protobuf.Any state = 3;
+}
+
+message EventBook {
+  Cover cover = 1;
+  Snapshot snapshot = 2;
+  repeated EventPage pages = 3;
+}
+
+message Projection {
+  Cover cover = 1;
+  string projector = 2;
+  uint32 sequence = 3;
+  google.protobuf.Any projection = 4;
+}
+
+message SynchronousProcessingResponse {
+  repeated EventBook books = 1;
+  repeated Projection projections = 3;
+}
+
+message CommandPage {
+  uint32 sequence = 1;
+  bool synchronous = 2;
+  google.protobuf.Any command = 3;
+}
+
+message CommandBook {
+  Cover cover = 1;
+  repeated CommandPage pages = 2;
+}
+
+message ContextualCommand {
+  // Passed from command handler to business, consists of everything that the business needs to execute/evaluate the command
+  EventBook events = 1;
+  CommandBook command = 2;
+}
+
+service BusinessLogic {
+  rpc Handle (evented.ContextualCommand) returns (evented.EventBook) {
+  }
+}
+
+service BusinessCoordinator {
+  rpc Handle (evented.CommandBook) returns (evented.SynchronousProcessingResponse) {
+  }
+  rpc Record (evented.EventBook) returns (evented.SynchronousProcessingResponse) {
+  }
+}
+
+service ProjectorCoordinator {
+  rpc HandleSync (evented.EventBook) returns (evented.Projection) {
+  }
+  rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
+  }
+}
+
+service Projector {
+  rpc HandleSync (evented.EventBook) returns (evented.Projection) {
+  }
+  rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
+  }
+
+}
+
+service EventQuery {
+  rpc GetEvents (Query) returns (stream evented.EventBook) {
+  }
+  rpc Synchronize (stream Query) returns (stream evented.EventBook) {
+  }
+  rpc GetAggregateRoots (google.protobuf.Empty) returns (stream AggregateRoot) {
+  }
+}
+message Query {
+  string domain = 1;
+  evented.UUID root = 2;
+  uint32 lowerBound = 3;
+  uint32 upperBound = 4;
+}
+
+message AggregateRoot {
+  string domain = 1;
+  evented.UUID root = 2;
+}
+
+message TestByteArray {
+  bytes bytes = 1;
+}
+
+service SagaCoordinator {
+  rpc HandleSync (evented.EventBook) returns (evented.SynchronousProcessingResponse) {
+  }
+  rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
+  }
+}
+
+service Saga {
+  rpc HandleSync (evented.EventBook) returns (evented.EventBook) {
+  }
+  rpc Handle (evented.EventBook) returns (evented.EventBook) {
+  }
+}
