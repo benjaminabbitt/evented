@@ -2,7 +2,7 @@ package sender
 
 import (
 	"fmt"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/protobuf/proto"
@@ -14,12 +14,12 @@ type AMQPSender struct {
 	log          *zap.SugaredLogger
 	amqpch       *amqp.Channel
 	conn         *amqp.Connection
-	ch           chan *evented_core.EventBook
+	ch           chan core.EventBook
 	exchangeName string
 	url          string
 }
 
-func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
+func (o AMQPSender) Handle(evts *core.EventBook) (err error) {
 	body, err := proto.Marshal(evts)
 	o.log.Infow("Publishing ", "eventBook", support.StringifyEventBook(evts), "exchange", o.exchangeName)
 	err = backoff.Retry(func() error {
@@ -30,16 +30,16 @@ func (o AMQPSender) Handle(evts *evented_core.EventBook) (err error) {
 			false,
 			amqp.Publishing{
 				ContentType: fmt.Sprintf("application/protobuf;proto=%T", evts),
-				Body:        []byte(body),
+				Body:        body,
 			})
 	}, backoff.NewExponentialBackOff())
 	return nil
 }
 
 func (o AMQPSender) Run() {
-	go func(ch chan *evented_core.EventBook) {
+	go func(ch chan core.EventBook) {
 		for eb := range o.ch {
-			err := o.Handle(eb)
+			err := o.Handle(&eb)
 			if err != nil {
 				o.log.Error(err)
 			}
@@ -47,7 +47,7 @@ func (o AMQPSender) Run() {
 	}(o.ch)
 }
 
-func NewAMQPSender(ch chan *evented_core.EventBook, url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
+func NewAMQPSender(ch chan core.EventBook, url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
 	client := &AMQPSender{
 		log:          log,
 		exchangeName: exchangeName,
