@@ -3,12 +3,12 @@ package eventBook
 import (
 	"context"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 	erMock "github.com/benjaminabbitt/evented/repository/events/mock"
 	ssMock "github.com/benjaminabbitt/evented/repository/snapshots/mock"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
 
@@ -19,7 +19,7 @@ type EventBookRepositorySuite struct {
 	eventBookRepository       RepositoryBasic
 	snapshotRepository        *ssMock.SnapshotRepo
 	eventRepository           *erMock.EventRepository
-	eventPageRepositoryStream chan *evented_core.EventPage
+	eventPageRepositoryStream chan *core.EventPage
 }
 
 func (o *EventBookRepositorySuite) SetupTest() {
@@ -29,7 +29,7 @@ func (o *EventBookRepositorySuite) SetupTest() {
 
 	o.eventRepository = &erMock.EventRepository{}
 	o.snapshotRepository = &ssMock.SnapshotRepo{}
-	o.eventPageRepositoryStream = make(chan *evented_core.EventPage, 10)
+	o.eventPageRepositoryStream = make(chan *core.EventPage, 10)
 
 	o.eventBookRepository = RepositoryBasic{
 		EventRepo:             o.eventRepository,
@@ -44,28 +44,28 @@ func (o *EventBookRepositorySuite) Test_Put() {
 	pid := evented_proto.UUIDToProto(id)
 	ctx := context.Background()
 
-	cover := &evented_core.Cover{
+	cover := &core.Cover{
 		Domain: "testPut",
 		Root:   &pid,
 	}
 
-	pages := []*evented_core.EventPage{
-		&evented_core.EventPage{
-			Sequence: &evented_core.EventPage_Num{
+	pages := []*core.EventPage{
+		&core.EventPage{
+			Sequence: &core.EventPage_Num{
 				Num: 0,
 			},
-			CreatedAt:   &timestamp.Timestamp{},
+			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       nil,
 			Synchronous: false,
 		},
 	}
 
-	snapshot := &evented_core.Snapshot{
+	snapshot := &core.Snapshot{
 		Sequence: 0,
 		State:    nil,
 	}
 
-	book := evented_core.EventBook{
+	book := core.EventBook{
 		Cover:    cover,
 		Pages:    pages,
 		Snapshot: snapshot,
@@ -87,7 +87,7 @@ func (o *EventBookRepositorySuite) Test_Put() {
 }
 
 func (o *EventBookRepositorySuite) Test_Get() {
-	snapshot := &evented_core.Snapshot{
+	snapshot := &core.Snapshot{
 		Sequence: 0,
 		State:    nil,
 	}
@@ -95,18 +95,18 @@ func (o *EventBookRepositorySuite) Test_Get() {
 	o.snapshotRepository.On("Get", ctx, o.id).Return(snapshot, nil)
 	o.eventRepository.On("GetFrom", ctx, o.eventPageRepositoryStream, o.id, uint32(0)).Return(nil)
 	root := evented_proto.UUIDToProto(o.id)
-	expected := evented_core.EventBook{
-		Cover: &evented_core.Cover{
+	expected := core.EventBook{
+		Cover: &core.Cover{
 			Domain: o.domain,
 			Root:   &root,
 		},
-		Pages: []*evented_core.EventPage{&evented_core.EventPage{
-			Sequence:    &evented_core.EventPage_Num{Num: 0},
-			CreatedAt:   &timestamp.Timestamp{},
+		Pages: []*core.EventPage{&core.EventPage{
+			Sequence:    &core.EventPage_Num{Num: 0},
+			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       nil,
 			Synchronous: false,
 		}},
-		Snapshot: &evented_core.Snapshot{},
+		Snapshot: &core.Snapshot{},
 	}
 	o.eventPageRepositoryStream <- expected.Pages[0]
 	close(o.eventPageRepositoryStream)

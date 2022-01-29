@@ -3,7 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/cucumber"
@@ -22,7 +22,7 @@ import (
 type MongoRepositorySuite struct {
 	log    *zap.SugaredLogger
 	id     uuid.UUID
-	events []*evented_core.EventPage
+	events []*core.EventPage
 	dait   *dockerTestSuite.DockerAssistedIntegrationTest
 	sut    events.EventStorer
 }
@@ -52,12 +52,12 @@ func (suite *MongoRepositorySuite) InitializeScenario(s *godog.ScenarioContext) 
 
 func (suite *MongoRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
 	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
-	ch := make(chan *evented_core.EventPage)
+	ch := make(chan *core.EventPage)
 	_ = suite.sut.Get(context.Background(), ch, suite.id)
 	return cucumber.AssertExpectedAndActual(assert.Equal, suite.events[0], <-ch, "", "")
 }
 
-func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented_core.EventPage) {
+func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*core.EventPage) {
 	for i, row := range arg.GetRows() {
 		if i == 0 { //header
 			continue
@@ -82,15 +82,15 @@ func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *messages.Pick
 
 		}
 
-		event := &evented_core.EventPage{
+		event := &core.EventPage{
 			CreatedAt:   ts,
 			Event:       nil,
 			Synchronous: false,
 		}
 		if force {
-			event.Sequence = &evented_core.EventPage_Force{}
+			event.Sequence = &core.EventPage_Force{}
 		} else {
-			event.Sequence = &evented_core.EventPage_Num{Num: sequence}
+			event.Sequence = &core.EventPage_Num{Num: sequence}
 		}
 		events = append(events, event)
 	}
@@ -114,7 +114,7 @@ func (suite *MongoRepositorySuite) iShouldGetTheseEvents(arg1 *messages.PickleSt
 	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, suite.events, "", "")
 }
 
-func (suite *MongoRepositorySuite) drainChannel(ch chan *evented_core.EventPage) (pages []*evented_core.EventPage) {
+func (suite *MongoRepositorySuite) drainChannel(ch chan *core.EventPage) (pages []*core.EventPage) {
 	for page := range ch {
 		pages = append(pages, page)
 	}
@@ -122,28 +122,28 @@ func (suite *MongoRepositorySuite) drainChannel(ch chan *evented_core.EventPage)
 }
 
 func (suite *MongoRepositorySuite) iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
-	ch := make(chan *evented_core.EventPage)
+	ch := make(chan *core.EventPage)
 	_ = suite.sut.GetTo(context.Background(), ch, suite.id, uint32(end))
 	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
 func (suite *MongoRepositorySuite) iRetrieveASubsetOfEventsFromTo(start, end int) error {
-	ch := make(chan *evented_core.EventPage)
+	ch := make(chan *core.EventPage)
 	_ = suite.sut.GetFromTo(context.Background(), ch, suite.id, uint32(start), uint32(end))
 	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
 func (suite *MongoRepositorySuite) iRetrieveASubsetOfEventsStartingFromValue(start int) error {
-	ch := make(chan *evented_core.EventPage)
+	ch := make(chan *core.EventPage)
 	_ = suite.sut.GetFrom(context.Background(), ch, suite.id, uint32(start))
 	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
 func (suite *MongoRepositorySuite) iRetrieveAllEvents() error {
-	ch := make(chan *evented_core.EventPage)
+	ch := make(chan *core.EventPage)
 	_ = suite.sut.Get(context.Background(), ch, suite.id)
 	suite.events = suite.drainChannel(ch)
 	return nil

@@ -3,11 +3,11 @@ package support
 import (
 	"fmt"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"strings"
 )
 
-func StringifyEventBook(eb *evented_core.EventBook) string {
+func StringifyEventBook(eb *core.EventBook) string {
 	var pages string
 	for _, page := range eb.Pages {
 		seq, _ := GetSequence(page)

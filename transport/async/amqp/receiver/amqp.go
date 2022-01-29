@@ -2,7 +2,7 @@ package receiver
 
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
@@ -10,7 +10,7 @@ import (
 )
 
 type AMQPDecodedMessage struct {
-	Book *evented_core.EventBook
+	Book *core.EventBook
 	Ack  func() error
 	Nack func() error
 }
@@ -48,8 +48,8 @@ func (o *AMQPReceiver) Listen() {
 	}
 }
 
-func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *evented_core.EventBook, ack func() error, nack func() error) {
-	book = &evented_core.EventBook{}
+func (o *AMQPReceiver) ExtractMessage(delivery amqp.Delivery) (book *core.EventBook, ack func() error, nack func() error) {
+	book = &core.EventBook{}
 	o.Log.Info(delivery.ContentType)
 	err := proto.Unmarshal(delivery.Body, book)
 	if err != nil {

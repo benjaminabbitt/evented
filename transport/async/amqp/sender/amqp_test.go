@@ -3,7 +3,7 @@ package sender
 import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/commandHandler/framework"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	core "github.com/benjaminabbitt/evented/proto/evented/core"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
 	"github.com/google/uuid"
@@ -32,7 +32,7 @@ func (o *AmqpSuite) SetupSuite() {
 
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	senderCh := make(chan *evented_core.EventBook)
+	senderCh := make(chan *core.EventBook)
 	o.client = NewAMQPSender(senderCh, url, "testExchange", o.log)
 	o.client.Connect()
 }
@@ -43,7 +43,7 @@ func (o *AmqpSuite) TearDownSuite() {
 
 func (o AmqpSuite) TestNoExceptionThrown() {
 	id, _ := uuid.NewRandom()
-	eb := framework.NewEventBook(id, "test", []*evented_core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
+	eb := framework.NewEventBook(id, "test", []*core.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	err := o.client.Handle(eb)
 	o.Assert().Nil(err)
 }

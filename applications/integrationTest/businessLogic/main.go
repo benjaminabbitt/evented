@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/businessLogic"
 	"github.com/benjaminabbitt/evented/applications/integrationTest/businessLogic/configuration"
-	business2 "github.com/benjaminabbitt/evented/proto/evented/business/business"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/business"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -43,7 +43,7 @@ func main() {
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 
 	server := businessLogic.NewPlaceholderBusinessLogicServer(log)
-	business2.RegisterBusinessLogicServer(rpc, server)
+	business.RegisterBusinessLogicServer(rpc, server)
 
 	health := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(rpc, health)
@@ -58,11 +58,11 @@ func main() {
 
 func setupConsul(config configuration.Configuration) {
 
-	consul := consul.EventedConsul{}
+	c := consul.EventedConsul{}
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)
 	}
-	consul.Register("test2", id.String(), config.Port())
+	c.Register("test2", id.String(), config.Port())
 
 }

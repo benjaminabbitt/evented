@@ -108,7 +108,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	domain := "test"
 
-	//evtChan := make(chan *evented_core.EventPage)
+	//evtChan := make(chan *core.EventPage)
 	query := &query.Query{
 		Domain:     domain,
 		Root:       &protoUUID,

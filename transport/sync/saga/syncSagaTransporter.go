@@ -2,9 +2,9 @@ package saga
 
 import (
 	"context"
-	evented_core "github.com/benjaminabbitt/evented/proto/evented/core"
+	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/core"
 )
 
 type SyncSagaTransporter interface {
-	HandleSync(ctx context.Context, evts *evented_core.EventBook) (response *evented_core.SynchronousProcessingResponse, err error)
+	HandleSync(ctx context.Context, evts *core.EventBook) (response *core.SynchronousProcessingResponse, err error)
 }
