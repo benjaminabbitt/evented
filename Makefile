@@ -41,3 +41,9 @@ build_sample_business_logic: build_base build_scratch generate
 	docker build --tag evented-sample-business-logic:$(VER) --build-arg=$(VER) -f ./applications/integrationTest/businessLogic/Dockerfile .
 
 build: build_command_handler build_query_handler build_coordinator_async_projector build_coordinator_sync_projector build_coordinator_async_saga build_coordinator_sync_saga build_sample_business_logic
+
+configuration_load_command_handler:
+	consul kv put commandHandler @applications/commandHandler/configuration/sample.yaml
+
+consul_ui:
+	kubectl port-forward service/consul-headless 8500:8500

@@ -94,5 +94,12 @@ Install:
 
 `#choco install kubernetes-helm`
 
-[MongoDB](https://github.com/bitnami/charts/tree/master/bitnami/mongodb)
-[Consul](https://www.consul.io/docs/k8s/installation/install)
+###All OS
+
+#### Install cluster services
+Install via helm:
+* `devops/helm/consul`
+* `devops/helm/mongodb`
+* `devops/helm/rabbitmq`
+
+#### Load consul k/v

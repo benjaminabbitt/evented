@@ -21,7 +21,7 @@ spec:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul.default.svc.cluster.local:8500
+              value: consul-headless.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY

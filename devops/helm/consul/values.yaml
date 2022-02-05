@@ -1,7 +1,6 @@
 # values.yaml
 global:
   name: consul
-  domain: evented
 connectInject:
   enabled: false
 syncCatalog:
