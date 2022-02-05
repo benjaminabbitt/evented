@@ -1,0 +1,18 @@
+#YAML 1.2
+---
+
+otherCommandHandler:
+  url: other.url
+
+saga:
+  url: saga.url
+
+database:
+  url: database.url
+  name: name
+
+port: 1747
+domain: domain
+
+queryHandler:
+  url: queryHandler.url

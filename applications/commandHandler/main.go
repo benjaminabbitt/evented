@@ -44,7 +44,12 @@ func main() {
 
 	tracer, closer := setupJaeger(conf.AppName())
 	initSpan := tracer.StartSpan("Init")
-	defer closer.Close()
+	defer func(closer io.Closer) {
+		err := closer.Close()
+		if err != nil {
+
+		}
+	}(closer)
 
 	businessAddress := conf.BusinessURL()
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)

@@ -1,0 +1,33 @@
+#YAML 1.2
+---
+business:
+  url: sample.url
+
+port: 1747
+domain: domain
+sync:
+  sagas:
+    - one
+    - two
+  projectors:
+    - one
+    - two
+
+snapshotStore:
+  type: mongodb
+  mongodb:
+    url: mongodb.default:27017
+    database: commandHandlerSnapshots
+
+transport:
+  type: rabbitmq
+  rabbitmq:
+    url: rabbitmq.default:5672
+    exchange: exchange
+
+eventStore:
+  type: mongodb
+  mongodb:
+    url: mongodb.default:27017
+    database: commandHandlerEvents
+    collection: eventCollection

@@ -1,0 +1,9 @@
+#YAML 1.2
+---
+database:
+  url: database.url
+  name: databaseName
+  collection: collectionName
+
+port: 1748
+targetSize: 1024 #Unknown 20220130

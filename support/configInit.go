@@ -35,6 +35,7 @@ func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
 
 	o.configMgmt = viper.GetString(ConfigMgmtType)
 	o.name = viper.GetString("APP_NAME")
+	log.Infow("Configuring.", ConfigMgmtType, o.configMgmt)
 	if o.configMgmt == "consul" {
 		o.consulHost = viper.GetString("CONSUL_HOST")
 		o.consulKey = viper.GetString("CONSUL_KEY")

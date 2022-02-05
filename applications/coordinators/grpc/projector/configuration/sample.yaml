@@ -1,0 +1,15 @@
+#YAML 1.2
+---
+queryHandler:
+  url: queryhandler.url
+
+evented:
+  url: business.url
+
+database:
+  url: database.url
+  name: name
+
+name: name
+port: 1747
+domain: domain

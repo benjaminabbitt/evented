@@ -7,4 +7,4 @@ metadata:
   namespace: kube-system
 data:
   stubDomains: |
-    {"consul": ["10.102.45.206"]}
+    {"consul": ["$CONSUL_DNS_IP"]}

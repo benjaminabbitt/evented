@@ -2,9 +2,8 @@
 global:
   name: consul
   domain: evented
-  datacenter: evented
-#connectInject:
-#  enabled: true
+connectInject:
+  enabled: false
 syncCatalog:
   enabled: true
 ui:

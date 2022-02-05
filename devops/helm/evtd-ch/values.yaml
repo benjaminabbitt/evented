@@ -5,7 +5,7 @@
 # TODO: add validation
 # domain and name are used to create DNS-1123 subdomains, so must consist only of [a-z, -, .].  Regex is [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
 domain: domain
-name: domain
+name: name
 
 commandhandler:
   image:
@@ -106,8 +106,8 @@ tolerations: [ ]
 affinity: { }
 
 consul:
-  host: consul-server
-  port: 8500
+  host: consul-headless.default.svc.cluster.local
+  port: 8300
 
 defaults:
   businessLogicName: bl

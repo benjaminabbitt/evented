@@ -1,0 +1,21 @@
+#YAML 1.2
+---
+otherCommandHandler:
+  url: otherCommandHandler.url
+
+queryHandler:
+  url: queryhandler.url
+
+transport:
+  url: transport.url
+  exchange: exchange
+  queue: queue
+
+evented:
+  url: business.url
+
+database:
+  url: database.url
+  name: name
+
+domain: domain

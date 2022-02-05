@@ -21,12 +21,7 @@ func NewEventPage(sequence uint32, sync bool, eventDetails *anypb.Any) *evented.
 
 func NewEmptyEventPage(sequence uint32, sync bool) *evented.EventPage {
 	anyEmpty, _ := anypb.New(&emptypb.Empty{})
-	return &evented.EventPage{
-		Sequence:    &evented.EventPage_Num{Num: sequence},
-		Synchronous: sync,
-		CreatedAt:   &timestamppb.Timestamp{},
-		Event:       anyEmpty,
-	}
+	return NewEventPage(sequence, sync, anyEmpty)
 }
 
 func NewEventBook(id uuid.UUID, domain string, events []*evented.EventPage, snapshot *evented.Snapshot) *evented.EventBook {

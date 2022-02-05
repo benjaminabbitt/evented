@@ -83,3 +83,16 @@ Arguably yes, its bad architecture, in the conventional sense of technical archi
 In the end, I decided that using the data models is not bad architecture.
 * The layers would be possible to re-introduce at a later time without substantial re-work (copy the generated, use an automated mapper).  Therefor, this selection is fundamentally not architecture.
 * It was more difficult (and annoying) to pass the events/commands/projections through as bytestreams.  This framework does not care what the underlying events/commands/projections are, and has no mechanism for deserializing them.  To decouple the data layers from protobuf/grpc would require writing an abstraction around bytestreams that I felt wasn't a good use of my time.  Keeping the data layers as protobuf `Any`s with custom wrappers around everything else doesn't actually achieve decoupling while substantially increasing codebase size. 
+
+
+## Setup
+### Windows
+Install:
+
+* Chocolatey
+* Kubernetes
+
+`#choco install kubernetes-helm`
+
+[MongoDB](https://github.com/bitnami/charts/tree/master/bitnami/mongodb)
+[Consul](https://www.consul.io/docs/k8s/installation/install)

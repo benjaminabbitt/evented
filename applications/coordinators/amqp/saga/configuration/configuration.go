@@ -10,6 +10,7 @@ type Configuration struct {
 }
 
 func (o *Configuration) OtherCommandHandlerURL() string {
+	//TODO: this will need to be an array of other command handlers, by domain
 	return viper.GetString("otherCommandHandler.url")
 }
 

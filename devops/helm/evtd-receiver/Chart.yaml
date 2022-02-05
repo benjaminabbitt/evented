@@ -1,5 +1,5 @@
 apiVersion: v2
-name: evented-consumer
+name: evented-receiver
 description: The projection and saga component and plumbing of the evented framework.
 
 # A chart can be either an 'application' or a 'library' chart.

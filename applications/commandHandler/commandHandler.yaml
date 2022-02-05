@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    evented: command-handler
+  name: command-handler
+spec:
+  selector:
+    matchLabels:
+      evented: command-handler
+  template:
+    metadata:
+      labels:
+        evented: command-handler
+    spec:
+      containers:
+        - name: evented-commandhandler
+          image: evented-commandhandler
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_MGMT_TYPE
+              value: consul
+            - name: CONSUL_HOST
+              value: consul.default.svc.cluster.local:8500
+            - name: CONSUL_CONFIG_TYPE
+              value: yaml
+            - name: CONSUL_KEY
+              value: commandHandler
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    evented: command-handler
+  name: evented-command-handler-exported
+spec:
+  type: NodePort
+  ports:
+    - port: 30747
+      name: 30747-tcp
+      targetPort: 30747
+      nodePort: 30747
+  selector:
+    evented: command-handler
+

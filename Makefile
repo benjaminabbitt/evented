@@ -14,7 +14,7 @@ build_scratch:
 
 build_command_handler: VER = $(shell git log -1 --pretty=%h)
 build_command_handler:build_base build_scratch generate
-	docker build --tag evented-commandhandler:$(VER) --build-arg=$(VER) -f ./applications/commandHandler/Dockerfile .
+	docker build --tag evented-commandhandler:$(VER) --build-arg=$(VER) -f ./applications/commandHandler/dockerfile .
 
 build_query_handler: VER = $(shell git log -1 --pretty=%h)
 build_query_handler: build_base build_scratch generate

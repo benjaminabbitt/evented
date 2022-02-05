@@ -1,9 +1,0 @@
-FROM evented-base AS app-build
-COPY --from=evented-base /root/.cache /root/.cache
-RUN cd /src && CGO_ENABLED=0 go build -o app ./applications/commandHandler
-
-FROM scratch-foundation AS final
-ARG VERSION
-ENV VERSION $VER
-COPY --from=app-build /src/app /bin/
-
