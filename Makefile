@@ -1,5 +1,10 @@
 .DEFAULT_GOAL := build
 
+build: build_command_handler build_query_handler build_coordinator_async_projector build_coordinator_sync_projector build_coordinator_async_saga build_coordinator_sync_saga build_sample_business_logic
+build_debug: build_command_handler_debug
+load_all: configuration_load_command_handler
+
+
 stage:
 	docker pull namely/protoc-all
 
@@ -15,6 +20,9 @@ build_scratch:
 #build_command_handler: VER = $(shell git log -1 --pretty=%h)
 build_command_handler:build_base build_scratch generate
 	docker build --tag evented-commandhandler:latest --build-arg=latest -f ./applications/commandHandler/dockerfile . --no-cache
+
+build_command_handler_debug:build_base build_scratch generate
+	docker build --tag evented-commandhandler:latest --build-arg=latest -f ./applications/commandHandler/debug.dockerfile . --no-cache
 
 build_query_handler: VER = $(shell git log -1 --pretty=%h)
 build_query_handler: build_base build_scratch generate
@@ -36,16 +44,13 @@ build_coordinator_sync_saga: VER = $(shell git log -1 --pretty=%h)
 build_coordinator_sync_saga: build_base build_scratch generate
 	docker build --tag evented-coordinator-sync-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/saga/Dockerfile  .
 
-build_sample_business_logic: VER = $(shell git log -1 --pretty=%h)
+#build_sample_business_logic: VER = $(shell git log -1 --pretty=%h)
 build_sample_business_logic: build_base build_scratch generate
-	docker build --tag evented-sample-business-logic:$(VER) --build-arg=$(VER) -f ./applications/integrationTest/businessLogic/Dockerfile .
-
-build: build_command_handler build_query_handler build_coordinator_async_projector build_coordinator_sync_projector build_coordinator_async_saga build_coordinator_sync_saga build_sample_business_logic
+	docker build --tag evented-sample-business-logic:latest --build-arg=latest -f ./applications/integrationTest/businessLogic/debug.dockerfile .
 
 configuration_load_command_handler:
 	consul kv put commandHandler @applications/commandHandler/configuration/sample.yaml
 
-load_all: configuration_load_command_handler
 
 consul_ui:
 	kubectl port-forward service/consul-headless 8500:8500

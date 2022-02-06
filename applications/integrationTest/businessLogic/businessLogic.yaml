@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    evented: sample-business-logic
+  name: sample-business-logic
+spec:
+  selector:
+    matchLabels:
+      evented: sample-business-logic
+  template:
+    metadata:
+      labels:
+        evented: sample-business-logic
+    spec:
+      containers:
+        - name: evented-sample-business-logic
+          image: evented-sample-business-logic
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_MGMT_TYPE
+              value: consul
+            - name: CONSUL_HOST
+              value: consul-headless.default.svc.cluster.local:8500
+            - name: CONSUL_CONFIG_TYPE
+              value: yaml
+            - name: CONSUL_KEY
+              value: businesslogic
+            - name: APP_NAME
+              value: businesslogic
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    evented: sample-business-logic
+  name: evented-sample-business-logic-exported
+spec:
+  type: NodePort
+  ports:
+    - port: 40000
+      name: 40000-tcp
+      targetPort: 40000
+      nodePort: 30805
+  selector:
+    evented: sample-business-logic
+
