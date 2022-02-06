@@ -12,19 +12,22 @@ RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health
 
 RUN adduser --disabled-password --uid 10747 evented
 
-RUN apk --no-cache add build-base git mercurial gcc curl
+RUN apk --no-cache add build-base git mercurial gcc curl make docker
 
 ENV GO111MODULE=on
 RUN go get google.golang.org/grpc@$GRPC_VERSION
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+
+#Delve
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
+RUN mkdir /app && cp /go/bin/dlv /app/
 
 COPY . /src
 RUN cd /src && go mod download
 
 RUN apk update && apk add --no-cache libc6-compat protobuf grpc protobuf-dev
 
-RUN cd /src/proto && go generate
+#RUN cd /src && make generate
 
-RUN cd /src && CGO_ENABLED=0 go build ./...
+#RUN cd /src && CGO_ENABLED=0 go build ./...

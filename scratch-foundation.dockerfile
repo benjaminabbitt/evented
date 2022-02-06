@@ -7,4 +7,3 @@ USER evented
 
 ##Health setup
 COPY --from=evented-base /bin/grpc_health_probe /bin/grpc_health_probe
-CMD ["/bin/app"]

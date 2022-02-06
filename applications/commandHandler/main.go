@@ -196,7 +196,7 @@ func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, 
 	} else if config.EventRepoType() == eventRepoTypes[1] {
 		repo, err = eventmongo.NewEventRepoMongo(context.Background(), config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
 	} else {
-		log.Error("Specified Event Repository %s does not match one of recognized, \"MongoDb\"")
+		log.Error("Specified Event Repository %s does not match one of recognized: ", eventRepoTypes)
 	}
 	return repo, nil
 }
@@ -227,6 +227,6 @@ func setupConsul(log *zap.SugaredLogger, config configuration.Configuration) {
 	}
 	err = c.Register(config.AppName(), id.String(), config.Port())
 	if err != nil {
-		log.Error(err)
+		log.Error("Error registering with Consul", err)
 	}
 }

@@ -7,14 +7,14 @@ generate:
 	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/evented.proto -l go -o gen
 
 build_base:
-	docker build --tag evented-base -f ./evented-base.dockerfile .
+	docker build --tag evented-base -f ./evented-base.dockerfile . --no-cache
 
 build_scratch:
-	docker build --tag scratch-foundation -f ./scratch-foundation.dockerfile .
+	docker build --tag scratch-foundation -f ./scratch-foundation.dockerfile . --no-cache
 
-build_command_handler: VER = $(shell git log -1 --pretty=%h)
+#build_command_handler: VER = $(shell git log -1 --pretty=%h)
 build_command_handler:build_base build_scratch generate
-	docker build --tag evented-commandhandler:$(VER) --build-arg=$(VER) -f ./applications/commandHandler/dockerfile .
+	docker build --tag evented-commandhandler:latest --build-arg=latest -f ./applications/commandHandler/dockerfile . --no-cache
 
 build_query_handler: VER = $(shell git log -1 --pretty=%h)
 build_query_handler: build_base build_scratch generate
