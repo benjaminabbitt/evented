@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build Business Logic (container)" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
-    <makefile filename="C:\Users\Ben\GolandProjects\evented\Makefile" target="build_sample_business_logic" workingDirectory="" arguments="">
+    <makefile filename="$PROJECT_DIR$/Makefile" target="build_sample_business_logic" workingDirectory="" arguments="">
       <envs />
     </makefile>
     <method v="2" />
