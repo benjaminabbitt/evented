@@ -45,5 +45,7 @@ build: build_command_handler build_query_handler build_coordinator_async_project
 configuration_load_command_handler:
 	consul kv put commandHandler @applications/commandHandler/configuration/sample.yaml
 
+load_all: configuration_load_command_handler
+
 consul_ui:
 	kubectl port-forward service/consul-headless 8500:8500

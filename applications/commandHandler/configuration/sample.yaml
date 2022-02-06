@@ -31,3 +31,5 @@ eventStore:
     url: mongodb.default:27017
     database: commandHandlerEvents
     collection: eventCollection
+
+proof: pudding

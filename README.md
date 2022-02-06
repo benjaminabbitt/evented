@@ -15,34 +15,8 @@ A complete architectural diagram (start below, under Architecture to be stepped/
 Evented aims to be compliant with the [Reactive Manifesto](https://www.reactivemanifesto.org/)
 
 ## Languages
-### First class languages
-First class languages have two tiers of abstraction and levels at which the developer can implement the business, projection, and saga logic.  Tier A is the same as the second class languages.  Tier B is a managed, language-specific tier that abstracts away common things like logging, configuration, some GRPC work, and other cross-cutting concerns.
-
-* Go
+* Go (this repository)
 * [Java (JVM)](https://github.com/benjaminabbitt/evented-url)
-
-Future:
-
-* C# (CLR)
-* Typescript (Node)
-* Python
-
-### Second class languages
-First and a half languages are languages that the first class libraries should work with, but will not have automated test suites.  Some efforts may be made to make using these languages easier with the first class language support libraries.  These may be promoted (looking at you, Kotlin) to first tier in the future.
-
-* Kotlin (JVM)
-* Javascript (Node)
-* F# (CLR)
-* Scala (JVM) -- Much synergy with this framework and Akka
-
-### Third class languages
-Third class languages will work by implementing GRPC endpoints based on the provided protocol buffer definitions.  Support libraries and examples will not be available for them at this time, but they will work if they implement the GRPC contracts.  I welcome examples and documentation for these to be provided by the community.
-
-* C++
-* Dart
-* Objective C
-* PHP
-* Ruby
 
 ## Benefits
 ### Elasticity (Scalability)
@@ -90,9 +64,23 @@ In the end, I decided that using the data models is not bad architecture.
 Install:
 
 * Chocolatey
-* Kubernetes
+
+#### Kubernetes
+Enable k8s on your Windows Docker installation or install it using other tools.  There are many available.
+
+#### Consul
+Consul (on host machine.  Do not set it up as a server, but we will need the consul binary to load parameters in the k/v store)
+
+`#choco install consul` 
+
+#### Helm
 
 `#choco install kubernetes-helm`
+
+#### Make
+
+`#choco install make`
+
 
 ###All OS
 
@@ -103,3 +91,9 @@ Install via helm:
 * `devops/helm/rabbitmq`
 
 #### Load consul k/v
+
+`make load_all`
+
+## Execution
+### Building
+`$make buid`
