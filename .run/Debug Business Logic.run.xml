@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Debug Business Logic" type="GoRemoteDebugConfigurationType" factoryName="Go Remote" port="30805">
+    <option name="disconnectOption" value="ASK" />
+    <method v="2" />
+  </configuration>
+</component>
