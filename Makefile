@@ -4,7 +4,6 @@ build: build_command_handler build_query_handler build_coordinator_async_project
 build_debug: build_command_handler_debug
 load_all: configuration_load_command_handler
 
-
 stage:
 	docker pull namely/protoc-all
 
@@ -23,6 +22,10 @@ build_command_handler:build_base build_scratch generate
 
 build_command_handler_debug:build_base build_scratch generate
 	docker build --tag evented-commandhandler:latest --build-arg=latest -f ./applications/commandHandler/debug.dockerfile . --no-cache
+
+bounce_command_handler: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+bounce_command_handler:
+	kubectl annotate pods -l evented=command-handler last-bounced=${DT} --overwrite
 
 build_query_handler: VER = $(shell git log -1 --pretty=%h)
 build_query_handler: build_base build_scratch generate

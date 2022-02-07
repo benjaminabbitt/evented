@@ -25,11 +25,13 @@ type PlaceholderProjectorLogic struct {
 }
 
 func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *evented.EventBook) (*empty.Empty, error) {
+	o.log.Infow("In Handle", in.String())
 	_, err := o.HandleSync(ctx, in)
 	return &empty.Empty{}, err
 }
 
 func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.Projection, error) {
+	o.log.Infow("In HandleSync", in.String())
 	lastSequenceIndex := len(in.Pages) - 1
 	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*evented.EventPage_Num).Num
 	projection := &evented.Projection{
@@ -38,6 +40,7 @@ func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.
 		Sequence:   lastSequence,
 		Projection: nil,
 	}
+	o.log.Infow("Returning projection...")
 	return projection, nil
 }
 
