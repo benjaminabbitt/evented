@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     evented: sample-business-logic
-  name: sample-business-logic
+  name: evented-sample-business-logic
 spec:
   selector:
     matchLabels:
@@ -38,10 +38,12 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 40000
-      name: 40000-tcp
-      targetPort: 40000
-      nodePort: 30805
+    - port: 1737
+      name: 1737-tcp
+      nodePort: 30837
+#    - port: 40000
+#      name: 40000-tcp
+#      nodePort: 30805
   selector:
     evented: sample-business-logic
 

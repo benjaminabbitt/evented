@@ -3,5 +3,6 @@ COPY --from=evented-base /root/.cache /root/.cache
 RUN cd /src && CGO_ENABLED=0 go build -o app ./applications/integrationTest/businessLogic
 
 FROM scratch-foundation AS final
-COPY --from=app-build /src/app /bin/
+COPY --from=app-build /src/app /app/
+CMD ["/app/app"]
 

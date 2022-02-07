@@ -27,7 +27,3 @@ COPY . /src
 RUN cd /src && go mod download
 
 RUN apk update && apk add --no-cache libc6-compat protobuf grpc protobuf-dev
-
-#RUN cd /src && make generate
-
-#RUN cd /src && CGO_ENABLED=0 go build ./...
