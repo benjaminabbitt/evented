@@ -1,8 +1,4 @@
 # Evented Framework
-# Not Dead
-This is a work in progress.  Please star, and come back in the future.  Depending on personal and professional workload, tentative release at the end of 2020.
-
-Note:  My family is moving, so work on this is slow.  I am continuing to work slowly, as time allows.  I hope for a more concentrated push in mid 2021.
 
 ## What is this thing?
 
@@ -18,6 +14,10 @@ Evented aims to be compliant with the [Reactive Manifesto](https://www.reactivem
 * Go (this repository)
 * [Java (JVM)](https://github.com/benjaminabbitt/evented-url)
 
+Other languages with GRPC bindings may be used trivially.
+
+Python, .NET languages, other JVM languages (Kotlin), are all perfectly 
+
 ## Benefits
 ### Elasticity (Scalability)
 Evented fundamentally structures/architects your application to be scalable.  Whether you're handling a few events a day or a few events per millisecond, the framework is built to support your use case.
@@ -32,14 +32,12 @@ By using the Evented system, you can project, re-project, re-re-project the data
 ### Full Fidelity
 The framework captures, in the event log, everything that happens that mutates the data model.  Every change, creation, or deletion is persisted for all time within the event store.  This makes audit trails straightforward, as the event log *is* the audit trail.
 
-## What Is This?
-
 ## Do I have to?
 ### Use Go?
 No, GRPC allows the clients (you, a user of the framework) to write in a myriad of languages and runtimes.
 
 ### Use Domain Driven Design?
-No, but it will certainly help structure your application.  Sometimes, domain driven design vocabulary is used within the Evented system, but I endeavour to keep its use as minimal as possible.
+No, but it will certainly help structure your application.  Sometimes, domain driven design vocabulary is used within the Evented system, but I endeavour to keep its use as minimally as possible.
 
 ### Use Event Sourcing?
 No, but it will help, and the framework makes it as easy as possible.  The framework will require you to use events, but you do not have to use event sourcing.  The business logic can be passed a serialized snapshot of the business state and a single-event list for every execution and return a new snapshot which the framework will persist.
@@ -56,7 +54,7 @@ Arguably yes, its bad architecture, in the conventional sense of technical archi
 
 In the end, I decided that using the data models is not bad architecture.
 * The layers would be possible to re-introduce at a later time without substantial re-work (copy the generated, use an automated mapper).  Therefor, this selection is fundamentally not architecture.
-* It was more difficult (and annoying) to pass the events/commands/projections through as bytestreams.  This framework does not care what the underlying events/commands/projections are, and has no mechanism for deserializing them.  To decouple the data layers from protobuf/grpc would require writing an abstraction around bytestreams that I felt wasn't a good use of my time.  Keeping the data layers as protobuf `Any`s with custom wrappers around everything else doesn't actually achieve decoupling while substantially increasing codebase size. 
+* It was more difficult (and annoying) to pass the events/commands/projections through as bytestreams.  This framework does not care what the underlying events/commands/projections are, and has no mechanism for deserializing them.  To decouple the data layers from protobuf/grpc would require writing an abstraction around bytestreams that I felt wasn't a good use of time.  Keeping the data layers as protobuf `Any`s with custom wrappers around everything else doesn't actually achieve decoupling while substantially increasing codebase size. 
 
 
 ## Setup
@@ -83,6 +81,9 @@ Consul (on host machine.  Do not set it up as a server, but we will need the con
 
 
 ###All OS
+
+#### Install Python 3.
+For Windows, use the python.org installation scripts.  Chocolatey installs to weird locations and doesn't always set the `PATH` appropriately.
 
 #### Install cluster services
 Install via helm:
