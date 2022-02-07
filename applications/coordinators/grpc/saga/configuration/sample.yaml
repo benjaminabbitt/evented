@@ -11,7 +11,7 @@ database:
   url: database.url
   name: name
 
-port: 1747
+port: 1748
 domain: domain
 
 queryHandler:

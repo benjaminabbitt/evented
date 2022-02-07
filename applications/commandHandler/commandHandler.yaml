@@ -40,11 +40,9 @@ spec:
   ports:
     - port: 30747
       name: 30747-tcp
-      targetPort: 30747
       nodePort: 30747
     - port: 40000
       name: 40000-tcp
-      targetPort: 40000
       nodePort: 30804
   selector:
     evented: command-handler

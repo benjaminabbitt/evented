@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    evented: sample-saga
-  name: sample-saga
+    evented: amqp-projector-coordinator
+  name: amqp-projector-coordinator
 spec:
   selector:
     matchLabels:
-      evented: sample-saga
+      evented: amqp-projector-coordinator
   template:
     metadata:
       labels:
-        evented: sample-saga
+        evented: amqp-projector-coordinator
     spec:
       containers:
-        - name: evented-sample-saga
-          image: evented-sample-saga
+        - name: evented-amqp-projector-coordinator
+          image: evented-amqp-projector-coordinator
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
@@ -25,22 +25,22 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: saga
+              value: amqp-projector-coordinator
             - name: APP_NAME
-              value: saga
+              value: amqp-projector-coordinator
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    evented: sample-saga
-  name: evented-sample-saga-exported
+    evented: amqp-projector-coordinator
+  name: evented-amqp-projector-coordinator-exported
 spec:
   type: NodePort
   ports:
     - port: 40000
       name: 40000-tcp
-      nodePort: 30812
+      nodePort: 30808
   selector:
-    evented: sample-saga
+    evented: amqp-projector-coordinator
 

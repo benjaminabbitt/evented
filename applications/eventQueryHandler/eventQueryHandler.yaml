@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    evented: sample-saga
-  name: sample-saga
+    evented: query-handler
+  name: query-handler
 spec:
   selector:
     matchLabels:
-      evented: sample-saga
+      evented: query-handler
   template:
     metadata:
       labels:
-        evented: sample-saga
+        evented: query-handler
     spec:
       containers:
-        - name: evented-sample-saga
-          image: evented-sample-saga
+        - name: evented-queryhandler
+          image: evented-queryhandler
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
@@ -25,22 +25,27 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: saga
+              value: queryHandler
             - name: APP_NAME
-              value: saga
+              value: queryHandler
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    evented: sample-saga
-  name: evented-sample-saga-exported
+    evented: query-handler
+  name: evented-query-handler-exported
 spec:
   type: NodePort
   ports:
+    - port: 30748
+      name: 30748-tcp
+      targetPort: 30748
+      nodePort: 30748
     - port: 40000
       name: 40000-tcp
-      nodePort: 30812
+      targetPort: 40000
+      nodePort: 30807
   selector:
-    evented: sample-saga
+    evented: query-handler
 
