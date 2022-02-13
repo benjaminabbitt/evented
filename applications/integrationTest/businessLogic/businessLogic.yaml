@@ -21,29 +21,29 @@ spec:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul-headless.default.svc.cluster.local:8500
+              value: consul-server.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: businesslogic
+              value: evented-sample-business-logic
             - name: APP_NAME
-              value: businesslogic
+              value: sample-business-logic
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     evented: sample-business-logic
-  name: evented-sample-business-logic-exported
+  name: evented-sample-business-logic
 spec:
   type: NodePort
   ports:
-    - port: 1737
-      name: 1737-tcp
-      nodePort: 30837
-#    - port: 40000
-#      name: 40000-tcp
-#      nodePort: 30805
+    - name: grpc-evented-business
+      port: 1738
+      nodePort: 30001
+    - port: 40000
+      name: debug
+      nodePort: 32001
   selector:
     evented: sample-business-logic
 

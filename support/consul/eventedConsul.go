@@ -5,12 +5,21 @@ import (
 	"go.uber.org/zap"
 )
 
+func NewEventedConsul(host string, port uint) (consul *EventedConsul) {
+	consul = &EventedConsul{
+		ConsulHost: host,
+		ConsulPort: port,
+	}
+	return consul
+}
+
 type EventedConsul struct {
 	Log        *zap.SugaredLogger
 	ConsulHost string
+	ConsulPort uint
 }
 
-func (o *EventedConsul) Register(name string, id string, port uint) error {
+func (o *EventedConsul) Register(name string, id string) error {
 	client, err := api.NewClient(&api.Config{
 		Address: o.ConsulHost,
 	})
@@ -21,7 +30,8 @@ func (o *EventedConsul) Register(name string, id string, port uint) error {
 		ID:      name + "-" + id,
 		Name:    name,
 		Tags:    []string{"evented", name},
-		Port:    int(port),
+		Address: o.ConsulHost,
+		Port:    int(o.ConsulPort),
 		Connect: &api.AgentServiceConnect{},
 	})
 	return err

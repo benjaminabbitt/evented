@@ -13,10 +13,10 @@ generate:
 	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/evented.proto -l go -o gen
 
 build_base:
-	docker build --tag evented-base -f ./evented-base.dockerfile . --no-cache
+	docker build --tag evented-base -f ./evented-base.dockerfile .
 
 build_scratch:
-	docker build --tag scratch-foundation -f ./scratch-foundation.dockerfile . --no-cache
+	docker build --tag scratch-foundation -f ./scratch-foundation.dockerfile .
 
 
 
@@ -40,9 +40,10 @@ build_command_handler_debug:build_base build_scratch generate
 	docker build --tag evented-commandhandler:latest --build-arg=${DT} -f ./applications/commandHandler/debug.dockerfile .
 
 configuration_load_command_handler:
-	consul kv put -http-addr=localhost:8500 evented-commandHandler @applications/commandHandler/configuration/sample.yaml
+	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/commandHandler/configuration/sample.yaml
 
-
+logs_command_handler:
+	kubectl logs -l evented=command-handler
 
 # Query Handler
 deploy_query_handler:
@@ -110,13 +111,22 @@ build_sample_business_logic: VER = $(shell git log -1 --pretty=%h)
 build_sample_business_logic: build_base build_scratch generate
 	docker build --tag evented-sample-business-logic:${VER} --build-arg=${VER} -f ./applications/integrationTest/businessLogic/dockerfile .
 
+build_sample_business_logic_dev: VER = $(shell git log -1 --pretty=%h)
+build_sample_business_logic_dev: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+build_sample_business_logic_dev: build_base build_scratch generate
+	docker build --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=LOCAL" -f ./applications/integrationTest/businessLogic/dockerfile .
+
 build_sample_business_logic_debug: build_base build_scratch generate
 	docker build --tag evented-sample-business-logic:latest --build-arg=latest -f ./applications/integrationTest/businessLogic/debug.dockerfile .
 
-bounce_sample_business_logic: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 bounce_sample_business_logic:
-	kubectl annotate pods -l evented=sample-business-logic last-bounced=${DT} --overwrite
+	kubectl delete pods -l evented=sample-business-logic
 
+configuration_load_sample_business_logic:
+	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/integrationTest/businessLogic/configuration/sample.yaml
+
+logs_sample_business_logic:
+	kubectl logs -l evented=sample-business-logic --since=1h
 
 # Sample Projector
 deploy_sample_projector:
@@ -136,7 +146,7 @@ build_sample_saga: build_base build_scratch generate
 
 
 ## Developer setup
-setup: install_consul install_rabbit mongo_install
+setup: install_consul rabbit_install mongo_install
 
 ## Consul Shortcuts
 install_consul:

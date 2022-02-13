@@ -25,7 +25,7 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: evented_commandHandler
+              value: evented-command-handler
             - name: APP_NAME
               value: commandHandler
 ---
@@ -38,12 +38,12 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 30747
-      name: 30747-tcp
-      nodePort: 30747
+    - port: 1737
+      name: grpc-evented-command
+      nodePort: 30000
     - port: 40000
-      name: 40000-tcp
-      nodePort: 30804
+      name: debug
+      nodePort: 32000
   selector:
     evented: command-handler
 

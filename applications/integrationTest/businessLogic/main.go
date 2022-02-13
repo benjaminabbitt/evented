@@ -17,11 +17,16 @@ import (
 	"net"
 )
 
-var log *zap.SugaredLogger
+var (
+	version   string
+	buildTime string
+	log       *zap.SugaredLogger
+)
 
 func main() {
 	log = support.Log()
 	defer log.Sync()
+	log.Infow("Sample Business Logic", "build time", buildTime, "version", version)
 
 	config := configuration.Configuration{}
 	config.Initialize(log)
@@ -51,18 +56,21 @@ func main() {
 
 	log.Infow("Starting Business Server...")
 	err = rpc.Serve(lis)
+	log.Infow("Serving...")
 	if err != nil {
 		log.Error(err)
 	}
 }
 
 func setupConsul(config configuration.Configuration) {
-
-	c := consul.EventedConsul{}
+	c := consul.NewEventedConsul(config.ConsulHost(), config.Port())
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)
 	}
-	c.Register("test2", id.String(), config.Port())
+	err = c.Register("test2", id.String())
+	if err != nil {
+		log.Error(err)
+	}
 
 }

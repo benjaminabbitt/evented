@@ -1,6 +1,8 @@
 FROM evented-base AS app-build
 COPY --from=evented-base /root/.cache /root/.cache
-RUN cd /src && CGO_ENABLED=0 go build -o /app/app ./applications/integrationTest/businessLogic
+ARG VERSION
+ARG BUILD_TIME
+RUN cd /src && CGO_ENABLED=0 go build -o /app/app -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" ./applications/integrationTest/businessLogic
 
 FROM scratch-foundation AS final
 COPY --from=app-build /app/app /app/

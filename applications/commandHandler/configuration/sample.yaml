@@ -1,7 +1,7 @@
 #YAML 1.2
 ---
 business:
-  url: sample.url
+  url: evented-sample-business-logic.default.svc.cluster.local:30001
 
 port: 1747
 domain: domain
