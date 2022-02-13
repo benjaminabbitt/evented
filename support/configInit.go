@@ -2,6 +2,7 @@ package support
 
 import (
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"go.uber.org/zap"
 )
 
@@ -42,12 +43,12 @@ func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
 		o.consulConfigType = viper.GetString(ConsulConfigType)
 		err := viper.AddRemoteProvider("consul", o.consulHost, o.consulKey)
 		if err != nil {
-			log.Error(err)
+			log.Fatal(err)
 		}
 		viper.SetConfigType("yaml")
 		err = viper.ReadRemoteConfig()
 		if err != nil {
-			log.Error(err)
+			log.Fatal(err)
 		}
 
 		log.Infow("Read consul.", "Proof", viper.GetString("proof"))

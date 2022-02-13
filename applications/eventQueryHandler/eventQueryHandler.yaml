@@ -14,8 +14,8 @@ spec:
         evented: query-handler
     spec:
       containers:
-        - name: evented-query-handler
-          image: evented-query-handler
+        - name: evented-queryhandler
+          image: evented-queryhandler
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
@@ -40,7 +40,7 @@ spec:
   ports:
     - port: 1738
       name: grpc-eventd-query
-      nodePort: 30001
+      nodePort: 30002
     - port: 40000
       name: debug
       nodePort: 32002

@@ -33,7 +33,7 @@ bounce_command_handler:
 	kubectl delete pods -l evented=command-handler
 
 build_command_handler_debug: VER = $(shell python ./devops/support/version/get-version.py)
-build_command_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+build_command_handler_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_command_handler_debug:build_base build_scratch generate
 	docker build --tag evented-commandhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/debug.dockerfile .
 
@@ -47,18 +47,24 @@ logs_command_handler:
 deploy_query_handler:
 	kubectl apply -f applications/eventQueryHandler/eventQueryHandler.yaml
 
+configuration_load_query_handler:
+	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/eventQueryHandler/configuration/sample.yaml
+
 build_query_handler: VER = $(shell python ./devops/support/version/get-version.py)
-build_query_handler: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+build_query_handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_query_handler: build_base build_scratch generate
-	docker build --tag evented-eventqueryhandler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/dockerfile  .
+	docker build --tag evented-queryhandler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/dockerfile  .
 
 build_query_handler_debug: VER = $(shell python ./devops/support/version/get-version.py)
-build_query_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+build_query_handler_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_query_handler_debug: build_base build_scratch generate
-	docker build --tag evented-eventqueryhandler:$(DT) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
+	docker build --tag evented-queryhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
 
+bounce_query_handler:
+	kubectl delete pods -l evented=query-handler
 
-
+logs_query_handler:
+	kubectl logs -l evented=query-handler --tail=100
 
 # Coordinator Async Projector
 deploy_coordinator_async_projector:

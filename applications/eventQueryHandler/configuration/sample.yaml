@@ -1,9 +1,12 @@
 #YAML 1.2
 ---
-database:
-  url: database.url
-  name: databaseName
-  collection: collectionName
+eventStore:
+  type: mongodb
+  mongodb:
+    url: mongodb://mongodb.default.svc.cluster.local:27017
+    database: commandHandlerEvents
+    collection: eventCollection
 
 port: 1748
 targetSize: 1024 #Unknown 20220130
+proof: pudding
