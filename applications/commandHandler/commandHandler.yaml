@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     evented: command-handler
-  name: command-handler
+  name: evented-command-handler
 spec:
   selector:
     matchLabels:
@@ -21,11 +21,11 @@ spec:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul-headless.default.svc.cluster.local:8500
+              value: consul-server.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: commandHandler
+              value: evented_commandHandler
             - name: APP_NAME
               value: commandHandler
 ---
@@ -34,7 +34,7 @@ kind: Service
 metadata:
   labels:
     evented: command-handler
-  name: evented-command-handler-exported
+  name: evented-command-handler
 spec:
   type: NodePort
   ports:
