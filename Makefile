@@ -111,10 +111,10 @@ build_sample_business_logic: VER = $(shell git log -1 --pretty=%h)
 build_sample_business_logic: build_base build_scratch generate
 	docker build --tag evented-sample-business-logic:${VER} --build-arg=${VER} -f ./applications/integrationTest/businessLogic/dockerfile .
 
-build_sample_business_logic_dev: VER = $(shell git log -1 --pretty=%h)
+build_sample_business_logic_dev: VER = $(shell python ./devops/support/version/get-version.py)
 build_sample_business_logic_dev: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_sample_business_logic_dev: build_base build_scratch generate
-	docker build --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=LOCAL" -f ./applications/integrationTest/businessLogic/dockerfile .
+	docker build --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile .
 
 build_sample_business_logic_debug: build_base build_scratch generate
 	docker build --tag evented-sample-business-logic:latest --build-arg=latest -f ./applications/integrationTest/businessLogic/debug.dockerfile .
