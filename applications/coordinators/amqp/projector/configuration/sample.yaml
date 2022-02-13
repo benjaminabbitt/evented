@@ -1,18 +1,21 @@
 #YAML 1.2
 ---
 queryHandler:
-  url: queryhandler.url
+  url: evented-query-handler.default.svc.cluster.local:30002
 
 transport:
-  url: transport.url
-  exchange: exchange
-  queue: queue
+  type: rabbitmq
+  rabbitmq:
+    url: rabbitmq.default.svc
+    exchange: evented
+    queue: UNKNOWN
 
 evented:
   url: business.url
 
 database:
-  url: database.url
-  name: name
+  type: mongodb
+    url: mongodb://mongodb.default.svc.cluster.local:27017
+    database: projection
 
 domain: domain

@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"fmt"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/spf13/viper"
 )
@@ -18,12 +19,20 @@ func (o *Configuration) SagaURL() string {
 	return viper.GetString("saga.url")
 }
 
+func (o *Configuration) DatabaseType() string {
+	return viper.GetString("database.type")
+}
+
 func (o *Configuration) DatabaseURL() string {
-	return viper.GetString("database.url")
+	return viper.GetString(fmt.Sprintf("database.%s.url", o.DatabaseType()))
 }
 
 func (o *Configuration) DatabaseName() string {
-	return viper.GetString("database.name")
+	return viper.GetString(fmt.Sprintf("database.%s.name", o.DatabaseType()))
+}
+
+func (o *Configuration) CollectionName() string {
+	return viper.GetString(fmt.Sprintf("database.%s.collectionName", o.DatabaseType()))
 }
 
 func (o *Configuration) Port() uint {

@@ -62,13 +62,13 @@ type MongoEventTrackRecord struct {
 	Sequence uint32
 }
 
-func NewProcessedClient(uri string, databaseName string, log *zap.SugaredLogger) (client *Processed) {
+func NewProcessedClient(uri string, databaseName string, collectionName string, log *zap.SugaredLogger) (client *Processed) {
 	mongoClient, err := mongo.Connect(nil, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Error(err)
 	}
 	err = mongoClient.Ping(nil, readpref.Primary())
-	collection := mongoClient.Database(databaseName).Collection("processtracking")
+	collection := mongoClient.Database(databaseName).Collection(collectionName)
 	client = &Processed{client: *mongoClient, Database: databaseName, Collection: *collection, log: log}
 	return client
 }

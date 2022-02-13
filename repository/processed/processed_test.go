@@ -42,7 +42,8 @@ func (o *LastProcessedRepo) Test_SequenceZero() {
 	defer dait.StopContainer()
 	processedRepo := NewProcessedClient(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
-		"test",
+		"databaseName",
+		"collectionName",
 		o.log,
 	)
 	ctx := context.Background()
@@ -57,7 +58,8 @@ func (o *LastProcessedRepo) Test_SequenceGreaterThanZero() {
 	defer dait.StopContainer()
 	processedRepo := NewProcessedClient(
 		fmt.Sprintf("mongodb://localhost:%d", dait.Ports[0].PublicPort),
-		"test",
+		"databaseName",
+		"collectionName",
 		o.log,
 	)
 	ctx := context.Background()

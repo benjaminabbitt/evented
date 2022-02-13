@@ -40,7 +40,7 @@ func main() {
 	//TODO: fix
 	otherCommandHandler := evented.NewBusinessCoordinatorClient(otherCommandConn)
 
-	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	p := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), config.CollectionName(), log)
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := evented.NewEventQueryClient(qhConn)
 	domain := config.Domain()

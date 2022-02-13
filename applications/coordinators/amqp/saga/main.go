@@ -41,7 +41,7 @@ func main() {
 	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlerURL(), log, tracer)
 	otherCommandHandlerClient := evented.NewBusinessCoordinatorClient(ochConn)
 
-	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), config.CollectionName(), log)
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 

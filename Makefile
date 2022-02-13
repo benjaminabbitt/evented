@@ -58,7 +58,7 @@ build_query_handler: build_base build_scratch generate
 build_query_handler_debug: VER = $(shell python ./devops/support/version/get-version.py)
 build_query_handler_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_query_handler_debug: build_base build_scratch generate
-	docker build --tag evented-queryhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
+	docker build --tag evented-queryhandler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
 
 bounce_query_handler:
 	kubectl delete pods -l evented=query-handler
@@ -67,19 +67,24 @@ logs_query_handler:
 	kubectl logs -l evented=query-handler --tail=100
 
 # Coordinator Async Projector
-deploy_coordinator_async_projector:
+deploy_coordinator_amqp_projector:
 	kubectl apply -f applications/coordinators/amqp/projector/amqp-projector-coordinator.yaml
 
-build_coordinator_async_projector: VER = $(shell python ./devops/support/version/get-version.py)
-build_coordinator_async_projector: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
-build_coordinator_async_projector: build_base build_scratch generate
-	docker build --tag evented-coordinator-async-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/dockerfile  .
+build_coordinator_amqp_projector: VER = $(shell python ./devops/support/version/get-version.py)
+build_coordinator_amqp_projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build_coordinator_amqp_projector: build_base build_scratch generate
+	docker build --tag evented-coordinator-amqp-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/dockerfile  .
 
-build_coordinator_async_projector_debug: VER = $(shell python ./devops/support/version/get-version.py)
-build_coordinator_async_projector_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
-build_coordinator_async_projector_debug: build_base build_scratch generate
-	docker build --tag evented-coordinator-async-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/debug.dockerfile  .
+build_coordinator_amqp_projector_debug: VER = $(shell python ./devops/support/version/get-version.py)
+build_coordinator_amqp_projector_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build_coordinator_amqp_projector_debug: build_base build_scratch generate
+	docker build --tag evented-amqp-projector:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/debug.dockerfile  .
 
+configuration_load_amqp_projector:
+	consul kv put -http-addr=localhost:8500 evented-amqp-projector @applications/coordinators/amqp/projector/configuration/sample.yaml
+
+logs_command_handler:
+	kubectl logs -l evented=amqp-projector --tail=100
 
 # Coordinator Async Saga
 deploy_coordinator_async_saga:

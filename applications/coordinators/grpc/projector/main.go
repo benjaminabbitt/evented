@@ -33,7 +33,7 @@ func main() {
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	projectorClient := evented.NewProjectorClient(conn)
 
-	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), config.CollectionName(), log)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := evented.NewEventQueryClient(qhConn)

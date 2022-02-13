@@ -37,7 +37,7 @@ func main() {
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
 	eventQueryClient := evented.NewEventQueryClient(qhConn)
 
-	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), log)
+	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), config.CollectionName(), log)
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 
