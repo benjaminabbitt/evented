@@ -7,5 +7,5 @@ if __name__ == "__main__":
         print("dynamic")
     else:
         sha = repo.head.commit.hexsha
-        print(repo.git.rev_parse(sha, short=4))
+        print(repo.git.rev_parse(sha, short=7))
 
