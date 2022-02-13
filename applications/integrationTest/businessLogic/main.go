@@ -18,15 +18,13 @@ import (
 )
 
 var (
-	version   string
-	buildTime string
-	log       *zap.SugaredLogger
+	log *zap.SugaredLogger
 )
 
 func main() {
 	log = support.Log()
 	defer log.Sync()
-	log.Infow("Sample Business Logic", "build time", buildTime, "version", version)
+	log.Infow("Sample Business Logic", "build time", support.BuildTime, "version", support.Version)
 
 	config := configuration.Configuration{}
 	config.Initialize(log)

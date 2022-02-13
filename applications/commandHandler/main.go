@@ -45,10 +45,7 @@ func main() {
 	tracer, closer := setupJaeger(conf.AppName())
 	initSpan := tracer.StartSpan("Init")
 	defer func(closer io.Closer) {
-		err := closer.Close()
-		if err != nil {
-
-		}
+		closer.Close()
 	}(closer)
 
 	businessAddress := conf.BusinessURL()
@@ -220,12 +217,12 @@ func setupJaeger(serviceName string) (opentracing.Tracer, io.Closer) {
 }
 
 func setupConsul(log *zap.SugaredLogger, config configuration.Configuration) {
-	c := consul.EventedConsul{Log: log, ConsulHost: config.ConsulHost()}
+	c := consul.NewEventedConsul(config.ConsulHost(), config.Port())
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)
 	}
-	err = c.Register(config.AppName(), id.String(), config.Port())
+	err = c.Register(config.AppName(), id.String())
 	if err != nil {
 		log.Error("Error registering with Consul", err)
 	}
