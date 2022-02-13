@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     evented: amqp-projector-coordinator
-  name: amqp-projector-coordinator
+  name: evented-amqp-projector-coordinator
 spec:
   selector:
     matchLabels:
@@ -14,14 +14,14 @@ spec:
         evented: amqp-projector-coordinator
     spec:
       containers:
-        - name: evented-amqp-projector-coordinator
-          image: evented-amqp-projector-coordinator
+        - name: evented-coordinator-async-projector
+          image: evented-coordinator-async-projector
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul-headless.default.svc.cluster.local:8500
+              value: consul-server.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
@@ -34,13 +34,13 @@ kind: Service
 metadata:
   labels:
     evented: amqp-projector-coordinator
-  name: evented-amqp-projector-coordinator-exported
+  name: evented-amqp-projector-coordinator
 spec:
   type: NodePort
   ports:
     - port: 40000
-      name: 40000-tcp
-      nodePort: 30808
+      name: debug
+      nodePort: 32002
   selector:
     evented: amqp-projector-coordinator
 

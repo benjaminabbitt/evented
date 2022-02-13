@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Build a version string based on the git short SHA, if its relevant and valid, or a provided string if its invalid")
     parser.add_argument('--git_root', dest='root', default=".")
-    parser.add_argument('--changed_text', dest='changed', default="dynamic")
+    parser.add_argument('--changed_text', dest='changed', default="latest")
     args = parser.parse_args()
     repo = Repo(args.root)
     changes = [item.a_path for item in repo.index.diff(None)]

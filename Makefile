@@ -24,21 +24,18 @@ build_scratch:
 deploy_command_handler:
 	kubectl apply -f applications/commandHandler/commandHandler.yaml
 
-build_command_handler: VER = $(shell git log -1 --pretty=%h)
+build_command_handler: VER = $(shell python ./devops/support/version/get-version.py)
+build_command_handler: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_command_handler:build_base build_scratch generate
-	docker build --tag evented-commandhandler:${VER} --build-arg=${VER} -f ./applications/commandHandler/dockerfile .
+	docker build --tag evented-commandhandler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
 
 bounce_command_handler:
 	kubectl delete pods -l evented=command-handler
 
-build_command_handler_dev: VER = $(shell python ./devops/support/version/get-version.py)
-build_command_handler_dev: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
-build_command_handler_dev:build_base build_scratch generate
-	docker build --tag evented-commandhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
-
+build_command_handler_debug: VER = $(shell python ./devops/support/version/get-version.py)
 build_command_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_command_handler_debug:build_base build_scratch generate
-	docker build --tag evented-commandhandler:latest --build-arg=${DT} -f ./applications/commandHandler/debug.dockerfile .
+	docker build --tag evented-commandhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/debug.dockerfile .
 
 configuration_load_command_handler:
 	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/commandHandler/configuration/sample.yaml
@@ -50,13 +47,15 @@ logs_command_handler:
 deploy_query_handler:
 	kubectl apply -f applications/eventQueryHandler/eventQueryHandler.yaml
 
-build_query_handler: VER = $(shell git log -1 --pretty=%h)
+build_query_handler: VER = $(shell python ./devops/support/version/get-version.py)
+build_query_handler: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_query_handler: build_base build_scratch generate
-	docker build --tag evented-eventqueryhandler:$(VER) --build-arg=$(VER) -f ./applications/eventQueryHandler/dockerfile  .
+	docker build --tag evented-eventqueryhandler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/dockerfile  .
 
-build_query_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H.%M.%S.%f%z'))")
+build_query_handler_debug: VER = $(shell python ./devops/support/version/get-version.py)
+build_query_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_query_handler_debug: build_base build_scratch generate
-	docker build --tag evented-eventqueryhandler:$(DT) --build-arg=$(DT) -f ./applications/eventQueryHandler/debug.dockerfile  .
+	docker build --tag evented-eventqueryhandler:$(DT) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
 
 
 
@@ -65,13 +64,15 @@ build_query_handler_debug: build_base build_scratch generate
 deploy_coordinator_async_projector:
 	kubectl apply -f applications/coordinators/amqp/projector/amqp-projector-coordinator.yaml
 
-build_coordinator_async_projector: VER = $(shell git log -1 --pretty=%h)
+build_coordinator_async_projector: VER = $(shell python ./devops/support/version/get-version.py)
+build_coordinator_async_projector: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_coordinator_async_projector: build_base build_scratch generate
-	docker build --tag evented-coordinator-async-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/projector/Dockerfile  .
+	docker build --tag evented-coordinator-async-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/dockerfile  .
 
-build_coordinator_async_projector_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H.%M.%S.%f%z'))")
+build_coordinator_async_projector_debug: VER = $(shell python ./devops/support/version/get-version.py)
+build_coordinator_async_projector_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_coordinator_async_projector_debug: build_base build_scratch generate
-	docker build --tag evented-eventqueryhandler:$(DT) --build-arg=$(DT) -f ./applications/eventQueryHandler/debug.dockerfile  .
+	docker build --tag evented-coordinator-async-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/coordinators/amqp/projector/debug.dockerfile  .
 
 
 # Coordinator Async Saga

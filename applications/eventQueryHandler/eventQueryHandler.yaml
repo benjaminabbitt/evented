@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     evented: query-handler
-  name: query-handler
+  name: evented-query-handler
 spec:
   selector:
     matchLabels:
@@ -14,38 +14,36 @@ spec:
         evented: query-handler
     spec:
       containers:
-        - name: evented-queryhandler
-          image: evented-queryhandler
+        - name: evented-query-handler
+          image: evented-query-handler
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul-headless.default.svc.cluster.local:8500
+              value: consul-server.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: queryHandler
+              value: evented-query-handler
             - name: APP_NAME
-              value: queryHandler
+              value: evented-query-handler
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     evented: query-handler
-  name: evented-query-handler-exported
+  name: evented-query-handler
 spec:
   type: NodePort
   ports:
-    - port: 30748
-      name: 30748-tcp
-      targetPort: 30748
-      nodePort: 30748
+    - port: 1738
+      name: grpc-eventd-query
+      nodePort: 30001
     - port: 40000
-      name: 40000-tcp
-      targetPort: 40000
-      nodePort: 30807
+      name: debug
+      nodePort: 32002
   selector:
     evented: query-handler
 

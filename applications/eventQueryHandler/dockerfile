@@ -1,6 +1,8 @@
 FROM evented-base AS app-build
 COPY --from=evented-base /root/.cache /root/.cache
-RUN cd /src && CGO_ENABLED=0 go build -o app ./applications/eventQueryHandler
+ARG VERSION
+ARG BUILD_TIME
+RUN cd /src && CGO_ENABLED=0 go build -ldflags "-X github.com/benjaminabbitt/evented/support.Version=${VERSION} -X github.com/benjaminabbitt/evented/support.BuildTime=${BUILD_TIME}" -o app ./applications/eventQueryHandler
 
 FROM scratch-foundation AS final
 COPY --from=app-build /src/app /bin/
