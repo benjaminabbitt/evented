@@ -31,9 +31,10 @@ build_command_handler:build_base build_scratch generate
 bounce_command_handler:
 	kubectl delete pods -l evented=command-handler
 
+build_command_handler_dev: VER = $(shell python ./devops/support/version/get-version.py)
 build_command_handler_dev: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_command_handler_dev:build_base build_scratch generate
-	docker build --tag evented-commandhandler:latest --build-arg=${DT} -f ./applications/commandHandler/dockerfile .
+	docker build --tag evented-commandhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
 
 build_command_handler_debug: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
 build_command_handler_debug:build_base build_scratch generate
@@ -43,7 +44,7 @@ configuration_load_command_handler:
 	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/commandHandler/configuration/sample.yaml
 
 logs_command_handler:
-	kubectl logs -l evented=command-handler
+	kubectl logs -l evented=command-handler --tail=100
 
 # Query Handler
 deploy_query_handler:

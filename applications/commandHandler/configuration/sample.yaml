@@ -9,7 +9,7 @@ domain: domain
 snapshotStore:
   type: mongodb
   mongodb:
-    url: mongodb.default.svc.cluster.local:27017
+    url: mongodb://mongodb.default.svc.cluster.local:27017
     database: commandHandlerSnapshots
 
 transport:
@@ -21,7 +21,7 @@ transport:
 eventStore:
   type: mongodb
   mongodb:
-    url: mongodb.default.svc.cluster.local:27017
+    url: mongodb://mongodb.default.svc.cluster.local:27017
     database: commandHandlerEvents
     collection: eventCollection
 

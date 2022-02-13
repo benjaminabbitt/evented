@@ -281,6 +281,7 @@ func (m EventRepoMongo) establishIndices() error {
 
 func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eventCollectionName string, log *zap.SugaredLogger) (repoMongo *EventRepoMongo, err error) {
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+
 	if err != nil {
 		return nil, err
 	}

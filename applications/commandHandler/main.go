@@ -36,7 +36,7 @@ var log *zap.SugaredLogger
 
 func main() {
 	log = support.Log()
-
+	log.Infow("Command Handler", "version", support.Version, "build time", support.BuildTime)
 	conf := configuration.Configuration{}
 	conf.Initialize(log)
 
@@ -187,7 +187,7 @@ func setupServiceBus(config configuration.Configuration, span opentracing.Span) 
 func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	var eventRepoTypes = []string{"Memory", "MongoDb"}
+	var eventRepoTypes = []string{"memory", "mongodb"}
 	if config.EventRepoType() == eventRepoTypes[0] {
 		repo, err = memory.NewEventRepoMemory(log)
 	} else if config.EventRepoType() == eventRepoTypes[1] {
