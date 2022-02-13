@@ -22,6 +22,7 @@ var log *zap.SugaredLogger
 func main() {
 	log = support.Log()
 	defer log.Sync()
+	support.LogStartup(log, "AMQP Projector Coordinator Startup")
 
 	config := configuration.Configuration{}
 	config.Initialize(log)

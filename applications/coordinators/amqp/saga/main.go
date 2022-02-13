@@ -24,6 +24,7 @@ func main() {
 	log = support.Log()
 	defer log.Sync()
 
+	support.LogStartup(log, "AMQP Saga Coordinator Startup")
 	config := configuration.Configuration{}
 	config.Initialize(log)
 

@@ -1,6 +1,14 @@
 package support
 
+import "go.uber.org/zap"
+
 var (
-	Version   string
-	BuildTime string
+	Version        string
+	VersionLabel   = "version"
+	BuildTime      string
+	BuildTimeLabel = "build time"
 )
+
+func LogStartup(log *zap.SugaredLogger, appStartup string) {
+	log.Info("Startup: "+appStartup, VersionLabel, Version, BuildTimeLabel, BuildTime)
+}

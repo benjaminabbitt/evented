@@ -20,6 +20,8 @@ func main() {
 	log := support.Log()
 	defer log.Sync()
 
+	support.LogStartup(log, "GRPC Projector Coordinator Startup")
+
 	config := configuration.Configuration{}
 	config.Initialize(log)
 

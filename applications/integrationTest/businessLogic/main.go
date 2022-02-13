@@ -24,7 +24,7 @@ var (
 func main() {
 	log = support.Log()
 	defer log.Sync()
-	log.Infow("Sample Business Logic", "build time", support.BuildTime, "version", support.Version)
+	support.LogStartup(log, "Sample Business Logic")
 
 	config := configuration.Configuration{}
 	config.Initialize(log)
