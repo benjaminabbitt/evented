@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     evented: sample-projector
-  name: sample-projector
+  name: evented-sample-projector
 spec:
   selector:
     matchLabels:
@@ -21,26 +21,28 @@ spec:
             - name: CONFIG_MGMT_TYPE
               value: consul
             - name: CONSUL_HOST
-              value: consul-headless.default.svc.cluster.local:8500
+              value: consul-server.default.svc.cluster.local:8500
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: projector
+              value: evented-sample-projector
             - name: APP_NAME
-              value: projector
+              value: evented-sample-projector
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     evented: sample-projector
-  name: evented-sample-projector-exported
+  name: evented-sample-projector
 spec:
   type: NodePort
   ports:
+    - name: grpc-evented-downstream
+      port: 1749
+      nodePort: 30003
     - port: 40000
       name: 40000-tcp
-      targetPort: 40000
       nodePort: 30806
   selector:
     evented: sample-projector

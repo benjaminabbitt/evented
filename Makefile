@@ -83,54 +83,53 @@ build_coordinator_amqp_projector_debug: build_base build_scratch generate
 configuration_load_amqp_projector:
 	consul kv put -http-addr=localhost:8500 evented-amqp-projector @applications/coordinators/amqp/projector/configuration/sample.yaml
 
-logs_command_handler:
+logs_amqp_projector:
 	kubectl logs -l evented=amqp-projector --tail=100
 
-# Coordinator Async Saga
-deploy_coordinator_async_saga:
-	kubectl apply -f applications/coordinators/amqp/saga/amqp-saga-coordinator.yaml
 
-build_coordinator_async_saga: VER = $(shell git log -1 --pretty=%h)
-build_coordinator_async_saga: build_base build_scratch generate
-	docker build --tag evented-coordinator-async-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/saga/Dockerfile  .
-
-
-
-# Coordinator Sync Projector
-deploy_coordinator_sync_projector:
-	kubectl apply -f applications/coordinators/grpc/projector/grpc-projector-coordinator.yaml
-
-build_coordinator_sync_projector: VER = $(shell git log -1 --pretty=%h)
-build_coordinator_sync_projector: build_base build_scratch generate
-	docker build --tag evented-coordinator-sync-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/projector/Dockerfile  .
-
-
-
-# Coordinator Sync Saga
-deploy_coordinator_sync_saga:
-	kubectl apply -f applications/coordinators/grpc/saga/grpc-saga-coordinator.yaml
-
-build_coordinator_sync_saga: VER = $(shell git log -1 --pretty=%h)
-build_coordinator_sync_saga: build_base build_scratch generate
-	docker build --tag evented-coordinator-sync-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/saga/Dockerfile  .
-
-
+## Coordinator Async Saga
+#deploy_coordinator_async_saga:
+#	kubectl apply -f applications/coordinators/amqp/saga/amqp-saga-coordinator.yaml
+#
+#build_coordinator_async_saga: VER = $(shell git log -1 --pretty=%h)
+#build_coordinator_async_saga: build_base build_scratch generate
+#	docker build --tag evented-coordinator-async-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/saga/Dockerfile  .
+#
+#
+#
+## Coordinator Sync Projector
+#deploy_coordinator_sync_projector:
+#	kubectl apply -f applications/coordinators/grpc/projector/grpc-projector-coordinator.yaml
+#
+#build_coordinator_sync_projector: VER = $(shell git log -1 --pretty=%h)
+#build_coordinator_sync_projector: build_base build_scratch generate
+#	docker build --tag evented-coordinator-sync-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/projector/Dockerfile  .
+#
+#
+#
+## Coordinator Sync Saga
+#deploy_coordinator_sync_saga:
+#	kubectl apply -f applications/coordinators/grpc/saga/grpc-saga-coordinator.yaml
+#
+#build_coordinator_sync_saga: VER = $(shell git log -1 --pretty=%h)
+#build_coordinator_sync_saga: build_base build_scratch generate
+#	docker build --tag evented-coordinator-sync-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/saga/Dockerfile  .
+#
+#
 
 # Sample Business Logic
 deploy_sample_business_logic:
 	kubectl apply -f applications/integrationTest/businessLogic/businessLogic.yaml
 
-build_sample_business_logic: VER = $(shell git log -1 --pretty=%h)
+build_sample_business_logic: VER = $(shell python ./devops/support/version/get-version.py)
+build_sample_business_logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_sample_business_logic: build_base build_scratch generate
-	docker build --tag evented-sample-business-logic:${VER} --build-arg=${VER} -f ./applications/integrationTest/businessLogic/dockerfile .
+	docker build --tag evented-sample_business_logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile  .
 
-build_sample_business_logic_dev: VER = $(shell python ./devops/support/version/get-version.py)
-build_sample_business_logic_dev: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
-build_sample_business_logic_dev: build_base build_scratch generate
-	docker build --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile .
-
+build_sample_business_logic_debug: VER = $(shell python ./devops/support/version/get-version.py)
+build_sample_business_logic_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_sample_business_logic_debug: build_base build_scratch generate
-	docker build --tag evented-sample-business-logic:latest --build-arg=latest -f ./applications/integrationTest/businessLogic/debug.dockerfile .
+	docker build --tag evented-sample_business_logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/debug.dockerfile  .
 
 bounce_sample_business_logic:
 	kubectl delete pods -l evented=sample-business-logic
@@ -139,15 +138,30 @@ configuration_load_sample_business_logic:
 	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/integrationTest/businessLogic/configuration/sample.yaml
 
 logs_sample_business_logic:
-	kubectl logs -l evented=sample-business-logic --since=1h
+	kubectl logs -l evented=sample-business-logic --tail=100
 
 # Sample Projector
 deploy_sample_projector:
 	kubectl apply -f applications/integrationTest/projector/projector.yaml
 
+build_sample_projector: VER = $(shell python ./devops/support/version/get-version.py)
+build_sample_projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build_sample_projector: build_base build_scratch generate
-	docker build --tag evented-sample-projector:latest --build-arg=latest -f ./applications/integrationTest/projector/debug.dockerfile .
+	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/projector/dockerfile .
 
+build_sample_projector_debug: VER = $(shell python ./devops/support/version/get-version.py)
+build_sample_projector_debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build_sample_projector_debug: build_base build_scratch generate
+	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/projector/debug.dockerfile .
+
+bounce_sample_projector:
+	kubectl delete pods -l evented=sample-projector
+
+configuration_load_sample_projector:
+	consul kv put -http-addr=localhost:8500 evented-sample-projector @applications/integrationTest/projector/configuration/sample.yaml
+
+logs_sample_projector:
+	kubectl logs -l evented=sample-projector --tail=100
 
 
 # Sample Saga

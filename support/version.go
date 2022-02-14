@@ -10,5 +10,5 @@ var (
 )
 
 func LogStartup(log *zap.SugaredLogger, appStartup string) {
-	log.Info("Startup: "+appStartup, VersionLabel, Version, BuildTimeLabel, BuildTime)
+	log.Infow("Startup: "+appStartup, VersionLabel, Version, BuildTimeLabel, BuildTime)
 }

@@ -15,6 +15,7 @@ Placeholder business logic -- used for Projector integration tests
 */
 func main() {
 	log = support.Log()
+	support.LogStartup(log, "Sample Projector")
 	defer log.Sync()
 
 	config := configuration.Configuration{}
