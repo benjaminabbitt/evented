@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    evented: amqp-projector
-  name: evented-amqp-projector
+    evented: coordinator-projector-amqp
+  name: evented-coordinator-projector-amqp
 spec:
   selector:
     matchLabels:
-      evented: amqp-projector
+      evented: coordinator-projector-amqp
   template:
     metadata:
       labels:
-        evented: amqp-projector
+        evented: coordinator-projector-amqp
     spec:
       containers:
-        - name: evented-amqp-projector
-          image: evented-amqp-projector
+        - name: evented-coordinator-projector-amqp
+          image: evented-coordinator-projector-amqp
           imagePullPolicy: Never
           env:
             - name: CONFIG_MGMT_TYPE
@@ -25,16 +25,16 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: evented-ampq-projector
+              value: evented-coordinator-projector-amqp
             - name: APP_NAME
-              value: evented-amqp-projector
+              value: evented-coordinator-projector-amqp
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    evented: amqp-projector
-  name: evented-amqp-projector
+    evented: coordinator-projector-amqp
+  name: evented-coordinator-projector-amqp
 spec:
   type: NodePort
   ports:
@@ -42,5 +42,5 @@ spec:
       name: debug
       nodePort: 32003
   selector:
-    evented: amqp-projector
+    evented: coordinator-projector-amqp
 

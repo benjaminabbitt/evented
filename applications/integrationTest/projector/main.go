@@ -16,13 +16,21 @@ Placeholder business logic -- used for Projector integration tests
 func main() {
 	log = support.Log()
 	support.LogStartup(log, "Sample Projector")
-	defer log.Sync()
+	defer func() {
+		if err := log.Sync(); err != nil {
+			log.Errorw("Error syncing logs", err)
+		}
+	}()
 
 	config := configuration.Configuration{}
 	config.Initialize(log)
 
 	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
-	defer closer.Close()
+	defer func() {
+		if err := closer.Close(); err != nil {
+			log.Errorw("Error closing Jaeger", err)
+		}
+	}()
 
 	server := projector.NewPlaceholderProjectorLogic(log, &tracer)
 

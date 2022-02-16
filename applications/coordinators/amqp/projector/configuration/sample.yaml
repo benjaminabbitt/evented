@@ -8,14 +8,15 @@ transport:
   rabbitmq:
     url: rabbitmq.default.svc
     exchange: evented
-    queue: UNKNOWN
+    queue: projector
 
 evented:
-  url: business.url
+  url: evented-sample-projector.default.svc.cluster.local:30003
 
 database:
   type: mongodb
-    url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: projection
+  mongodb:
+    url: mongodb://mongodb.default.svc.cluster.local:27018
+    database: evented-projector-amqp-default
 
 domain: domain
