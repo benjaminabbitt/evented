@@ -1,7 +1,7 @@
 #YAML 1.2
 ---
 queryHandler:
-  url: evented-query-handler.default.svc.cluster.local:30002
+  url: evented-query-handler.default.svc.cluster.local:1738
 
 transport:
   type: rabbitmq
@@ -11,12 +11,12 @@ transport:
     queue: projector
 
 evented:
-  url: evented-sample-projector.default.svc.cluster.local:30003
+  url: evented-sample-projector.default.svc.cluster.local:1738
 
 database:
   type: mongodb
   mongodb:
-    url: mongodb://mongodb.default.svc.cluster.local:27018
+    url: mongodb://mongodb.default.svc.cluster.local:27017
     database: evented-projector-amqp-default
 
 domain: domain

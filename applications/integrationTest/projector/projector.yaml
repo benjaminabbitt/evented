@@ -38,8 +38,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - name: grpc-evented-downstream
-      port: 1749
+    - name: grpc-evented-events
+      port: 1738
       nodePort: 30003
     - port: 40000
       name: 40000-tcp

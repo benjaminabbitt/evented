@@ -25,3 +25,9 @@ func SetupJaeger(service string, log *zap.SugaredLogger) (opentracing.Tracer, io
 	}
 	return tracer, closer
 }
+
+func CloseJaeger(closer io.Closer, log *zap.SugaredLogger) {
+	if err := closer.Close(); err != nil {
+		log.Errorw("Error closing Jaeger", err)
+	}
+}

@@ -167,13 +167,16 @@ configuration-load-sample-projector:
 logs-sample-projector:
 	kubectl logs -l evented=sample-projector --tail=100
 
+sample-projector-expose:
+	kubectl port-forward svc/evented-sample-projector 30003
 
-# Sample Saga
-deploy-sample-saga:
-	kubectl apply -f applications/integrationTest/saga/saga.yaml
-
-build-sample-saga: build-base build-scratch generate
-	docker build --tag evented-sample-saga:latest --build-arg=latest -f ./applications/integrationTest/saga/debug.dockerfile .
+#
+## Sample Saga
+#deploy-sample-saga:
+#	kubectl apply -f applications/integrationTest/saga/saga.yaml
+#
+#build-sample-saga: build-base build-scratch generate
+#	docker build --tag evented-sample-saga:latest --build-arg=latest -f ./applications/integrationTest/saga/debug.dockerfile .
 
 
 ## Developer setup

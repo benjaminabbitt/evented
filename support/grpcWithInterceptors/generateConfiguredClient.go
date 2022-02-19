@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"time"
 )
 
@@ -24,7 +25,7 @@ func GenerateConfiguredConn(target string, log *zap.SugaredLogger, tracer opentr
 		grpc_retry.WithCodes(codes.NotFound, codes.Aborted, codes.Unavailable, codes.Unimplemented, codes.Unknown),
 	}
 	conn, err := grpc.Dial(target,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 
 		grpc.WithUnaryInterceptor(

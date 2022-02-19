@@ -20,7 +20,7 @@ type ProjectorCoordinator struct {
 	Log              *zap.SugaredLogger
 }
 
-func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
+func (o ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match projector configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
@@ -37,7 +37,7 @@ func (o *ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.Event
 	return reb, err
 }
 
-func (o *ProjectorCoordinator) Handle(ctx context.Context, eb *evented.EventBook) error {
+func (o ProjectorCoordinator) Handle(ctx context.Context, eb *evented.EventBook) error {
 	_, err := o.HandleSync(ctx, eb)
 	return err
 }

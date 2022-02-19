@@ -3,6 +3,7 @@ package projector
 import (
 	"github.com/benjaminabbitt/evented/applications/coordinators/universal"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
@@ -40,11 +41,11 @@ type Coordinator struct {
 	tracer      *opentracing.Tracer
 }
 
-func (o *Coordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
+func (o Coordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
 	return o.Coordinator.HandleSync(ctx, eb)
 }
 
-func (o *Coordinator) Listen(port uint) {
+func (o Coordinator) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
@@ -54,4 +55,8 @@ func (o *Coordinator) Listen(port uint) {
 	if err != nil {
 		o.log.Error(err)
 	}
+}
+
+func (o Coordinator) Handle(ctx context.Context, eb *evented.EventBook) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, o.Coordinator.Handle(ctx, eb)
 }

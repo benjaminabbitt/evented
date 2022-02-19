@@ -39,7 +39,7 @@ spec:
   type: NodePort
   ports:
     - name: grpc-evented-business
-      port: 1738
+      port: 1739
       nodePort: 30001
     - port: 40000
       name: debug

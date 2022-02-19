@@ -24,13 +24,13 @@ type PlaceholderProjectorLogic struct {
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderProjectorLogic) Handle(ctx context.Context, in *evented.EventBook) (*empty.Empty, error) {
+func (o PlaceholderProjectorLogic) Handle(ctx context.Context, in *evented.EventBook) (*empty.Empty, error) {
 	o.log.Infow("In Handle", in.String())
 	_, err := o.HandleSync(ctx, in)
 	return &empty.Empty{}, err
 }
 
-func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.Projection, error) {
+func (o PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.Projection, error) {
 	o.log.Infow("In HandleSync", in.String())
 	lastSequenceIndex := len(in.Pages) - 1
 	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*evented.EventPage_Num).Num
@@ -44,7 +44,7 @@ func (o *PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.
 	return projection, nil
 }
 
-func (o *PlaceholderProjectorLogic) Listen(port uint) {
+func (o PlaceholderProjectorLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
