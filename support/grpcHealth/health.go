@@ -1,13 +1,15 @@
 package grpcHealth
 
 import (
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func RegisterHealthChecks(rpc *grpc.Server, name string) *HealthReporter {
+func RegisterHealthChecks(rpc *grpc.Server, name string, log *zap.SugaredLogger) *HealthReporter {
 	hlth := health.NewServer()
+	log.Infow("Health Check Initializing", "name", name)
 	grpc_health_v1.RegisterHealthServer(rpc, hlth)
 	return &HealthReporter{
 		name:       name,

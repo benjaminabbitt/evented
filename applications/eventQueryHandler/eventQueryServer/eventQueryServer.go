@@ -28,7 +28,7 @@ type DefaultEventQueryServer struct {
 	log           *zap.SugaredLogger
 }
 
-func (o *DefaultEventQueryServer) GetEvents(req *evented.Query, server evented.EventQuery_GetEventsServer) error {
+func (o DefaultEventQueryServer) GetEvents(req *evented.Query, server evented.EventQuery_GetEventsServer) error {
 	id, err := eventedproto.ProtoToUUID(req.Root)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (o *DefaultEventQueryServer) GetEvents(req *evented.Query, server evented.E
 	return nil
 }
 
-func (o *DefaultEventQueryServer) send(cover *evented.Cover, pages []*evented.EventPage, server evented.EventQuery_GetEventsServer) error {
+func (o DefaultEventQueryServer) send(cover *evented.Cover, pages []*evented.EventPage, server evented.EventQuery_GetEventsServer) error {
 	book := &evented.EventBook{
 		Cover:    cover,
 		Pages:    pages,
@@ -83,15 +83,15 @@ func (o *DefaultEventQueryServer) send(cover *evented.Cover, pages []*evented.Ev
 	return nil
 }
 
-func (o *DefaultEventQueryServer) Synchronize(server evented.EventQuery_SynchronizeServer) error {
+func (o DefaultEventQueryServer) Synchronize(server evented.EventQuery_SynchronizeServer) error {
 	panic("implement me")
 }
 
-func (o *DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server evented.EventQuery_GetAggregateRootsServer) error {
+func (o DefaultEventQueryServer) GetAggregateRoots(e *empty.Empty, server evented.EventQuery_GetAggregateRootsServer) error {
 	panic("implement me")
 }
 
-func (o *DefaultEventQueryServer) Listen(port uint, tracer opentracing.Tracer) error {
+func (o DefaultEventQueryServer) Listen(port uint, tracer opentracing.Tracer) error {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), tracer)
 

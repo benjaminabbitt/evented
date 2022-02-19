@@ -13,6 +13,6 @@ func OpenPort(port uint, log *zap.SugaredLogger) (lis net.Listener, err error) {
 		log.Errorw("Error opening port", port, err)
 		return nil, err
 	}
-	log.Debugw("Port Open", "port", port)
+	log.Debugw("Listening", "port", port)
 	return lis, err
 }

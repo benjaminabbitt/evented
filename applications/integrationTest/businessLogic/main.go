@@ -45,7 +45,7 @@ func main() {
 	server := businessLogic.NewPlaceholderBusinessLogicServer(log)
 	evented.RegisterBusinessLogicServer(rpc, server)
 
-	grpcHealth.RegisterHealthChecks(rpc)
+	grpcHealth.RegisterHealthChecks(rpc, config.AppName(), log)
 
 	log.Infow("Starting Business Server...")
 	err = rpc.Serve(lis)
@@ -61,7 +61,7 @@ func setupConsul(config configuration.Configuration) {
 	if err != nil {
 		log.Error(err)
 	}
-	err = c.Register("test2", id.String())
+	err = c.Register(config.AppName(), id.String())
 	if err != nil {
 		log.Error(err)
 	}
