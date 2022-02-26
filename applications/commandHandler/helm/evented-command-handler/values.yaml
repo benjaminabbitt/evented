@@ -1,0 +1,97 @@
+selectorLabels:
+  selectorLabel: "selectorLabel"
+
+labels:
+  label: "label"
+
+port: 1313 #ASCII CQRS +1000 to get out of priv ports
+
+command_handler:
+  image:
+    repository: evented-command-handler
+    pullPolicy: Never
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+  securityContext: { }
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+business_logic:
+  image:
+    repository: evented-sample-business-logic
+    pullPolicy: Never
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+  securityContext: { }
+  env:
+    - name: CONFIG_MGMT_TYPE
+      value: consul
+    - name: CONSUL_HOST
+      value: consul-server.default.svc.cluster.local:8500
+    - name: CONSUL_CONFIG_TYPE
+      value: yaml
+    - name: CONSUL_KEY
+      value: evented-sample-business-logic
+    - name: APP_NAME
+      value: sample-business-logic
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+
+
+imagePullSecrets: [ ]
+
+replicaCount: 1
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: { }
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "saName"
+
+podAnnotations: { }
+
+podSecurityContext: { }
+# fsGroup: 2000
+
+service:
+  type: LoadBalancer
+  port: 1313
+
+
+resources: { }
+# We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
+# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+# limits:
+#   cpu: 100m
+#   memory: 128Mi
+# requests:
+#   cpu: 100m
+#   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }

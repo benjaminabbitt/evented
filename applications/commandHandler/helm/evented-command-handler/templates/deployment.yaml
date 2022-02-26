@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "evented-command-handler.fullname" . }}
+  labels:
+    {{- include "evented-command-handler.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "evented-command-handler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "evented-command-handler.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "evented-command-handler.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ include "evented-command-handler.command-handler.name" . }}
+          image: {{ .Values.command_handler.image.repository }}:{{ .Values.command_handler.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.command_handler.image.pullPolicy }}
+          ports:
+            - name: evtd
+              containerPort: {{.Values.port | default 1313 }}
+              protocol: TCP
+  {{/* TODO: build grpc liveness and readiness probes once docker desktop updates k8s to 1.23 */}}
+{{/*          livenessProbe:*/}}
+{{/*            grpc:*/}}
+{{/*              port: 1737*/}}
+{{/*            initialDelaySeconds: 10*/}}
+{{/*          readinessProbe:*/}}
+{{/*            grpc:*/}}
+{{/*              port: 1737*/}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: CONFIG_MGMT_TYPE
+              value: consul
+            - name: CONSUL_HOST
+              value: consul-server.default.svc.cluster.local:8500
+            - name: CONSUL_CONFIG_TYPE
+              value: yaml
+            - name: CONSUL_KEY
+              value: evented-command-handler
+            - name: APP_NAME
+              value: commandHandler
+        - name: {{ include "evented-command-handler.business-logic.name" . }}
+          securityContext: {{- toYaml .Values.business_logic.securityContext | nindent 12 }}
+          image: "{{ .Values.business_logic.image.repository }}:{{ .Values.business_logic.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}
+          ports:
+            - name: evtd
+              containerPort: {{.Values.port | default 1313 }}
+              protocol: TCP
+  {{/* TODO: build grpc liveness and readiness probes once docker desktop updates k8s to 1.23 */}}
+{{/*          livenessProbe:*/}}
+{{/*            grpc:*/}}
+{{/*              port: 1737*/}}
+{{/*            initialDelaySeconds: 10*/}}
+{{/*          readinessProbe:*/}}
+{{/*            grpc:*/}}
+{{/*              port: 1737*/}}
+          env:
+            {{- toYaml .Values.business_logic.env  | nindent 12}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
