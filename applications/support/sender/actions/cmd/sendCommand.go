@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/support/sender/root"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	sendCmd.Flags().String("host", "localhost", "The host with which to connect")
 	sendCmd.Flags().Int("port", 1737, "The port on which to connect")
-	rootCmd.AddCommand(sendCmd)
+	root.rootCmd.AddCommand(sendCmd)
 }
 
 var sendCmd = &cobra.Command{

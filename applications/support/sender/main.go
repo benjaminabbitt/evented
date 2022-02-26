@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/support/sender/cmd"
+	"github.com/benjaminabbitt/evented/applications/support/sender/actions/root"
 	"go.uber.org/zap"
 )
 
 var log *zap.SugaredLogger
 
 func main() {
-	cmd.Execute()
+	root.Execute()
 }

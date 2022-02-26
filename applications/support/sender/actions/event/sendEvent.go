@@ -1,8 +1,9 @@
-package cmd
+package event
 
 import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
+	"github.com/benjaminabbitt/evented/applications/support/sender/actions/root"
 	"github.com/benjaminabbitt/evented/applications/support/sender/configuration"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
@@ -18,7 +19,7 @@ import (
 func init() {
 	sendEvent.Flags().String("host", "localhost", "The host with which to connect")
 	sendEvent.Flags().Int("port", 1738, "The port on which to connect")
-	rootCmd.AddCommand(sendEvent)
+	root.RootCmd.AddCommand(sendEvent)
 }
 
 var sendEvent = &cobra.Command{

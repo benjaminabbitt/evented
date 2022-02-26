@@ -1,4 +1,4 @@
-package cmd
+package root
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 }
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   "sender",
 	Short: "root command",
 	Long:  "long root command",
@@ -21,7 +21,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() error {
-	return rootCmd.Execute()
+	return RootCmd.Execute()
 }
 
 func init() {

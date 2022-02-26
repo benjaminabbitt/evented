@@ -1,8 +1,9 @@
-package cmd
+package health
 
 import (
 	"context"
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/support/sender/actions/root"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -11,7 +12,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(sendHealth)
+	root.RootCmd.AddCommand(sendHealth)
 }
 
 var sendHealth = &cobra.Command{

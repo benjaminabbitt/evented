@@ -1,12 +1,13 @@
-package cmd
+package version
 
 import (
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/support/sender/actions/root"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	root.RootCmd.AddCommand(versionCmd)
 }
 
 var versionCmd = &cobra.Command{
