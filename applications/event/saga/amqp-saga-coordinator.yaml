@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    evented: amqp-saga-coordinator
+  name: amqp-saga-coordinator
+spec:
+  selector:
+    matchLabels:
+      evented: amqp-saga-coordinator
+  template:
+    metadata:
+      labels:
+        evented: amqp-saga-coordinator
+    spec:
+      containers:
+        - name: evented-amqp-placeholder-saga-coordinator
+          image: evented-amqp-saga-coordinator
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_MGMT_TYPE
+              value: consul
+            - name: CONSUL_HOST
+              value: consul-headless.default.svc.cluster.local:8500
+            - name: CONSUL_CONFIG_TYPE
+              value: yaml
+            - name: CONSUL_KEY
+              value: amqp-placeholder-saga-coordinator
+            - name: APP_NAME
+              value: amqp-placeholder-saga-coordinator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    evented: amqp-saga-coordinator
+  name: evented-amqp-saga-coordinator-exported
+spec:
+  type: NodePort
+  ports:
+    - port: 40000
+      name: 40000-tcp
+      nodePort: 30809
+  selector:
+    evented: amqp-saga-coordinator
+

@@ -25,9 +25,9 @@ deploy-command-handler:
 	kubectl apply -f applications/commandHandler/commandHandler.yaml
 
 build-command-handler: VER = $(shell python ./devops/support/version/get-version.py)
-build-command-handler: DT = $(shell python -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z'))")
+build-command-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler:build-base build-scratch generate
-	docker build --tag evented-commandhandler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
+	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
 
 bounce-command-handler:
 	kubectl delete pods -l evented=command-handler
@@ -35,7 +35,7 @@ bounce-command-handler:
 build-command-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-command-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler-debug:build-base build-scratch generate
-	docker build --tag evented-commandhandler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/debug.dockerfile .
+	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/debug.dockerfile .
 
 configuration-load-command-handler:
 	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/commandHandler/configuration/sample.yaml
@@ -43,22 +43,50 @@ configuration-load-command-handler:
 logs-command-handler:
 	kubectl logs -l evented=command-handler --tail=100
 
+
+# Sample Business Logic
+deploy-sample-business-logic:
+	kubectl apply -f applications/integrationTest/businessLogic/businessLogic.yaml
+
+build-sample-business-logic: VER = $(shell python ./devops/support/version/get-version.py)
+build-sample-business-logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-business-logic: build-base build-scratch generate
+	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile  .
+
+build-sample-business-logic-debug: VER = $(shell python ./devops/support/version/get-version.py)
+build-sample-business-logic-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-business-logic-debug: build-base build-scratch generate
+	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/debug.dockerfile  .
+
+bounce-sample-business-logic:
+	kubectl delete pods -l evented=sample-business-logic
+
+configuration-load-sample-business-logic:
+	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/integrationTest/businessLogic/configuration/sample.yaml
+
+logs-sample-business-logic:
+	kubectl logs -l evented=sample-business-logic --tail=100
+
+
+build-command-handler-complex: build-sample-business-logic build-command-handler
+
+
 # Query Handler
 deploy-query-handler:
-	kubectl apply -f applications/eventQueryHandler/eventQueryHandler.yaml
+	kubectl apply -f applications/queryHandler/queryHandler.yaml
 
 configuration-load-query-handler:
-	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/eventQueryHandler/configuration/sample.yaml
+	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/queryHandler/configuration/sample.yaml
 
 build-query-handler: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler: build-base build-scratch generate
-	docker build --tag evented-queryhandler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/dockerfile  .
+	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/queryHandler/dockerfile  .
 
 build-query-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler-debug: build-base build-scratch generate
-	docker build --tag evented-queryhandler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/eventQueryHandler/debug.dockerfile  .
+	docker build --tag evented-queryhandler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/queryHandler/debug.dockerfile  .
 
 bounce-query-handler:
 	kubectl delete pods -l evented=query-handler
@@ -92,57 +120,35 @@ bounce-coordinator-projector-amqp:
 
 
 ## Coordinator Async Saga
-#deploy_coordinator-async-saga:
-#	kubectl apply -f applications/coordinators/amqp/saga/amqp-saga-coordinator.yaml
+#deploy_coordinator-async-placeholder-saga:
+#	kubectl apply -f applications/coordinators/amqp/placeholder-saga/amqp-placeholder-saga-coordinator.yaml
 #
-#build-coordinator-async-saga: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-async-saga: build-base build-scratch generate
-#	docker build --tag evented-coordinator-async-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/saga/Dockerfile  .
+#build-coordinator-async-placeholder-saga: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-async-placeholder-saga: build-base build-scratch generate
+#	docker build --tag evented-coordinator-async-placeholder-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/placeholder-saga/Dockerfile  .
 #
 #
 #
 ## Coordinator Sync Projector
-#deploy-coordinator-sync-projector:
-#	kubectl apply -f applications/coordinators/grpc/projector/grpc-projector-coordinator.yaml
+#deploy-coordinator-sync-placeholder-projector:
+#	kubectl apply -f applications/coordinators/grpc/placeholder-projector/grpc-placeholder-projector-coordinator.yaml
 #
-#build-coordinator-sync-projector: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-projector: build-base build-scratch generate
-#	docker build --tag evented-coordinator-sync-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/projector/Dockerfile  .
+#build-coordinator-sync-placeholder-projector: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-placeholder-projector: build-base build-scratch generate
+#	docker build --tag evented-coordinator-sync-placeholder-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/placeholder-projector/Dockerfile  .
 #
 #
 #
 ## Coordinator Sync Saga
-#deploy-coordinator-sync-saga:
-#	kubectl apply -f applications/coordinators/grpc/saga/grpc-saga-coordinator.yaml
+#deploy-coordinator-sync-placeholder-saga:
+#	kubectl apply -f applications/coordinators/grpc/placeholder-saga/grpc-placeholder-saga-coordinator.yaml
 #
-#build-coordinator-sync-saga: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-saga: build-base build-scratch generate
-#	docker build --tag evented-coordinator-sync-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/saga/Dockerfile  .
+#build-coordinator-sync-placeholder-saga: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-placeholder-saga: build-base build-scratch generate
+#	docker build --tag evented-coordinator-sync-placeholder-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/placeholder-saga/Dockerfile  .
 #
 #
 
-# Sample Business Logic
-deploy-sample-business-logic:
-	kubectl apply -f applications/integrationTest/businessLogic/businessLogic.yaml
-
-build-sample-business-logic: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-business-logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-business-logic: build-base build-scratch generate
-	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile  .
-
-build-sample-business-logic-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-business-logic-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-business-logic-debug: build-base build-scratch generate
-	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/debug.dockerfile  .
-
-bounce-sample-business-logic:
-	kubectl delete pods -l evented=sample-business-logic
-
-configuration-load-sample-business-logic:
-	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/integrationTest/businessLogic/configuration/sample.yaml
-
-logs-sample-business-logic:
-	kubectl logs -l evented=sample-business-logic --tail=100
 
 # Sample Projector
 deploy-sample-projector:
@@ -172,11 +178,11 @@ sample-projector-expose:
 
 #
 ## Sample Saga
-#deploy-sample-saga:
-#	kubectl apply -f applications/integrationTest/saga/saga.yaml
+#deploy-sample-placeholder-saga:
+#	kubectl apply -f applications/integrationTest/placeholder-saga/placeholder-saga.yaml
 #
-#build-sample-saga: build-base build-scratch generate
-#	docker build --tag evented-sample-saga:latest --build-arg=latest -f ./applications/integrationTest/saga/debug.dockerfile .
+#build-sample-placeholder-saga: build-base build-scratch generate
+#	docker build --tag evented-sample-placeholder-saga:latest --build-arg=latest -f ./applications/integrationTest/placeholder-saga/debug.dockerfile .
 
 
 ## Developer setup

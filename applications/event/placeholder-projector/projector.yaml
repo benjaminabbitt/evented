@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    evented: sample-projector
+  name: evented-sample-projector
+spec:
+  selector:
+    matchLabels:
+      evented: sample-projector
+  template:
+    metadata:
+      labels:
+        evented: sample-projector
+    spec:
+      containers:
+        - name: evented-sample-placeholder-projector
+          image: evented-sample-projector
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_MGMT_TYPE
+              value: consul
+            - name: CONSUL_HOST
+              value: consul-server.default.svc.cluster.local:8500
+            - name: CONSUL_CONFIG_TYPE
+              value: yaml
+            - name: CONSUL_KEY
+              value: evented-sample-placeholder-projector
+            - name: APP_NAME
+              value: evented-sample-placeholder-projector
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    evented: sample-projector
+  name: evented-sample-projector
+spec:
+  type: NodePort
+  ports:
+    - name: grpc-evented-events
+      port: 1738
+      nodePort: 30003
+    - port: 40000
+      name: 40000-tcp
+      nodePort: 30806
+  selector:
+    evented: sample-projector
+

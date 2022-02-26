@@ -1,0 +1,28 @@
+#YAML 1.2
+---
+business:
+  url: evented-sample-business-logic.default.svc.cluster.local:30001
+
+port: 1313
+domain: domain
+
+snapshotStore:
+  type: mongodb
+  mongodb:
+    url: mongodb://mongodb.default.svc.cluster.local:27017
+    database: commandHandlerSnapshots
+
+transport:
+  type: rabbitmq
+  rabbitmq:
+    url: rabbitmq.default.svc
+    exchange: evented
+
+eventStore:
+  type: mongodb
+  mongodb:
+    url: mongodb://mongodb.default.svc.cluster.local:27017
+    database: commandHandlerEvents
+    collection: eventCollection
+
+proof: pudding
