@@ -169,14 +169,14 @@ func addIfNotLoopback(addr net.IP, externalAddrs []string) (rExternalAddrs []str
 func setupSnapshotRepo(config *configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
 	childSpan := span.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStore().Url, config.SnapshotStore().Name, log)
+	return snapshotmongo.NewSnapshotMongoRepo(config.Snapshots.Mongodb.Url, config.Snapshots.Mongodb.Name, log)
 }
 
 func setupServiceBus(config *configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	ch = make(chan evented.EventBook)
-	trans := sender.NewAMQPSender(ch, config.Transport.AMQP.Url, config.Transport.AMQP.Exchange, log)
+	trans := sender.NewAMQPSender(ch, config.Transport.Rabbitmq.Url, config.Transport.Rabbitmq.Exchange, log)
 	err := trans.Connect()
 	if err != nil {
 		log.Error(err)

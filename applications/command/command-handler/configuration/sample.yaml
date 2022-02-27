@@ -6,23 +6,23 @@ business:
 port: 1313
 domain: domain
 
-snapshotStore:
-  type: mongodb
+snapshots:
+  kind: mongodb
   mongodb:
     url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: commandHandlerSnapshots
+    name: commandHandlerSnapshots
 
 transport:
-  type: rabbitmq
+  kind: rabbitmq
   rabbitmq:
     url: rabbitmq.default.svc
     exchange: evented
 
-eventStore:
-  type: mongodb
+events:
+  kind: mongodb
   mongodb:
     url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: commandHandlerEvents
+    name: commandHandlerEvents
     collection: eventCollection
 
 proof: pudding

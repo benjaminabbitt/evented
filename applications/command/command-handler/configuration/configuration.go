@@ -27,8 +27,8 @@ type Configuration struct {
 		Mongodb SnapshotStore
 	}
 	Transport struct {
-		Kind string
-		AMQP struct {
+		Kind     string
+		Rabbitmq struct {
 			Url      string
 			Exchange string
 		}
