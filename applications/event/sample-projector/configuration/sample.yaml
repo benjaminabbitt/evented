@@ -1,4 +1,5 @@
 #YAML 1.2
 ---
-port: 1738
+port: 1314
 proof: pudding
+name: evented-projector-sample

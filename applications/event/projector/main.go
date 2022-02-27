@@ -12,6 +12,7 @@ import (
 	"github.com/benjaminabbitt/evented/support/grpcHealth"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/support/jaeger"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
@@ -29,13 +30,14 @@ func main() {
 	defer log.Sync()
 	support.LogStartup(log, "AMQP Projector Coordinator Startup")
 
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	baseConfig := support.ConfigInit{}
+	config := &configuration.Configuration{}
+	config = baseConfig.Initialize(log, config).(*configuration.Configuration)
 
-	projectorClient := makeProjectorClient(config)
-
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer closer.Close()
+
+	projectorClient := makeProjectorClient(config, tracer)
 
 	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandler.Url, log, tracer)
 	eventQueryClient := evented.NewEventQueryClient(qhConn)
@@ -60,17 +62,15 @@ func main() {
 		go amqp.ListenRabbit(log, decodedMessageChan, rabbitReceiver, projectorCoordinator)
 	} else if config.Transport.Kind == GRPC {
 		//TODO: Unify approaches/contract here
-		grpc.ListenGRPC(log, &config, tracer)
+		grpc.ListenGRPC(log, config, tracer)
 	}
 
 }
 
-func makeProjectorClient(config configuration.Configuration) evented.ProjectorClient {
+func makeProjectorClient(config *configuration.Configuration, tracer opentracing.Tracer) evented.ProjectorClient {
 	log.Info("Starting...")
 	target := config.Projector.Url
 	log.Infow("Attempting to connect to projector at", "address", target)
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
-	defer closer.Close()
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))
 	eventHandler := evented.NewProjectorClient(conn)

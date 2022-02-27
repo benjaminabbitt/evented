@@ -16,19 +16,19 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 
-{{/*
-Create container names
-*/}}
-{{- define "evented-command-handler.command-handler.name"}}
-{{- printf "evtd-ch-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower }}
-{{- end }}
+{{/**/}}
+{{/*Create container names*/}}
+{{/**/}}
+{{/*{{- define "evented-command-handler.command-handler.name"}}*/}}
+{{/*{{- printf "evtd-ch-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower }}*/}}
+{{/*{{- end }}*/}}
 
-{{/*
-Business Logic names
-*/}}
-{{- define "evented-command-handler.business-logic.name"}}
-{{- printf "evtd-bl-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower}}
-{{- end}}
+{{/**/}}
+{{/*Business Logic names*/}}
+{{/**/}}
+{{/*{{- define "evented-command-handler.business-logic.name"}}*/}}
+{{/*{{- printf "evtd-bl-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower}}*/}}
+{{/*{{- end}}*/}}
 
 {{/*
 Create chart name and version as used by the chart label.

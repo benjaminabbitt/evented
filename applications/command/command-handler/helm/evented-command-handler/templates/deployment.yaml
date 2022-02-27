@@ -28,7 +28,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ include "evented-command-handler.command-handler.name" . }}
+        - name: coordinator
           image: {{ .Values.command_handler.image.repository }}:{{ .Values.command_handler.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.command_handler.image.pullPolicy }}
           ports:
@@ -56,7 +56,8 @@ spec:
               value: evented-command-handler
             - name: APP_NAME
               value: commandHandler
-        - name: {{ include "evented-command-handler.business-logic.name" . }}
+
+        - name: business-logic
           securityContext: {{- toYaml .Values.business_logic.securityContext | nindent 12 }}
           image: "{{ .Values.business_logic.image.repository }}:{{ .Values.business_logic.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}

@@ -25,20 +25,21 @@ func main() {
 		}
 	}()
 
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	initConfig := support.ConfigInit{}
+	config := &configuration.Configuration{}
+	config = initConfig.Initialize(log, config).(*configuration.Configuration)
 
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer jaeger.CloseJaeger(closer, log)
 
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
-	hlthReporter := grpcHealth.RegisterHealthChecks(rpc, config.AppName(), log)
+	hlthReporter := grpcHealth.RegisterHealthChecks(rpc, config.Name, log)
 
 	server := projector.NewPlaceholderProjectorLogic(log, &tracer)
 	evented.RegisterProjectorServer(rpc, server)
 	hlthReporter.OK()
 
-	lis, err := support.OpenPort(config.Port(), log)
+	lis, err := support.OpenPort(config.Port, log)
 
 	err = rpc.Serve(lis)
 	if err != nil {

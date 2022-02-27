@@ -7,6 +7,6 @@ eventStore:
     database: commandHandlerEvents
     collection: eventCollection
 
-port: 1748
+port: 1313
 targetSize: 1024 #Unknown 20220130
 proof: pudding

@@ -36,9 +36,11 @@ var log *zap.SugaredLogger
 
 func main() {
 	log = support.Log()
-	log.Infow("Command Handler", "version", support.Version, "build time", support.BuildTime)
-	conf := configuration.Configuration{}
-	conf.Initialize(log)
+	support.LogStartup(log, "Command Handler")
+
+	baseConfig := support.ConfigInit{}
+	conf := &configuration.Configuration{}
+	conf = baseConfig.Initialize(log, conf).(*configuration.Configuration)
 
 	setupConsul(log, conf)
 
@@ -165,13 +167,13 @@ func addIfNotLoopback(addr net.IP, externalAddrs []string) (rExternalAddrs []str
 	return rExternalAddrs
 }
 
-func setupSnapshotRepo(config configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
+func setupSnapshotRepo(config *configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
 	childSpan := span.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStore().Url, config.SnapshotStore().Name, log)
 }
 
-func setupServiceBus(config configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
+func setupServiceBus(config *configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	ch = make(chan evented.EventBook)
@@ -184,7 +186,7 @@ func setupServiceBus(config configuration.Configuration, span opentracing.Span) 
 	return ch
 }
 
-func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
+func setupEventRepo(config *configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	var eventRepoTypes = []string{"memory", "mongodb"}
@@ -216,7 +218,7 @@ func setupJaeger(serviceName string) (opentracing.Tracer, io.Closer) {
 	return tracer, closer
 }
 
-func setupConsul(log *zap.SugaredLogger, config configuration.Configuration) {
+func setupConsul(log *zap.SugaredLogger, config *configuration.Configuration) {
 	c := consul.NewEventedConsul(config.ConsulHost(), config.Port)
 	id, err := uuid.NewRandom()
 	if err != nil {

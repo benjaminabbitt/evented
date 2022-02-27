@@ -1,6 +1,7 @@
 package support
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 	"go.uber.org/zap"
@@ -28,34 +29,46 @@ func (o *ConfigInit) ConsulKey() string {
 
 const ConfigMgmtType = "CONFIG_MGMT_TYPE"
 const ConsulConfigType = "CONSUL_CONFIG_TYPE"
+const ConsulHostType = "CONSUL_HOST"
+const ConsulKeyType = "CONSUL_KEY"
+const LocalConsul = "localhost:8500"
+const Consul = "consul"
+const Yaml = "yaml"
+const AppNameType = "APP_NAME"
+const AppName = "UnnamedEventedApplication"
 
-func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
+func (o *ConfigInit) Initialize(log *zap.SugaredLogger, config interface{}) interface{} {
 	viper.AutomaticEnv()
-	viper.SetDefault(ConfigMgmtType, "consul")
-	viper.SetDefault(ConsulConfigType, "yaml")
+	viper.SetDefault(ConfigMgmtType, Consul)
+	viper.SetDefault(ConsulConfigType, Yaml)
+	viper.SetDefault(ConsulHostType, LocalConsul)
+	viper.SetDefault(AppNameType, AppName)
+	viper.SetConfigType(Yaml)
 
 	o.configMgmt = viper.GetString(ConfigMgmtType)
-	o.name = viper.GetString("APP_NAME")
+	o.name = viper.GetString(AppNameType)
 	log.Infow("Configuring.", ConfigMgmtType, o.configMgmt)
-	if o.configMgmt == "consul" {
-		o.consulHost = viper.GetString("CONSUL_HOST")
-		o.consulKey = viper.GetString("CONSUL_KEY")
+	if o.configMgmt == Consul {
+		o.consulHost = viper.GetString(ConsulHostType)
+		o.consulKey = viper.GetString(ConsulKeyType)
 		o.consulConfigType = viper.GetString(ConsulConfigType)
+		log.Infow("Attempting to fetch configuration", "provider", o.configMgmt, "host", o.consulHost, "key", o.consulKey)
 		err := viper.AddRemoteProvider("consul", o.consulHost, o.consulKey)
 		if err != nil {
 			log.Fatal(err)
 		}
-		viper.SetConfigType("yaml")
 		err = viper.ReadRemoteConfig()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalw(err.Error(), "key", o.consulKey)
 		}
-		err = viper.Unmarshal(o)
+		err = viper.Unmarshal(config)
+		log.Infow("Configuration set", "configuration", fmt.Sprintf("%+v", config))
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalw(err.Error(), "key", o.consulKey)
 		}
 
 		log.Infow("Read consul.", "Proof", viper.GetString("proof"))
+		return config
 	}
-
+	return nil
 }

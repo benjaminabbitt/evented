@@ -1,17 +1,15 @@
-selectorLabels:
-  selectorLabel: "selectorLabel"
+# Default values for evented-projector.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 
-labels:
-  label: "label"
+replicaCount: 1
 
-port: 1313 #ASCII CQRS +1000 to get out of priv ports
-
-command_handler:
+coordinator:
+  #The projector coordinator is the sidecar that coordinates and drives the projector logic.
   image:
-    repository: evented-command-handler
+    repository: evented-projector
     pullPolicy: Never
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
+    tag: "latest"
   securityContext: { }
   resources: { }
   env:
@@ -22,19 +20,18 @@ command_handler:
     - name: CONSUL_CONFIG_TYPE
       value: yaml
     - name: CONSUL_KEY
-      value: evented-command-handler
+      value: evented-projector
     - name: APP_NAME
-      value: command-handler
+      value: evented-projector
 
 
-business_logic:
+projector:
   image:
-    repository: evented-sample-business-logic
+    repository: evented-sample-projector
     pullPolicy: Never
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: latest
-  securityContext: { }
+    tag: "latest"
   resources: { }
+  securityContext: { }
   env:
     - name: CONFIG_MGMT_TYPE
       value: consul
@@ -43,14 +40,12 @@ business_logic:
     - name: CONSUL_CONFIG_TYPE
       value: yaml
     - name: CONSUL_KEY
-      value: evented-sample-business-logic
+      value: evented-sample-projector
     - name: APP_NAME
-      value: sample-business-logic
+      value: evented-sample-projector
 
 
 imagePullSecrets: [ ]
-
-replicaCount: 1
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -59,7 +54,7 @@ serviceAccount:
   annotations: { }
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "saName"
+  name: ""
 
 podAnnotations: { }
 
@@ -67,7 +62,7 @@ podSecurityContext: { }
 # fsGroup: 2000
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 1313
 
 autoscaling:

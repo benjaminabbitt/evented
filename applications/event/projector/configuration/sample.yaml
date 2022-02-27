@@ -1,25 +1,28 @@
 #YAML 1.2
 ---
 queryHandler:
-  url: evented-query-handler.default.svc.cluster.local:1738
+  url: evented-query-handler.default.svc.cluster.local:1313
+  name: queryHandlerName
 
 transport:
-  type: rabbitmq
-  rabbitmq:
+  kind: amqp
+  amqp:
     url: rabbitmq.default.svc
     exchange: evented
     queue: sample-projector
 
 projector:
-  url: evented-sample-sample-projector.default.svc.cluster.local:1738
+  url: localhost:1314
 
 database:
-  type: mongodb
+  kind: mongodb
   mongodb:
     url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: evented-sample-projector-amqp-default
+    name: evented-sample-projector-amqp-default
+    collection: projector
 
 domain: domain
 
-name: name
-port: 1748
+name: applicationName
+port: 1313
+proof: pudding
