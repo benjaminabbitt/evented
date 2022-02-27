@@ -20,12 +20,15 @@ evented:
   url: business.url
 
 database:
-  url: database.url
-  name: name
+  kind: mongodb
+  mongodb:
+    url: database.url
+    name: name
+    collection: collection
 
 domain: domain
 
 saga:
   url: sample-saga.url
 
-port: 1748
+port: 1313

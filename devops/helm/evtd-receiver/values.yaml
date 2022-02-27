@@ -6,8 +6,8 @@ replicaCount: 1
 
 consumer:
   image:
-    name: "placeholder-projector"
-    image: evented-async-placeholder-projector
+    name: "sample-projector"
+    image: evented-async-sample-projector
     pullPolicy: IfNotPresent
     tag: "latest"
   network:
@@ -17,7 +17,7 @@ consumer:
 coordinator:
   type: async
   image:
-    image: evented-coordinator-async-placeholder-projector
+    image: evented-coordinator-async-sample-projector
     tag: "latest"
     pullPolicy: IfNotPresent
 

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: evented-receiver
-description: The projection and placeholder-saga component and plumbing of the evented framework.
+description: The projection and sample-saga component and plumbing of the evented framework.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

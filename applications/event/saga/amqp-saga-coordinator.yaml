@@ -14,7 +14,7 @@ spec:
         evented: amqp-saga-coordinator
     spec:
       containers:
-        - name: evented-amqp-placeholder-saga-coordinator
+        - name: evented-amqp-sample-saga-coordinator
           image: evented-amqp-saga-coordinator
           imagePullPolicy: Never
           env:
@@ -25,9 +25,9 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: amqp-placeholder-saga-coordinator
+              value: amqp-sample-saga-coordinator
             - name: APP_NAME
-              value: amqp-placeholder-saga-coordinator
+              value: amqp-sample-saga-coordinator
 ---
 apiVersion: v1
 kind: Service

@@ -48,37 +48,37 @@ func main() {
 		closer.Close()
 	}(closer)
 
-	businessAddress := conf.BusinessURL()
+	businessAddress := conf.Business.Url
 	businessClient, _ := client.NewBusinessClient(businessAddress, log)
 
-	commandHandlerPort := conf.Port()
+	commandHandlerPort := conf.Port
 	log.Infow("Starting Business Logic Coordinator", "port", commandHandlerPort)
 
 	eventRepo, _ := setupEventRepo(conf, log, initSpan)
 	ssRepo := setupSnapshotRepo(conf, initSpan)
 
-	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, conf.Domain(), log)
+	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, conf.Domain, log)
 
 	handlers := transport.NewTransportHolder(log)
 
-	for _, url := range conf.SagaURLs() {
-		log.Infow("Connecting with Saga... ", "url", url)
-		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
+	for _, ea := range conf.Sync.Sagas {
+		log.Infow("Connecting with Saga... ", "url", ea.Url)
+		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
 		err := handlers.Add(saga.NewGRPCSagaClient(sagaConn))
 		if err != nil {
 			log.Error(err)
 		}
-		log.Infow("Connection with Saga Successful", "url", url)
+		log.Infow("Connection with Saga Successful", "url", ea.Url)
 	}
 
-	for _, url := range conf.ProjectorURLs() {
-		log.Infow("Connecting with evented... ", "url", url)
-		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(url, log, tracer)
+	for _, ea := range conf.Sync.Projectors {
+		log.Infow("Connecting with evented... ", "url", ea.Url)
+		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
 		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
 		if err != nil {
 			log.Error(err)
 		}
-		log.Infow("Connection with Projector Successful.", "url", url)
+		log.Infow("Connection with Projector Successful.", "url", ea.Url)
 	}
 
 	err := handlers.Add(setupServiceBus(conf, initSpan))
@@ -97,8 +97,8 @@ func main() {
 	if viper.GetBool("bindLocal") {
 		addrs = getExternalAddrs()
 	}
-	log.Infow("Opening port on addresses", "port", conf.Port(), "addrs", addrs)
-	listeners := listen(addrs, conf.Port())
+	log.Infow("Opening port on addresses", "port", conf.Port, "addrs", addrs)
+	listeners := listen(addrs, conf.Port)
 	log.Infow("Creating GRPC Server")
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 	log.Infow("Registering Command Handler with GRPC")
@@ -168,14 +168,14 @@ func addIfNotLoopback(addr net.IP, externalAddrs []string) (rExternalAddrs []str
 func setupSnapshotRepo(config configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
 	childSpan := span.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStoreURL(), config.SnapshotStoreDatabaseName(), log)
+	return snapshotmongo.NewSnapshotMongoRepo(config.SnapshotStore().Url, config.SnapshotStore().Name, log)
 }
 
 func setupServiceBus(config configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	ch = make(chan evented.EventBook)
-	trans := sender.NewAMQPSender(ch, config.TransportURL(), config.TransportExchange(), log)
+	trans := sender.NewAMQPSender(ch, config.Transport.AMQP.Url, config.Transport.AMQP.Exchange, log)
 	err := trans.Connect()
 	if err != nil {
 		log.Error(err)
@@ -188,10 +188,10 @@ func setupEventRepo(config configuration.Configuration, log *zap.SugaredLogger, 
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	var eventRepoTypes = []string{"memory", "mongodb"}
-	if config.EventRepoType() == eventRepoTypes[0] {
+	if config.Events.Kind == eventRepoTypes[0] {
 		repo, err = memory.NewEventRepoMemory(log)
-	} else if config.EventRepoType() == eventRepoTypes[1] {
-		repo, err = eventmongo.NewEventRepoMongo(context.Background(), config.EventStoreURL(), config.EventStoreDatabaseName(), config.EventStoreCollectionName(), log)
+	} else if config.Events.Kind == eventRepoTypes[1] {
+		repo, err = eventmongo.NewEventRepoMongo(context.Background(), config.Events.Mongodb.Url, config.Events.Mongodb.Name, config.Events.Mongodb.Collection, log)
 	} else {
 		log.Error("Specified Event Repository %s does not match one of recognized: ", eventRepoTypes)
 	}
@@ -217,7 +217,7 @@ func setupJaeger(serviceName string) (opentracing.Tracer, io.Closer) {
 }
 
 func setupConsul(log *zap.SugaredLogger, config configuration.Configuration) {
-	c := consul.NewEventedConsul(config.ConsulHost(), config.Port())
+	c := consul.NewEventedConsul(config.ConsulHost(), config.Port)
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)

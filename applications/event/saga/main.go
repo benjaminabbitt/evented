@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/benjaminabbitt/evented/applications/event/saga/configuration"
+	"github.com/benjaminabbitt/evented/applications/event/saga/grpc"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
@@ -25,8 +26,10 @@ func main() {
 	defer log.Sync()
 
 	support.LogStartup(log, "AMQP Saga Coordinator Startup")
-	config := configuration.Configuration{}
+	config := &configuration.Config{}
 	config.Initialize(log)
+
+	log.Info("Configuration", config.Transport.Rabbitmq.Exchange)
 
 	ctx := context.Background()
 
@@ -35,13 +38,13 @@ func main() {
 
 	sagaClient := makeSagaClient(config, tracer)
 
-	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandlerURL(), log, tracer)
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandler.Url, log, tracer)
 	eventQueryClient := evented.NewEventQueryClient(qhConn)
 
-	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlerURL(), log, tracer)
+	ochConn := grpcWithInterceptors.GenerateConfiguredConn(config.OtherCommandHandlers[0].Url, log, tracer)
 	otherCommandHandlerClient := evented.NewBusinessCoordinatorClient(ochConn)
 
-	processedClient := processed.NewProcessedClient(config.DatabaseURL(), config.DatabaseName(), config.CollectionName(), log)
+	processedClient := processed.NewProcessedClient(config.Database.Mongodb.Url, config.Database.Mongodb.Name, config.Database.Mongodb.Collection, log)
 
 	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
 
@@ -51,7 +54,7 @@ func main() {
 			EventQueryClient: eventQueryClient,
 			Log:              log,
 		},
-		Domain:              config.Domain(),
+		Domain:              config.Domain,
 		SagaClient:          sagaClient,
 		OtherCommandHandler: otherCommandHandlerClient,
 		Log:                 log,
@@ -77,12 +80,12 @@ func main() {
 	rabbitReceiver.ListenForever()
 }
 
-func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPDecodedMessage, receiver.AMQPReceiver) {
+func makeRabbitReceiver(config *configuration.Config) (chan receiver.AMQPDecodedMessage, receiver.AMQPReceiver) {
 	outChan := make(chan receiver.AMQPDecodedMessage)
 	receiverInstance := receiver.AMQPReceiver{
-		SourceURL:         config.AMQPURL(),
-		SourceExhangeName: config.AMQPExchange(),
-		SourceQueueName:   config.AMQPQueue(),
+		SourceURL:         config.Transport.Rabbitmq.Url,
+		SourceExhangeName: config.Transport.Rabbitmq.Exchange,
+		SourceQueueName:   config.Transport.Rabbitmq.Queue,
 		Log:               log,
 		OutputChannel:     outChan,
 	}
@@ -94,9 +97,35 @@ func makeRabbitReceiver(config configuration.Configuration) (chan receiver.AMQPD
 	return outChan, receiverInstance
 }
 
-func makeSagaClient(config configuration.Configuration, tracer opentracing.Tracer) evented.SagaClient {
+func makeGRPCReceiver(config configuration.Config, tracer opentracing.Tracer) {
+	sagaURL := config.Saga.Url
+	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log, tracer)
+	log.Infof("Connected to remote %s", sagaURL)
+	sagaClient := evented.NewSagaClient(sagaConn)
+
+	ochUrls := config.OtherCommandHandlers
+	var ochConnections []evented.BusinessCoordinatorClient
+	for _, ochUrl := range ochUrls {
+		otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl.Url, log, tracer)
+		otherCommandHandler := evented.NewBusinessCoordinatorClient(otherCommandConn)
+		ochConnections = append(ochConnections, otherCommandHandler)
+	}
+
+	p := processed.NewProcessedClient(config.Database.Mongodb.Url, config.Database.Mongodb.Name, config.Database.Mongodb.Collection, log)
+	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandler.Url, log, tracer)
+	eventQueryClient := evented.NewEventQueryClient(qhConn)
+	domain := config.Domain
+
+	server := grpc.NewSagaCoordinator(sagaClient, eventQueryClient, ochConnections, p, domain, log, &tracer)
+
+	port := config.Port
+	log.Infow("Starting Saga Proxy Server...", "port", port)
+	server.Listen(port)
+}
+
+func makeSagaClient(config *configuration.Config, tracer opentracing.Tracer) evented.SagaClient {
 	log.Info("Starting...")
-	target := config.BusinessURL()
+	target := config.Saga.Url
 	log.Infow("Attempting to connect to business at", "address", target)
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 	log.Info(fmt.Sprintf("Connected to remote %s", target))

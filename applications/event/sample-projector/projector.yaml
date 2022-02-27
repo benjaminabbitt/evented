@@ -14,7 +14,7 @@ spec:
         evented: sample-projector
     spec:
       containers:
-        - name: evented-sample-placeholder-projector
+        - name: evented-sample-sample-projector
           image: evented-sample-projector
           imagePullPolicy: Never
           env:
@@ -25,9 +25,9 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: evented-sample-placeholder-projector
+              value: evented-sample-sample-projector
             - name: APP_NAME
-              value: evented-sample-placeholder-projector
+              value: evented-sample-sample-projector
 ---
 apiVersion: v1
 kind: Service

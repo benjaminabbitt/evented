@@ -50,6 +50,10 @@ func (o *ConfigInit) Initialize(log *zap.SugaredLogger) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		err = viper.Unmarshal(o)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		log.Infow("Read consul.", "Proof", viper.GetString("proof"))
 	}

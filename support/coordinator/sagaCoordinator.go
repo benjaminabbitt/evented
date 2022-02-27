@@ -19,7 +19,7 @@ type SagaCoordinator struct {
 
 func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.SynchronousProcessingResponse, error) {
 	if eb.Cover.Domain != o.Domain {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match placeholder-saga configured Domain %s", eb.Cover.Domain, o.Domain))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match sample-saga configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
 
 	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented.EventBook) error {
@@ -32,6 +32,7 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook)
 		o.Log.Error(err)
 	}
 	o.Coordinator.MarkProcessed(ctx, eb)
+
 	commandHandlerResponse, err := o.OtherCommandHandler.Record(ctx, sagaResponseBooks)
 	if err != nil {
 		o.Log.Error(err)

@@ -1,76 +1,54 @@
 package configuration
 
 import (
-	"fmt"
 	"github.com/benjaminabbitt/evented/support"
-	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 )
 
 type Configuration struct {
 	support.ConfigInit
-}
-
-func (o *Configuration) BusinessURL() string {
-	return viper.GetString("business.url")
-}
-
-func (o *Configuration) Port() uint {
-	return uint(viper.GetInt64("port"))
-}
-
-func (o *Configuration) Domain() string {
-	return viper.GetString("domain")
-}
-
-func (o *Configuration) SagaURLs() (urls []string) {
-	sagaConfig := viper.GetStringMap("sync.sagas")
-	for name, _ := range sagaConfig {
-		urls = append(urls, viper.GetString("sync.sagas."+name+".url"))
+	Business struct {
+		Url string
 	}
-	return urls
+	Port   uint
+	Domain string
+	Sync   struct {
+		Sagas []struct {
+			Name string
+			Url  string
+		}
+		Projectors []struct {
+			Name string
+			Url  string
+		}
+	}
+	Snapshots struct {
+		Kind    string
+		Mongodb SnapshotStore
+	}
+	Transport struct {
+		Kind string
+		AMQP struct {
+			Url      string
+			Exchange string
+		}
+	}
+	Events struct {
+		Kind    string
+		Mongodb struct {
+			Url        string
+			Name       string
+			Collection string
+		}
+	}
 }
 
-func (o *Configuration) ProjectorURLs() (urls []string) {
-	return viper.GetStringSlice("sync.projectors")
+type SnapshotStore struct {
+	Url        string
+	Name       string
+	Collection string
 }
 
-func (o *Configuration) SnapshotStoreType() string {
-	return viper.GetString("snapshotStore.type")
-}
-
-func (o *Configuration) SnapshotStoreURL() string {
-	return viper.GetString(fmt.Sprintf("snapshotStore.%s.url", o.SnapshotStoreType()))
-}
-
-func (o *Configuration) SnapshotStoreDatabaseName() string {
-	return viper.GetString(fmt.Sprintf("snapshotStore.%s.database", o.SnapshotStoreType()))
-}
-
-func (o *Configuration) TransportType() string {
-	return viper.GetString("transport.type")
-}
-
-func (o *Configuration) TransportURL() string {
-	return viper.GetString(fmt.Sprintf("transport.%s.url", o.TransportType()))
-}
-
-func (o *Configuration) TransportExchange() string {
-	return viper.GetString(fmt.Sprintf("transport.%s.exchange", o.TransportType()))
-}
-
-func (o *Configuration) EventRepoType() string {
-	return viper.GetString("eventStore.type")
-}
-
-func (o *Configuration) EventStoreURL() string {
-	return viper.GetString(fmt.Sprintf("eventStore.%s.url", o.EventRepoType()))
-}
-
-func (o *Configuration) EventStoreDatabaseName() string {
-	return viper.GetString(fmt.Sprintf("eventStore.%s.database", o.EventRepoType()))
-}
-
-func (o *Configuration) EventStoreCollectionName() string {
-	return viper.GetString(fmt.Sprintf("eventStore.%s.collection", o.EventRepoType()))
+func (o Configuration) SnapshotStore() SnapshotStore {
+	return o.Snapshots.Mongodb
 }

@@ -14,7 +14,7 @@ spec:
         evented: coordinator-projector-amqp
     spec:
       containers:
-        - name: evented-coordinator-placeholder-projector-amqp
+        - name: evented-coordinator-sample-projector-amqp
           image: evented-coordinator-projector-amqp
           imagePullPolicy: Never
           env:
@@ -25,9 +25,9 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: evented-coordinator-placeholder-projector-amqp
+              value: evented-coordinator-sample-projector-amqp
             - name: APP_NAME
-              value: evented-coordinator-placeholder-projector-amqp
+              value: evented-coordinator-sample-projector-amqp
 ---
 apiVersion: v1
 kind: Service

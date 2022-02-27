@@ -22,7 +22,7 @@ type ProjectorCoordinator struct {
 
 func (o ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match placeholder-projector configured Domain %s", eb.Cover.Domain, o.Domain))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match sample-projector configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
 	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented.EventBook) error {
 		_, err := o.ProjectorClient.Handle(ctx, eb)

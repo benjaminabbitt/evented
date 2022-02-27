@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/event/placeholder-projector/configuration"
-	"github.com/benjaminabbitt/evented/applications/event/placeholder-projector/projector"
+	"github.com/benjaminabbitt/evented/applications/event/sample-projector/configuration"
+	"github.com/benjaminabbitt/evented/applications/event/sample-projector/projector"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcHealth"

@@ -119,33 +119,36 @@ bounce-coordinator-projector-amqp:
 
 
 
-## Coordinator Async Saga
-#deploy_coordinator-async-placeholder-saga:
-#	kubectl apply -f applications/coordinators/amqp/placeholder-saga/amqp-placeholder-saga-coordinator.yaml
-#
-#build-coordinator-async-placeholder-saga: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-async-placeholder-saga: build-base build-scratch generate
-#	docker build --tag evented-coordinator-async-placeholder-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/placeholder-saga/Dockerfile  .
-#
+##  Saga
+deploy_coordinator-async-sample-saga:
+	kubectl apply -f applications/coordinators/amqp/sample-saga/amqp-sample-saga-coordinator.yaml
+
+build-coordinator-async-sample-saga: VER = $(shell git log -1 --pretty=%h)
+build-coordinator-async-sample-saga: build-base build-scratch generate
+	docker build --tag evented-coordinator-async-sample-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/sample-saga/Dockerfile  .
+
+configuration-load-saga:
+	consul kv put -http-addr=localhost:8500 evented-saga @applications/event/saga/configuration/sample.yaml
+
 #
 #
 ## Coordinator Sync Projector
-#deploy-coordinator-sync-placeholder-projector:
-#	kubectl apply -f applications/coordinators/grpc/placeholder-projector/grpc-placeholder-projector-coordinator.yaml
+#deploy-coordinator-sync-sample-projector:
+#	kubectl apply -f applications/coordinators/grpc/sample-projector/grpc-sample-projector-coordinator.yaml
 #
-#build-coordinator-sync-placeholder-projector: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-placeholder-projector: build-base build-scratch generate
-#	docker build --tag evented-coordinator-sync-placeholder-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/placeholder-projector/Dockerfile  .
+#build-coordinator-sync-sample-projector: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-sample-projector: build-base build-scratch generate
+#	docker build --tag evented-coordinator-sync-sample-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-projector/Dockerfile  .
 #
 #
 #
 ## Coordinator Sync Saga
-#deploy-coordinator-sync-placeholder-saga:
-#	kubectl apply -f applications/coordinators/grpc/placeholder-saga/grpc-placeholder-saga-coordinator.yaml
+#deploy-coordinator-sync-sample-saga:
+#	kubectl apply -f applications/coordinators/grpc/sample-saga/grpc-sample-saga-coordinator.yaml
 #
-#build-coordinator-sync-placeholder-saga: VER = $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-placeholder-saga: build-base build-scratch generate
-#	docker build --tag evented-coordinator-sync-placeholder-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/placeholder-saga/Dockerfile  .
+#build-coordinator-sync-sample-saga: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-sample-saga: build-base build-scratch generate
+#	docker build --tag evented-coordinator-sync-sample-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-saga/Dockerfile  .
 #
 #
 
@@ -178,11 +181,11 @@ sample-projector-expose:
 
 #
 ## Sample Saga
-#deploy-sample-placeholder-saga:
-#	kubectl apply -f applications/integrationTest/placeholder-saga/placeholder-saga.yaml
+#deploy-sample-sample-saga:
+#	kubectl apply -f applications/integrationTest/sample-saga/sample-saga.yaml
 #
-#build-sample-placeholder-saga: build-base build-scratch generate
-#	docker build --tag evented-sample-placeholder-saga:latest --build-arg=latest -f ./applications/integrationTest/placeholder-saga/debug.dockerfile .
+#build-sample-sample-saga: build-base build-scratch generate
+#	docker build --tag evented-sample-sample-saga:latest --build-arg=latest -f ./applications/integrationTest/sample-saga/debug.dockerfile .
 
 
 ## Developer setup

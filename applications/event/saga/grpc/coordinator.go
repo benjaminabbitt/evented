@@ -1,4 +1,4 @@
-package saga
+package grpc
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewSagaCoordinator(sagaClient evented.SagaClient, eventQueryClient evented.EventQueryClient, otherCommandHandlerClient evented.BusinessCoordinatorClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
+func NewSagaCoordinator(sagaClient evented.SagaClient, eventQueryClient evented.EventQueryClient, otherCommandHandlerClient []evented.BusinessCoordinatorClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
 	universalCoordinator := &coordinator.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -21,7 +21,7 @@ func NewSagaCoordinator(sagaClient evented.SagaClient, eventQueryClient evented.
 		Coordinator:         universalCoordinator,
 		Domain:              domain,
 		SagaClient:          sagaClient,
-		OtherCommandHandler: otherCommandHandlerClient,
+		OtherCommandHandler: otherCommandHandlerClient[0],
 	}
 	return Coordinator{
 		coordinator: universalSagaCoordinator,

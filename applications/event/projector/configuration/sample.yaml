@@ -8,15 +8,18 @@ transport:
   rabbitmq:
     url: rabbitmq.default.svc
     exchange: evented
-    queue: placeholder-projector
+    queue: sample-projector
 
-evented:
-  url: evented-sample-placeholder-projector.default.svc.cluster.local:1738
+projector:
+  url: evented-sample-sample-projector.default.svc.cluster.local:1738
 
 database:
   type: mongodb
   mongodb:
     url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: evented-placeholder-projector-amqp-default
+    database: evented-sample-projector-amqp-default
 
 domain: domain
+
+name: name
+port: 1748

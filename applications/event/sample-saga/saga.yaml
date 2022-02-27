@@ -14,7 +14,7 @@ spec:
         evented: sample-saga
     spec:
       containers:
-        - name: evented-sample-placeholder-saga
+        - name: evented-sample-sample-saga
           image: evented-sample-saga
           imagePullPolicy: Never
           env:
@@ -25,9 +25,9 @@ spec:
             - name: CONSUL_CONFIG_TYPE
               value: yaml
             - name: CONSUL_KEY
-              value: placeholder-saga
+              value: sample-saga
             - name: APP_NAME
-              value: placeholder-saga
+              value: sample-saga
 ---
 apiVersion: v1
 kind: Service

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/benjaminabbitt/evented/applications/event/placeholder-saga/configuration"
-	"github.com/benjaminabbitt/evented/applications/event/placeholder-saga/saga"
+	"github.com/benjaminabbitt/evented/applications/event/sample-saga/configuration"
+	"github.com/benjaminabbitt/evented/applications/event/sample-saga/saga"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/jaeger"
 	"go.uber.org/zap"
