@@ -23,12 +23,12 @@ func main() {
 	defer log.Sync()
 	support.LogStartup(log, "Sample Business Logic")
 
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	config := &configuration.Configuration{}
+	config = support.Initialize(log, config).(*configuration.Configuration)
 
 	setupConsul(config)
 
-	tracer, closer := jaeger.NewTracer(config.AppName(),
+	tracer, closer := jaeger.NewTracer(config.Name,
 		jaeger.NewConstSampler(true),
 		jaeger.NewInMemoryReporter(),
 	)
@@ -38,14 +38,14 @@ func main() {
 		}
 	}()
 
-	lis, err := support.OpenPort(config.Port(), log)
+	lis, err := support.OpenPort(config.Port, log)
 
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 
 	server := businessLogic.NewPlaceholderBusinessLogicServer(log)
 	evented.RegisterBusinessLogicServer(rpc, server)
 
-	grpcHealth.RegisterHealthChecks(rpc, config.AppName(), log)
+	grpcHealth.RegisterHealthChecks(rpc, config.Name, log)
 
 	log.Infow("Starting Business Server...")
 	err = rpc.Serve(lis)
@@ -55,13 +55,13 @@ func main() {
 	}
 }
 
-func setupConsul(config configuration.Configuration) {
-	c := consul.NewEventedConsul(config.ConsulHost(), config.Port())
+func setupConsul(config *configuration.Configuration) {
+	c := consul.NewEventedConsul(config.ConsulHost, config.Port)
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)
 	}
-	err = c.Register(config.AppName(), id.String())
+	err = c.Register(config.Name, id.String())
 	if err != nil {
 		log.Error(err)
 	}

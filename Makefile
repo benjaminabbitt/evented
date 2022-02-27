@@ -21,13 +21,17 @@ build-scratch:
 
 
 # Command Handler
+scratch-deploy-command-handler: build-command-handler build-sample-business-logic configuration-load-command-handler configuration-load-sample-business-logic deploy-command-handler
+debug-deploy-command-handler: build-command-handler-debug build-sample-business-logic-debug build-command-handler build-sample-business-logic configuration-load-command-handler configuration-load-sample-business-logic deploy-command-handler
+
 deploy-command-handler:
-	kubectl apply -f applications/commandHandler/commandHandler.yaml
+	-helm delete sample-command-handler-deployment
+	helm install sample-command-handler-deployment ./applications/command/command-handler/helm/evented-command-handler --debug
 
 build-command-handler: VER = $(shell python ./devops/support/version/get-version.py)
 build-command-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler:build-base build-scratch generate
-	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/dockerfile .
+	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 bounce-command-handler:
 	kubectl delete pods -l evented=command-handler
@@ -35,10 +39,10 @@ bounce-command-handler:
 build-command-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-command-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler-debug:build-base build-scratch generate
-	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/commandHandler/debug.dockerfile .
+	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/debug.dockerfile .
 
 configuration-load-command-handler:
-	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/commandHandler/configuration/sample.yaml
+	consul kv put -http-addr=localhost:8500 evented-command-handler @applications/command/command-handler/configuration/sample.yaml
 
 logs-command-handler:
 	kubectl logs -l app.kubernetes.io/name=evtd-command-handler --all-containers=true --tail=-1
@@ -51,24 +55,16 @@ deploy-sample-business-logic:
 build-sample-business-logic: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-business-logic: build-base build-scratch generate
-	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/dockerfile  .
+	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
 build-sample-business-logic-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-business-logic-debug: build-base build-scratch generate
-	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/integrationTest/businessLogic/debug.dockerfile  .
-
-bounce-sample-business-logic:
-	kubectl delete pods -l evented=sample-business-logic
+	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
 
 configuration-load-sample-business-logic:
-	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/integrationTest/businessLogic/configuration/sample.yaml
+	consul kv put -http-addr=localhost:8500 evented-sample-business-logic @applications/command/sample-business-logic/configuration/sample.yaml
 
-logs-sample-business-logic:
-	kubectl logs -l evented=sample-business-logic --tail=100
-
-
-build-command-handler-complex: build-sample-business-logic build-command-handler
 
 
 # Query Handler
@@ -95,6 +91,8 @@ logs-query-handler:
 	kubectl logs -l evented=query-handler --tail=100
 
 # Projector
+scratch-deploy-projector: build-projector build-sample-projector configuration-load-projector configuration-load-sample-projector deploy-projector
+
 build-projector: VER = $(shell python ./devops/support/version/get-version.py)
 build-projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-projector: build-base build-scratch generate
@@ -116,15 +114,17 @@ build-sample-projector-debug: build-base build-scratch generate
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/debug.dockerfile .
 
 deploy-projector:
-	helm delete sample-projector-deployment
+	-helm delete sample-projector-deployment
 	helm install sample-projector-deployment ./applications/event/projector/helm/evented-projector --debug
 
 bounce-projector:
 	kubectl delete pods -l app.kubernetes.io/name=evented-projector
 
 configuration-load-projector:
-	consul kv put -http-addr=localhost:8500 evented-sample-projector @applications/event/sample-projector/configuration/sample.yaml
 	consul kv put -http-addr=localhost:8500 evented-projector @applications/event/projector/configuration/sample.yaml
+
+configuration-load-sample-projector:
+	consul kv put -http-addr=localhost:8500 evented-sample-projector @applications/event/sample-projector/configuration/sample.yaml
 
 logs-projector:
 	kubectl logs -l app.kubernetes.io/name=evented-projector --all-containers=true --tail=-1

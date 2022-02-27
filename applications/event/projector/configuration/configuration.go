@@ -1,6 +1,9 @@
 package configuration
 
+import "github.com/benjaminabbitt/evented/support"
+
 type Configuration struct {
+	support.ConfigInitS
 	QueryHandler struct {
 		Url  string
 		Name string
@@ -24,7 +27,6 @@ type Configuration struct {
 			Collection string
 		}
 	}
-	Name   string
 	Port   uint
 	Domain string
 }

@@ -38,13 +38,12 @@ func main() {
 	log = support.Log()
 	support.LogStartup(log, "Command Handler")
 
-	baseConfig := support.ConfigInit{}
 	conf := &configuration.Configuration{}
-	conf = baseConfig.Initialize(log, conf).(*configuration.Configuration)
+	conf = support.Initialize(log, conf).(*configuration.Configuration)
 
 	setupConsul(log, conf)
 
-	tracer, closer := setupJaeger(conf.AppName())
+	tracer, closer := setupJaeger(conf.Name)
 	initSpan := tracer.StartSpan("Init")
 	defer func(closer io.Closer) {
 		closer.Close()
@@ -219,12 +218,12 @@ func setupJaeger(serviceName string) (opentracing.Tracer, io.Closer) {
 }
 
 func setupConsul(log *zap.SugaredLogger, config *configuration.Configuration) {
-	c := consul.NewEventedConsul(config.ConsulHost(), config.Port)
+	c := consul.NewEventedConsul(config.ConsulHost, config.Port)
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error(err)
 	}
-	err = c.Register(config.AppName(), id.String())
+	err = c.Register(config.Name, id.String())
 	if err != nil {
 		log.Error("Error registering with Consul", err)
 	}

@@ -25,9 +25,8 @@ func main() {
 		}
 	}()
 
-	initConfig := support.ConfigInit{}
 	config := &configuration.Configuration{}
-	config = initConfig.Initialize(log, config).(*configuration.Configuration)
+	config = support.Initialize(log, config).(*configuration.Configuration)
 
 	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer jaeger.CloseJaeger(closer, log)

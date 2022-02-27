@@ -63,7 +63,7 @@ spec:
           imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}
           ports:
             - name: evtd
-              containerPort: {{.Values.port | default 1313 }}
+              containerPort: {{.Values.port | default 1314 }}
               protocol: TCP
   {{/* TODO: build grpc liveness and readiness probes once docker desktop updates k8s to 1.23 */}}
 {{/*          livenessProbe:*/}}

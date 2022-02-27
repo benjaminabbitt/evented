@@ -30,9 +30,8 @@ func main() {
 	defer log.Sync()
 	support.LogStartup(log, "AMQP Projector Coordinator Startup")
 
-	baseConfig := support.ConfigInit{}
 	config := &configuration.Configuration{}
-	config = baseConfig.Initialize(log, config).(*configuration.Configuration)
+	config = support.Initialize(log, config).(*configuration.Configuration)
 
 	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer closer.Close()

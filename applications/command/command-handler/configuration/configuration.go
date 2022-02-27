@@ -6,7 +6,7 @@ import (
 )
 
 type Configuration struct {
-	support.ConfigInit
+	support.ConfigInitS
 	Business struct {
 		Url string
 	}
