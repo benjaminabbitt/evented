@@ -1,4 +1,4 @@
-package projector
+package grpc
 
 import (
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"

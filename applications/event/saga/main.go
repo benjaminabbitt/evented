@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/event/saga/amqp"
 	"github.com/benjaminabbitt/evented/applications/event/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/event/saga/grpc"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
@@ -11,7 +11,6 @@ import (
 	"github.com/benjaminabbitt/evented/support/coordinator"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/support/jaeger"
-	"github.com/benjaminabbitt/evented/transport/async/amqp/receiver"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 )
@@ -31,8 +30,6 @@ func main() {
 
 	log.Info("Configuration", config.Transport.Rabbitmq.Exchange)
 
-	ctx := context.Background()
-
 	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
 	defer closer.Close()
 
@@ -46,9 +43,7 @@ func main() {
 
 	processedClient := processed.NewProcessedClient(config.Database.Mongodb.Url, config.Database.Mongodb.Name, config.Database.Mongodb.Collection, log)
 
-	decodedMessageChan, rabbitReceiver := makeRabbitReceiver(config)
-
-	sagaCoordinator := coordinator.SagaCoordinator{
+	sagaCoordinator := &coordinator.SagaCoordinator{
 		Coordinator: &coordinator.Coordinator{
 			Processed:        processedClient,
 			EventQueryClient: eventQueryClient,
@@ -60,67 +55,12 @@ func main() {
 		Log:                 log,
 	}
 
-	go func() {
-		for {
-			msg := <-decodedMessageChan
-			err := sagaCoordinator.Handle(ctx, msg.Book)
-			if err == nil {
-				err := msg.Ack()
-				if err != nil {
-					log.Error(err)
-				}
-			} else {
-				err = msg.Nack()
-				if err != nil {
-					log.Error(err)
-				}
-			}
-		}
-	}()
-	rabbitReceiver.ListenForever()
-}
-
-func makeRabbitReceiver(config *configuration.Config) (chan receiver.AMQPDecodedMessage, receiver.AMQPReceiver) {
-	outChan := make(chan receiver.AMQPDecodedMessage)
-	receiverInstance := receiver.AMQPReceiver{
-		SourceURL:         config.Transport.Rabbitmq.Url,
-		SourceExhangeName: config.Transport.Rabbitmq.Exchange,
-		SourceQueueName:   config.Transport.Rabbitmq.Queue,
-		Log:               log,
-		OutputChannel:     outChan,
+	if config.Transport.Kind == grpc.NAME {
+		grpc.ListenGRPC(log, config, tracer)
+	} else if config.Transport.Kind == amqp.NAME {
+		decodedMessageChan, rabbitReceiver := amqp.MakeRabbitReceiver(log, config)
+		go amqp.ListenRabbit(log, decodedMessageChan, rabbitReceiver, sagaCoordinator)
 	}
-	err := receiverInstance.Connect()
-	if err != nil {
-		log.Error(err)
-	}
-	log.Infow("Created RabbitMQ Receiver", "url", receiverInstance.SourceURL, "queue", receiverInstance.SourceQueueName)
-	return outChan, receiverInstance
-}
-
-func makeGRPCReceiver(config configuration.Config, tracer opentracing.Tracer) {
-	sagaURL := config.Saga.Url
-	sagaConn := grpcWithInterceptors.GenerateConfiguredConn(sagaURL, log, tracer)
-	log.Infof("Connected to remote %s", sagaURL)
-	sagaClient := evented.NewSagaClient(sagaConn)
-
-	ochUrls := config.OtherCommandHandlers
-	var ochConnections []evented.BusinessCoordinatorClient
-	for _, ochUrl := range ochUrls {
-		otherCommandConn := grpcWithInterceptors.GenerateConfiguredConn(ochUrl.Url, log, tracer)
-		otherCommandHandler := evented.NewBusinessCoordinatorClient(otherCommandConn)
-		ochConnections = append(ochConnections, otherCommandHandler)
-	}
-
-	p := processed.NewProcessedClient(config.Database.Mongodb.Url, config.Database.Mongodb.Name, config.Database.Mongodb.Collection, log)
-	qhConn := grpcWithInterceptors.GenerateConfiguredConn(config.QueryHandler.Url, log, tracer)
-	eventQueryClient := evented.NewEventQueryClient(qhConn)
-	domain := config.Domain
-
-	server := grpc.NewSagaCoordinator(sagaClient, eventQueryClient, ochConnections, p, domain, log, &tracer)
-
-	port := config.Port
-	log.Infow("Starting Saga Proxy Server...", "port", port)
-	server.Listen(port)
 }
 
 func makeSagaClient(config *configuration.Config, tracer opentracing.Tracer) evented.SagaClient {

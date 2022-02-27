@@ -120,14 +120,14 @@ bounce-coordinator-projector-amqp:
 
 
 ##  Saga
-deploy_coordinator-async-sample-saga:
-	kubectl apply -f applications/coordinators/amqp/sample-saga/amqp-sample-saga-coordinator.yaml
+deploy-coordinator-saga:
+	ls
 
-build-coordinator-async-sample-saga: VER = $(shell git log -1 --pretty=%h)
-build-coordinator-async-sample-saga: build-base build-scratch generate
-	docker build --tag evented-coordinator-async-sample-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/amqp/sample-saga/Dockerfile  .
+build-coordinator-saga: VER = $(shell git log -1 --pretty=%h)
+build-coordinator-saga: build-base build-scratch generate
+	docker build --tag evented-coordinator-saga:$(VER) --build-arg=$(VER) -f ./applications/event/projector/dockerfile  .
 
-configuration-load-saga:
+configuration-load-coordinator-saga:
 	consul kv put -http-addr=localhost:8500 evented-saga @applications/event/saga/configuration/sample.yaml
 
 #
