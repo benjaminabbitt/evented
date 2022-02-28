@@ -20,28 +20,28 @@ func main() {
 			log.Errorw("Error syncing logs", err)
 		}
 	}()
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	config := &configuration.Configuration{}
+	config = support.Initialize(log, config).(*configuration.Configuration)
 
-	mongoUrl := config.DatabaseURL()
-	databaseName := config.DatabaseName()
-	collectionName := config.DatabaseCollection()
+	mongoUrl := config.EventStore.Mongodb.Url
+	databaseName := config.EventStore.Mongodb.Name
+	collectionName := config.EventStore.Mongodb.Collection
 
 	repo, err := mongo.NewEventRepoMongo(context.Background(), mongoUrl, databaseName, collectionName, log)
 	if err != nil {
 		log.Error(err)
 	}
 
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer jaeger.CloseJaeger(closer, log)
 
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
-	hlthReporter := grpcHealth.RegisterHealthChecks(rpc, config.AppName(), log)
-	server := eventQueryServer.NewEventQueryServer(config.EventBookTargetSize(), repo, log)
+	hlthReporter := grpcHealth.RegisterHealthChecks(rpc, config.Name, log)
+	server := eventQueryServer.NewEventQueryServer(config.TargetSize, repo, log)
 	evented.RegisterEventQueryServer(rpc, server)
 	hlthReporter.OK()
 
-	lis, err := support.OpenPort(config.Port(), log)
+	lis, err := support.OpenPort(config.Port, log)
 
 	err = rpc.Serve(lis)
 	if err != nil {

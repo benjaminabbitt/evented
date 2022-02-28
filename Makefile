@@ -68,21 +68,24 @@ configuration-load-sample-business-logic:
 
 
 # Query Handler
+scratch-deploy-query-handler: build-query-handler configuration-load-query-handler deploy-query-handler
+
 deploy-query-handler:
-	kubectl apply -f applications/queryHandler/queryHandler.yaml
+	-helm delete sample-query-handler-deployment
+	helm install sample-query-handler-deployment ./applications/command/query-handler/helm/evented-query-handler --debug
 
 configuration-load-query-handler:
-	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/queryHandler/configuration/sample.yaml
+	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/command/query-handler/configuration/sample.yaml
 
 build-query-handler: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler: build-base build-scratch generate
-	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/queryHandler/dockerfile  .
+	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/dockerfile  .
 
 build-query-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler-debug: build-base build-scratch generate
-	docker build --tag evented-queryhandler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/queryHandler/debug.dockerfile  .
+	docker build --tag evented-query-handler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/debug.dockerfile  .
 
 bounce-query-handler:
 	kubectl delete pods -l evented=query-handler

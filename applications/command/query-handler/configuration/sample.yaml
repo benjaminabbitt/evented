@@ -1,10 +1,10 @@
 #YAML 1.2
 ---
 eventStore:
-  type: mongodb
+  kind: mongodb
   mongodb:
     url: mongodb://mongodb.default.svc.cluster.local:27017
-    database: commandHandlerEvents
+    name: commandHandlerEvents
     collection: eventCollection
 
 port: 1313
