@@ -14,9 +14,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient, log *zap.SugaredLogger) Server {
+func NewServer(actx CommandHandlerApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
 	return Server{
-		log:                 log,
+		retry:               actx.RetryStrategy(),
+		log:                 actx.Log(),
 		eventBookRepository: eventBookRepository,
 		transports:          transports,
 		businessClient:      businessClient,
@@ -29,6 +30,7 @@ func (o *Server) Shutdown() {
 
 type Server struct {
 	evented.UnimplementedBusinessCoordinatorServer
+	retry               backoff.BackOff
 	log                 *zap.SugaredLogger
 	eventBookRepository eventBook.Storer
 	transports          transport.Holder
@@ -55,7 +57,7 @@ func (o Server) Handle(ctx context.Context, in *evented.CommandBook) (result *ev
 	err = backoff.Retry(func() error {
 		businessResponse, err = o.businessClient.Handle(ctx, contextualCommand)
 		return err
-	}, backoff.NewExponentialBackOff())
+	}, o.retry)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +108,11 @@ func (o Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) (
 	for _, syncSaga := range o.transports.GetSaga() {
 		var response *evented.SynchronousProcessingResponse
 		var err error
-		backoff.Retry(func() error {
+		err = backoff.Retry(func() error {
 			response, err = syncSaga.HandleSync(ctx, sync)
 			return err
-		}, backoff.NewExponentialBackOff())
+		}, o.retry)
+
 		if err != nil {
 			o.log.Error(err)
 			rerr = multierror.Append(rerr, err)
@@ -126,10 +129,10 @@ func (o Server) executeSyncProjections(ctx context.Context, sync *evented.EventB
 	for _, syncProjector := range o.transports.GetProjectors() {
 		var response *evented.Projection
 		var err error
-		backoff.Retry(func() error {
+		err = backoff.Retry(func() error {
 			response, err = syncProjector.HandleSync(ctx, sync)
 			return err
-		}, backoff.NewExponentialBackOff())
+		}, o.retry)
 		if err != nil {
 			o.log.Error(err)
 			rerr = multierror.Append(rerr, err)

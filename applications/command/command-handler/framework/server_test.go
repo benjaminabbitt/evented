@@ -3,6 +3,7 @@ package framework
 import (
 	"context"
 	"errors"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/mocks"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
@@ -10,16 +11,16 @@ import (
 	transportMock "github.com/benjaminabbitt/evented/transport/async/mock"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 	"testing"
 )
 
 type ServerSuite struct {
 	suite.Suite
-	log            *zap.SugaredLogger
+	actx           *BasicCommandHandlerApplicationContext
 	domainA        string
 	domainB        string
 	ctx            context.Context
@@ -30,27 +31,37 @@ type ServerSuite struct {
 }
 
 func (o *ServerSuite) SetupTest() {
-	o.log = support.Log()
-	defer func(log *zap.SugaredLogger) {
+	log := support.Log()
+	retryStrategy := &backoff.StopBackOff{}
+	config := &configuration.Configuration{}
+	o.actx = &BasicCommandHandlerApplicationContext{
+		BasicApplicationContext: support.BasicApplicationContext{
+			RetryStrategy: retryStrategy,
+			Log:           log,
+		},
+		Config: config,
+	}
+
+	defer func(actx support.ApplicationContext) {
 		err := log.Sync()
 		if err != nil {
 			log.Error(err)
 		}
-	}(o.log)
+	}(o.actx)
 	o.domainA = "testA"
 	o.domainB = "testB"
 	o.ctx = context.Background()
 	o.eventBookRepo = new(mocks.Storer)
 	o.holder = new(mocks.Holder)
 	o.businessClient = new(mocks.BusinessClient)
-	o.server = NewServer(o.eventBookRepo, o.holder, o.businessClient, o.log)
+	o.server = NewServer(o.actx, o.eventBookRepo, o.holder, o.businessClient)
 }
 
 func (o ServerSuite) Test_Handle() {
 	eventBookRepo := new(mocks.Storer)
 	holder := new(mocks.Holder)
 	businessClient := new(mocks.BusinessClient)
-	server := NewServer(eventBookRepo, holder, businessClient, o.log)
+	server := NewServer(o.actx, eventBookRepo, holder, businessClient)
 
 	commandBook := o.produceCommandBook()
 
@@ -157,7 +168,7 @@ func (o ServerSuite) Test_HandleWithTransports() {
 	o.holder.On("GetTransports").Return([]chan *evented.EventBook{ch})
 	o.server.Handle(context.Background(), commandBook)
 	test := <-ch
-	o.log.Info(test)
+	o.actx.Log().Info(test)
 	mockProjector.AssertExpectations(o.T())
 	mockSaga.AssertExpectations(o.T())
 	o.holder.AssertExpectations(o.T())
@@ -254,6 +265,7 @@ func (o ServerSuite) TestBusinessClientError() {
 	_, err := o.server.Handle(o.ctx, book)
 	o.Assert().Error(err)
 }
+
 func (o ServerSuite) TestEventBookRepositoryPutError() {
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)

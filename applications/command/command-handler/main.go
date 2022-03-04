@@ -20,6 +20,7 @@ import (
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -46,7 +47,10 @@ func main() {
 	tracer, closer := setupJaeger(conf.Name)
 	initSpan := tracer.StartSpan("Init")
 	defer func(closer io.Closer) {
-		closer.Close()
+		err := closer.Close()
+		if err != nil {
+			log.Error(err)
+		}
 	}(closer)
 
 	businessAddress := conf.Business.Url
@@ -78,11 +82,19 @@ func main() {
 
 	handlers.AddEventBookChan(setupServiceBus(conf, initSpan))
 
+	actx := &framework.BasicCommandHandlerApplicationContext{
+		BasicApplicationContext: support.BasicApplicationContext{
+			RetryStrategy: backoff.NewExponentialBackOff(),
+			Log:           log,
+		},
+		Config: conf,
+	}
+
 	server := framework.NewServer(
+		actx,
 		repo,
 		handlers,
 		businessClient,
-		log,
 	)
 
 	var addrs []string

@@ -1,11 +1,16 @@
 package support
 
 import (
-	"context"
+	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 )
 
-type ApplicationContext struct {
-	context.Context
-	log *zap.SugaredLogger
+type BasicApplicationContext struct {
+	RetryStrategy backoff.BackOff
+	Log           *zap.SugaredLogger
+}
+
+type ApplicationContext interface {
+	RetryStrategy() backoff.BackOff
+	Log() *zap.SugaredLogger
 }
