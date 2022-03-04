@@ -5,8 +5,8 @@ import (
 	"github.com/benjaminabbitt/evented/mocks"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
-
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -92,7 +92,7 @@ func (o *EventBookRepositorySuite) Test_Get() {
 	}
 	ctx := context.Background()
 	o.snapshotRepository.On("Get", ctx, o.id).Return(snapshot, nil)
-	o.eventRepository.On("GetFrom", ctx, o.eventPageRepositoryStream, o.id, uint32(0)).Return(nil)
+	o.eventRepository.On("GetFrom", ctx, mock.Anything, o.id, uint32(0)).Return(nil)
 	root := evented_proto.UUIDToProto(o.id)
 	expected := evented.EventBook{
 		Cover: &evented.Cover{

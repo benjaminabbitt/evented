@@ -6,10 +6,7 @@ build: build-command-handler build-query-handler build-coordinator-async-project
 build-debug: build-command-handler-debug
 load-all: configuration-load-command-handler
 
-stage:
-	docker pull namely/protoc-all
-
-generate:
+generate: install-deps
 	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/evented.proto -l go -o gen
 
 build-base:
@@ -18,6 +15,20 @@ build-base:
 build-scratch:
 	docker build --tag scratch-foundation -f ./scratch-foundation.dockerfile .
 
+##Test
+test:
+	go test ./...
+
+vet:
+	go vet ./...
+
+
+install-deps:
+	go install github.com/vektra/mockery/v2@latest
+	docker pull namely/protoc-all
+
+generate-mocks:
+	mockery --all
 
 
 # Command Handler
@@ -30,7 +41,7 @@ deploy-command-handler:
 
 build-command-handler: VER = $(shell python ./devops/support/version/get-version.py)
 build-command-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-command-handler:build-base build-scratch generate
+build-command-handler:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 bounce-command-handler:
@@ -38,7 +49,7 @@ bounce-command-handler:
 
 build-command-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-command-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-command-handler-debug:build-base build-scratch generate
+build-command-handler-debug:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/debug.dockerfile .
 
 configuration-load-command-handler:
@@ -54,12 +65,12 @@ deploy-sample-business-logic:
 
 build-sample-business-logic: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-business-logic: build-base build-scratch generate
+build-sample-business-logic: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
 build-sample-business-logic-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-business-logic-debug: build-base build-scratch generate
+build-sample-business-logic-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
 
 configuration-load-sample-business-logic:
@@ -79,12 +90,12 @@ configuration-load-query-handler:
 
 build-query-handler: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-query-handler: build-base build-scratch generate
+build-query-handler: build-base build-scratch generate generate-mocks
 	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/dockerfile  .
 
 build-query-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-query-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-query-handler-debug: build-base build-scratch generate
+build-query-handler-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-query-handler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/debug.dockerfile  .
 
 bounce-query-handler:
@@ -98,22 +109,22 @@ scratch-deploy-projector: build-projector build-sample-projector configuration-l
 
 build-projector: VER = $(shell python ./devops/support/version/get-version.py)
 build-projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-projector: build-base build-scratch generate
+build-projector: build-base build-scratch generate generate-mocks
 	docker build --tag evented-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/dockerfile  .
 
 build-projector-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-projector-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-projector-debug: build-base build-scratch generate
+build-projector-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-projector:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/debug.dockerfile  .
 
 build-sample-projector: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-projector: build-base build-scratch generate
+build-sample-projector: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/dockerfile .
 
 build-sample-projector-debug: VER = $(shell python ./devops/support/version/get-version.py)
 build-sample-projector-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
-build-sample-projector-debug: build-base build-scratch generate
+build-sample-projector-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/debug.dockerfile .
 
 deploy-projector:
@@ -182,13 +193,13 @@ sample-projector-expose:
 
 
 ## Developer setup
-setup: install-consul rabbit-install mongo-install
+setup: install-consul install-rabbit install-mongo install-deps
 
 ## Consul Shortcuts
 install-consul:
 	helm repo add hashicorp https://helm.releases.hashicorp.com
 	helm repo update
-	helm install consul hashicorp/consul --wait --set global.name=consul --values ./devops/helm/consul/values.yaml
+	helm install evented-consul hashicorp/consul --wait --set global.name=consul --values ./devops/helm/consul/values.yaml
 
 consul-ui-expose:
 	kubectl port-forward svc/consul-ui 80
@@ -198,10 +209,10 @@ consul-service-expose:
 
 
 ## RabbitMQ Shortcuts
-rabbit-install:
+install-rabbit:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo update
-	helm install rabbitmq bitnami/rabbitmq --wait --values ./devops/helm/rabbitmq/values.yaml
+	helm install evented-rabbitmq bitnami/rabbitmq --wait --values ./devops/helm/rabbitmq/values.yaml
 
 rabbit-ui-expose:
 	kubectl port-forward svc/rabbitmq 15672:15672
@@ -220,22 +231,8 @@ mongo-service-expose:
 mongo-extract-password:
 	@python devops/support/get-secret/get-secret.py --namespace="default" --name="mongodb" --secret="mongodb-root-password"
 
-mongo-install:
+install-mongo:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo update
-	helm install mongodb bitnami/mongodb --wait --values ./devops/helm/mongodb/values.yaml
+	helm install evented-mongodb bitnami/mongodb --wait --values ./devops/helm/mongodb/values.yaml
 
-
-##Test
-test:
-	go test ./...
-
-vet:
-	go vet ./...
-
-
-install-deps:
-	go install github.com/vektra/mockery/v2@latest
-
-generate-mocks:
-	mockery --all

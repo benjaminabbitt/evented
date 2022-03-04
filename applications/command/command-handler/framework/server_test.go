@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/mocks"
-	evented_proto "github.com/benjaminabbitt/evented/proto"
+	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	transportMock "github.com/benjaminabbitt/evented/transport/async/mock"
@@ -65,7 +65,7 @@ func (o ServerSuite) Test_Handle() {
 
 	commandBook := o.produceCommandBook()
 
-	id, _ := evented_proto.ProtoToUUID(commandBook.Cover.Root)
+	id, _ := eventedproto.ProtoToUUID(commandBook.Cover.Root)
 
 	eventBookRepo.On("Get", mock.Anything, id).Return(o.produceHistoricalEventBook(commandBook), nil)
 
@@ -90,7 +90,7 @@ func (o ServerSuite) Test_HandleWithTransports() {
 
 	commandBook := o.produceCommandBook()
 
-	id, _ := evented_proto.ProtoToUUID(commandBook.Cover.Root)
+	id, _ := eventedproto.ProtoToUUID(commandBook.Cover.Root)
 	o.eventBookRepo.On("Get", mock.Anything, id).Return(o.produceHistoricalEventBook(commandBook), nil)
 
 	contextualCommand := &evented.ContextualCommand{
@@ -227,7 +227,7 @@ func (o ServerSuite) produceCommandBook() *evented.CommandBook {
 	}
 
 	randomId, _ := uuid.NewRandom()
-	id := evented_proto.UUIDToProto(randomId)
+	id := eventedproto.UUIDToProto(randomId)
 
 	cover := &evented.Cover{
 		Domain: "test",
