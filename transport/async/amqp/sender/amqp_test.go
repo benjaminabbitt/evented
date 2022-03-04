@@ -32,7 +32,7 @@ func (o *AmqpSuite) SetupSuite() {
 
 	port, err := o.dait.GetPortMapping(5672)
 	url := fmt.Sprintf("amqp://guest:guest@localhost:%d/", port)
-	senderCh := make(chan evented.EventBook)
+	senderCh := make(chan *evented.EventBook)
 	o.client = NewAMQPSender(senderCh, url, "testExchange", o.log)
 	err = o.client.Connect()
 	if err != nil {

@@ -68,7 +68,7 @@ func (o Server) Handle(ctx context.Context, in *evented.CommandBook) (result *ev
 	return result, err
 }
 
-func (o *Server) handleEventBook(ctx context.Context, eb *evented.EventBook) (result *evented.SynchronousProcessingResponse, rerr error) {
+func (o Server) handleEventBook(ctx context.Context, eb *evented.EventBook) (result *evented.SynchronousProcessingResponse, rerr error) {
 	result = &evented.SynchronousProcessingResponse{}
 	result.Books = []*evented.EventBook{eb}
 
@@ -102,7 +102,7 @@ func (o *Server) handleEventBook(ctx context.Context, eb *evented.EventBook) (re
 	return result, nil
 }
 
-func (o *Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) (eventBooks []*evented.EventBook, projections []*evented.Projection, rerr error) {
+func (o Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) (eventBooks []*evented.EventBook, projections []*evented.Projection, rerr error) {
 	for _, syncSaga := range o.transports.GetSaga() {
 		var response *evented.SynchronousProcessingResponse
 		var err error
@@ -121,7 +121,7 @@ func (o *Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) 
 	return eventBooks, projections, rerr
 }
 
-func (o *Server) executeSyncProjections(ctx context.Context, sync *evented.EventBook) (result []*evented.Projection, rerr error) {
+func (o Server) executeSyncProjections(ctx context.Context, sync *evented.EventBook) (result []*evented.Projection, rerr error) {
 	result = []*evented.Projection{}
 	for _, syncProjector := range o.transports.GetProjectors() {
 		var response *evented.Projection
@@ -140,7 +140,7 @@ func (o *Server) executeSyncProjections(ctx context.Context, sync *evented.Event
 	return result, rerr
 }
 
-func (o *Server) extractSynchronous(originalBook *evented.EventBook) (synchronous *evented.EventBook, async *evented.EventBook, err error) {
+func (o Server) extractSynchronous(originalBook *evented.EventBook) (synchronous *evented.EventBook, async *evented.EventBook, err error) {
 	if len(originalBook.Pages) == 0 {
 		return nil, nil, errors.New("event book has no pages -- not correct in this context")
 	}

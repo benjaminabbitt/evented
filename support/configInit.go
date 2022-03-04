@@ -15,7 +15,7 @@ type ConfigInit interface {
 	SetConsulConfigType(configType string)
 }
 
-type DefaultConfigInit struct {
+type BasicConfigInit struct {
 	ConsulHost       string
 	ConsulKey        string
 	Name             string
@@ -23,23 +23,23 @@ type DefaultConfigInit struct {
 	ConsulConfigType string
 }
 
-func (c *DefaultConfigInit) SetConsulKey(key string) {
+func (c *BasicConfigInit) SetConsulKey(key string) {
 	c.ConsulKey = key
 }
 
-func (c *DefaultConfigInit) SetName(name string) {
+func (c *BasicConfigInit) SetName(name string) {
 	c.Name = name
 }
 
-func (c *DefaultConfigInit) SetConfigMgmt(mgmt string) {
+func (c *BasicConfigInit) SetConfigMgmt(mgmt string) {
 	c.ConfigMgmt = mgmt
 }
 
-func (c *DefaultConfigInit) SetConsulConfigType(configType string) {
+func (c *BasicConfigInit) SetConsulConfigType(configType string) {
 	c.ConsulConfigType = configType
 }
 
-func (c *DefaultConfigInit) SetConsulHost(host string) {
+func (c *BasicConfigInit) SetConsulHost(host string) {
 	c.ConsulHost = host
 }
 

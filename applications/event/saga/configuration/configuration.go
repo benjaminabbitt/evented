@@ -3,7 +3,7 @@ package configuration
 import "github.com/benjaminabbitt/evented/support"
 
 type Config struct {
-	support.ConfigInit
+	support.BasicConfigInit
 	Proof        string
 	QueryHandler struct {
 		Url string

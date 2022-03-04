@@ -5,7 +5,7 @@ import (
 )
 
 type Configuration struct {
-	support.DefaultConfigInit
+	support.BasicConfigInit
 	EventStore struct {
 		Kind    string
 		Mongodb struct {

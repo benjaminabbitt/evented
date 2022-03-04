@@ -7,7 +7,7 @@ queryHandler:
 transport:
   kind: amqp
   amqp:
-    url: rabbitmq.default.svc
+    url: amqp://guest:guest@rabbitmq.default.svc:5672
     exchange: evented
     queue: sample-projector
 

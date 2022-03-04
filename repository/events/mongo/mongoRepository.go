@@ -156,8 +156,8 @@ func (m EventRepoMongo) insert(ctx context.Context, id uuid.UUID, events []*even
 func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint32, error) {
 	idStr := id.String()
 	opts := options.FindOne()
-	opts.SetSort(bson.D{{"sequence", -1}})
-	result := m.Collection.FindOne(ctx, bson.D{{"root", idStr}}, opts)
+	opts.SetSort(bson.D{{Key: "sequence", Value: -1}})
+	result := m.Collection.FindOne(ctx, bson.D{{Key: "root", Value: idStr}}, opts)
 	if result.Err() != nil {
 		//XXX: find some better way to do this, string compare on an error string is fraught with issues
 		if result.Err().Error() == "mongo: no documents in result" {
@@ -176,7 +176,7 @@ func (m EventRepoMongo) getNextSequence(ctx context.Context, id uuid.UUID) (uint
 
 // Gets the events related to the provided ID
 func (m EventRepoMongo) Get(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID) (err error) {
-	cur, err := m.Collection.Find(ctx, bson.D{{"root", id.String()}})
+	cur, err := m.Collection.Find(ctx, bson.D{{Key: "root", Value: id.String()}})
 	if err != nil {
 		return err
 	}
@@ -209,8 +209,8 @@ func (m EventRepoMongo) drainCursor(ctx context.Context, evtChan chan *evented.E
 // To provides an inclusive limit to the events fetched
 func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
-		{"root", id.String()},
-		{"sequence", bson.D{{"$lt", to}}},
+		{Key: "root", Value: id.String()},
+		{Key: "sequence", Value: bson.D{{Key: "$lt", Value: to}}},
 	})
 	if err != nil {
 		return err
@@ -228,8 +228,8 @@ func (m EventRepoMongo) GetTo(ctx context.Context, evtChan chan *evented.EventPa
 // From provides an inclusive limit to the events fetched
 func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
-		{"root", id.String()},
-		{"sequence", bson.D{{"$gte", from}}},
+		{Key: "root", Value: id.String()},
+		{Key: "sequence", Value: bson.D{{Key: "$gte", Value: from}}},
 	})
 	if err != nil {
 		return err
@@ -248,9 +248,9 @@ func (m EventRepoMongo) GetFrom(ctx context.Context, evtChan chan *evented.Event
 // From and To provide an inclusive limit to the events fetched
 func (m EventRepoMongo) GetFromTo(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) (err error) {
 	cur, err := m.Collection.Find(ctx, bson.D{
-		{"root", id.String()},
-		{"sequence", bson.D{{"$lt", to}}},
-		{"sequence", bson.D{{"$gte", from}}},
+		{Key: "root", Value: id.String()},
+		{Key: "sequence", Value: bson.D{{Key: "$lt", Value: to}}},
+		{Key: "sequence", Value: bson.D{{Key: "$gte", Value: from}}},
 	})
 	if err != nil {
 		return err

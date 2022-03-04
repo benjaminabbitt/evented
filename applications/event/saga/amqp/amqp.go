@@ -43,5 +43,4 @@ func ListenRabbit(log *zap.SugaredLogger, decodedMessageChan chan receiver.AMQPD
 			}
 		}
 	}
-	rabbitReceiver.ListenForever()
 }

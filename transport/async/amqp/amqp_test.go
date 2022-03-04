@@ -59,7 +59,10 @@ func (o *AmqpSuite) SetupSuite() {
 }
 
 func (o *AmqpSuite) TearDownSuite() {
-	o.dait.StopContainer()
+	err := o.dait.StopContainer()
+	if err != nil {
+		o.log.Fatal(err)
+	}
 }
 
 //func (o AmqpSuite) TestNoExceptionThrown() {

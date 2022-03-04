@@ -15,7 +15,7 @@ type AMQPSender struct {
 	log          *zap.SugaredLogger
 	amqpch       *amqp.Channel
 	conn         *amqp.Connection
-	ch           chan evented.EventBook
+	ch           chan *evented.EventBook
 	exchangeName string
 	url          string
 }
@@ -38,9 +38,9 @@ func (o AMQPSender) Handle(evts *evented.EventBook) (err error) {
 }
 
 func (o AMQPSender) Run() {
-	go func(ch chan evented.EventBook) {
+	go func(ch chan *evented.EventBook) {
 		for eb := range o.ch {
-			err := o.Handle(&eb)
+			err := o.Handle(eb)
 			if err != nil {
 				o.log.Error(err)
 			}
@@ -48,7 +48,7 @@ func (o AMQPSender) Run() {
 	}(o.ch)
 }
 
-func NewAMQPSender(ch chan evented.EventBook, url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
+func NewAMQPSender(ch chan *evented.EventBook, url string, exchangeName string, log *zap.SugaredLogger) *AMQPSender {
 	client := &AMQPSender{
 		log:          log,
 		exchangeName: exchangeName,

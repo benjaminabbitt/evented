@@ -26,11 +26,11 @@ func main() {
 
 	support.LogStartup(log, "AMQP Saga Coordinator Startup")
 	config := &configuration.Config{}
-	config.Initialize(log)
+	support.Initialize(log, config)
 
 	log.Info("Configuration", config.Transport.Rabbitmq.Exchange)
 
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer closer.Close()
 
 	sagaClient := makeSagaClient(config, tracer)

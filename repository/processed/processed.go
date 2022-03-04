@@ -32,7 +32,7 @@ func (o Processed) Received(ctx context.Context, id uuid.UUID, sequence uint32) 
 			return err
 		}
 	} else {
-		_, err := o.Collection.ReplaceOne(ctx, bson.D{{"_id", idBytes}}, record)
+		_, err := o.Collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: idBytes}}, record)
 		if err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func (o Processed) Received(ctx context.Context, id uuid.UUID, sequence uint32) 
 
 func (o Processed) LastReceived(ctx context.Context, id uuid.UUID) (sequence uint32, err error) {
 	idBytes, err := mongosupport.RootToMongo(id)
-	singleResult := o.Collection.FindOne(ctx, bson.D{{"_id", idBytes}})
+	singleResult := o.Collection.FindOne(ctx, bson.D{{Key: "_id", Value: idBytes}})
 	record := &MongoEventTrackRecord{}
 	err = singleResult.Decode(record)
 	if err != nil {

@@ -65,27 +65,18 @@ func main() {
 	for _, ea := range conf.Sync.Sagas {
 		log.Infow("Connecting with Saga... ", "url", ea.Url)
 		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
-		err := handlers.Add(saga.NewGRPCSagaClient(sagaConn))
-		if err != nil {
-			log.Error(err)
-		}
+		handlers.AddSagaTransporter(saga.NewGRPCSagaClient(sagaConn))
 		log.Infow("Connection with Saga Successful", "url", ea.Url)
 	}
 
 	for _, ea := range conf.Sync.Projectors {
 		log.Infow("Connecting with evented... ", "url", ea.Url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
-		err := handlers.Add(projector.NewGRPCProjector(projectorConn))
-		if err != nil {
-			log.Error(err)
-		}
+		handlers.AddProjectorClient(projector.NewGRPCProjector(projectorConn))
 		log.Infow("Connection with Projector Successful.", "url", ea.Url)
 	}
 
-	err := handlers.Add(setupServiceBus(conf, initSpan))
-	if err != nil {
-		log.Error(err)
-	}
+	handlers.AddEventBookChan(setupServiceBus(conf, initSpan))
 
 	server := framework.NewServer(
 		repo,
@@ -112,7 +103,7 @@ func main() {
 	log.Infow("Serving...")
 	initSpan.Finish()
 	for _, listener := range listeners {
-		err = rpc.Serve(listener)
+		err := rpc.Serve(listener)
 		if err != nil {
 			log.Error(err)
 		}
@@ -172,10 +163,10 @@ func setupSnapshotRepo(config *configuration.Configuration, span opentracing.Spa
 	return snapshotmongo.NewSnapshotMongoRepo(config.Snapshots.Mongodb.Url, config.Snapshots.Mongodb.Name, log)
 }
 
-func setupServiceBus(config *configuration.Configuration, span opentracing.Span) (ch chan evented.EventBook) {
+func setupServiceBus(config *configuration.Configuration, span opentracing.Span) (ch chan *evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	ch = make(chan evented.EventBook)
+	ch = make(chan *evented.EventBook)
 	trans := sender.NewAMQPSender(ch, config.Transport.Rabbitmq.Url, config.Transport.Rabbitmq.Exchange, log)
 	err := trans.Connect()
 	if err != nil {

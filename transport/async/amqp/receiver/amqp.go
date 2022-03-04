@@ -27,15 +27,6 @@ type AMQPReceiver struct {
 	conn              *amqp.Connection
 }
 
-func (o *AMQPReceiver) ListenForever() {
-	forever := make(chan bool)
-
-	go o.Listen()
-
-	o.Log.Info(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
-}
-
 func (o *AMQPReceiver) Listen() {
 	for delivery := range o.deliveryChan {
 		eb, ack, nack := o.ExtractMessage(delivery)

@@ -52,7 +52,7 @@ func storageToCore(storage *snapshot) (root uuid.UUID, snapshot *evented.Snapsho
 
 func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *evented.Snapshot, err error) {
 	idBytes, err := mongosupport.RootToMongo(root)
-	singleResult := o.collection.FindOne(ctx, bson.D{{"_id", idBytes}})
+	singleResult := o.collection.FindOne(ctx, bson.D{{Key: "_id", Value: idBytes}})
 	record := &snapshot{}
 	err = singleResult.Decode(record)
 	if err != nil {
@@ -81,7 +81,7 @@ func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evente
 			return err
 		}
 	} else {
-		_, err := o.collection.ReplaceOne(ctx, bson.D{{"_id", idBytes}}, record)
+		_, err := o.collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: idBytes}}, record)
 		if err != nil {
 			o.log.Error(err)
 			return err
@@ -91,7 +91,8 @@ func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evente
 }
 
 func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cxl := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cxl()
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Error(err)

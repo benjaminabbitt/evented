@@ -29,7 +29,12 @@ type QueryHandlerSuite struct {
 
 func (o *QueryHandlerSuite) SetupTest() {
 	o.log = support.Log()
-	defer o.log.Sync()
+	defer func(log *zap.SugaredLogger) {
+		err := log.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(o.log)
 	o.ctx = context.Background()
 	o.repos = &mer.EventRepository{}
 	o.sut = &DefaultEventQueryServer{
@@ -125,7 +130,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 		}()
 	}).Once()
 
-	queryResponse := MockGetEventsServer{}
+	queryResponse := &MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)
@@ -160,7 +165,7 @@ func (o *QueryHandlerSuite) Test_Low() {
 		}()
 	}).Once()
 
-	queryResponse := MockGetEventsServer{}
+	queryResponse := &MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)
@@ -194,7 +199,7 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 		}()
 	}).Once()
 
-	queryResponse := MockGetEventsServer{}
+	queryResponse := &MockGetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)

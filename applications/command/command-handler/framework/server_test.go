@@ -33,7 +33,12 @@ type ServerSuite struct {
 
 func (o *ServerSuite) SetupTest() {
 	o.log = support.Log()
-	defer o.log.Sync()
+	defer func(log *zap.SugaredLogger) {
+		err := log.Sync()
+		if err != nil {
+			log.Error(err)
+		}
+	}(o.log)
 	o.domainA = "testA"
 	o.domainB = "testB"
 	o.ctx = context.Background()

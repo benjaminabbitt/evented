@@ -15,7 +15,7 @@ snapshots:
 transport:
   kind: rabbitmq
   rabbitmq:
-    url: rabbitmq.default.svc
+    url: amqp://guest:guest@rabbitmq.default.svc:5672
     exchange: evented
 
 events:

@@ -11,22 +11,34 @@ type MockHolder struct {
 	mock.Mock
 }
 
-func (o MockHolder) Add(i interface{}) error {
+func (o *MockHolder) AddEventBookChan(ebc chan *evented.EventBook) {
+	o.Called(ebc)
+}
+
+func (o *MockHolder) AddProjectorClient(pc projector.SyncProjectorTransporter) {
+	o.Called(pc)
+}
+
+func (o *MockHolder) AddSagaTransporter(st saga.SyncSagaTransporter) {
+	o.Called(st)
+}
+
+func (o *MockHolder) Add(i interface{}) error {
 	args := o.Called(i)
 	return args.Error(0)
 }
 
-func (o MockHolder) GetTransports() []chan *evented.EventBook {
+func (o *MockHolder) GetTransports() []chan *evented.EventBook {
 	args := o.Called()
 	return args.Get(0).([]chan *evented.EventBook)
 }
 
-func (o MockHolder) GetProjectors() []projector.SyncProjectorTransporter {
+func (o *MockHolder) GetProjectors() []projector.SyncProjectorTransporter {
 	args := o.Called()
 	return args.Get(0).([]projector.SyncProjectorTransporter)
 }
 
-func (o MockHolder) GetSaga() []saga.SyncSagaTransporter {
+func (o *MockHolder) GetSaga() []saga.SyncSagaTransporter {
 	args := o.Called()
 	return args.Get(0).([]saga.SyncSagaTransporter)
 }

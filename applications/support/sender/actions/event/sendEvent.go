@@ -48,10 +48,10 @@ var sendEvent = &cobra.Command{
 
 func SendEvent(host string, port int, domain string, id uuid.UUID, config configuration.Configuration, log *zap.SugaredLogger) {
 	log.Info("Starting...")
-	target := config.EventHandlerURL()
+	target := config.EventHandlerURL
 	log.Info(target)
 
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer jaeger.CloseJaeger(closer, log)
 
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
@@ -68,7 +68,7 @@ func SendEvent(host string, port int, domain string, id uuid.UUID, config config
 	}
 	eventBook := &evented.EventBook{
 		Cover: &evented.Cover{
-			Domain: config.Domain(),
+			Domain: config.Domain,
 			Root:   &protoId,
 		},
 		Pages: pages,

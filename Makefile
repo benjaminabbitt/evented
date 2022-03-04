@@ -224,3 +224,14 @@ mongo-install:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo update
 	helm install mongodb bitnami/mongodb --wait --values ./devops/helm/mongodb/values.yaml
+
+
+##Test
+test:
+	go test ./...
+
+vet:
+	go vet ./...
+
+generate-mocks:
+	docker run -v "$PWD":/src -w /src vektra/mockery -all

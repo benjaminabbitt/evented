@@ -17,15 +17,15 @@ func main() {
 	log = support.Log()
 	defer log.Sync()
 
-	config := configuration.Configuration{}
-	config.Initialize(log)
+	config := &configuration.Configuration{}
+	support.Initialize(log, config)
 
-	tracer, closer := jaeger.SetupJaeger(config.AppName(), log)
+	tracer, closer := jaeger.SetupJaeger(config.Name, log)
 	defer closer.Close()
 
 	server := saga.NewPlaceholderSagaLogic(log, &tracer)
 
-	port := config.Port()
+	port := config.Port
 	log.Infow("Starting Saga Server...", "port", port)
 	server.Listen(port)
 }

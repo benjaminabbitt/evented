@@ -12,7 +12,7 @@ queryHandler:
 transport:
   kind: rabbitmq
   rabbitmq:
-    url: transport.url
+    url: amqp://guest:guest@rabbitmq.default.svc:5672
     exchange: exchange
     queue: queue
 
