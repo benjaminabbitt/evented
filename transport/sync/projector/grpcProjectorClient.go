@@ -12,7 +12,7 @@ type GrpcProjector struct {
 	client evented.ProjectorCoordinatorClient
 }
 
-func (o GrpcProjector) HandleSync(ctx context.Context, evts *evented.EventBook) (projection *evented.Projection, err error) {
+func (o GrpcProjector) HandleSync(ctx context.Context, evts *evented.EventBook, opts ...grpc.CallOption) (projection *evented.Projection, err error) {
 	err = backoff.Retry(func() error {
 		projection, err = o.client.HandleSync(ctx, evts)
 		return err

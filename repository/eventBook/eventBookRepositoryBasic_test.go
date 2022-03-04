@@ -2,11 +2,10 @@ package eventBook
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/mocks"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
-	erMock "github.com/benjaminabbitt/evented/repository/events/mock"
-	ssMock "github.com/benjaminabbitt/evented/repository/snapshots/mock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -18,8 +17,8 @@ type EventBookRepositorySuite struct {
 	domain                    string
 	id                        uuid.UUID
 	eventBookRepository       RepositoryBasic
-	snapshotRepository        *ssMock.SnapshotRepo
-	eventRepository           *erMock.EventRepository
+	snapshotRepository        *mocks.SnapshotStorer
+	eventRepository           *mocks.EventStorer
 	eventPageRepositoryStream chan *evented.EventPage
 }
 
@@ -28,8 +27,8 @@ func (o *EventBookRepositorySuite) SetupTest() {
 	o.id = id
 	o.domain = "test"
 
-	o.eventRepository = &erMock.EventRepository{}
-	o.snapshotRepository = &ssMock.SnapshotRepo{}
+	o.eventRepository = &mocks.EventStorer{}
+	o.snapshotRepository = &mocks.SnapshotStorer{}
 	o.eventPageRepositoryStream = make(chan *evented.EventPage, 10)
 
 	o.eventBookRepository = RepositoryBasic{

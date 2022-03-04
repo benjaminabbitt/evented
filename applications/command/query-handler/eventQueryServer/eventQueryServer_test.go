@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
+	"github.com/benjaminabbitt/evented/mocks"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
@@ -130,7 +131,7 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 		}()
 	}).Once()
 
-	queryResponse := &MockGetEventsServer{}
+	queryResponse := &mocks.EventQuery_GetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)
@@ -165,7 +166,7 @@ func (o *QueryHandlerSuite) Test_Low() {
 		}()
 	}).Once()
 
-	queryResponse := &MockGetEventsServer{}
+	queryResponse := &mocks.EventQuery_GetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)
@@ -199,7 +200,7 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 		}()
 	}).Once()
 
-	queryResponse := &MockGetEventsServer{}
+	queryResponse := &mocks.EventQuery_GetEventsServer{}
 	queryResponse.On("Context").Return(ctx)
 	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
 		book := args.Get(0).(*evented.EventBook)

@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"github.com/benjaminabbitt/evented/mocks"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
@@ -19,14 +20,14 @@ func (o *BasicHolderSuite) SetupTest() {
 }
 
 func (o *BasicHolderSuite) TestSyncProjectorHandling() {
-	projectorClient := &projector.MockProjectorClient{}
+	projectorClient := &mocks.ProjectorClient{}
 	projectorSet := []projector.SyncProjectorTransporter{projectorClient}
 	o.holder.AddProjectorClient(projectorClient)
 	o.Assert().Equal(projectorSet, o.holder.GetProjectors())
 }
 
 func (o *BasicHolderSuite) TestSyncSagaHandling() {
-	sagaClient := &saga.MockSagaClient{}
+	sagaClient := &mocks.SyncSagaTransporter{}
 	sagaSet := []saga.SyncSagaTransporter{sagaClient}
 	o.holder.AddSagaTransporter(sagaClient)
 	o.Assert().Equal(sagaSet, o.holder.GetSaga())

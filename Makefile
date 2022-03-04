@@ -233,5 +233,9 @@ test:
 vet:
 	go vet ./...
 
+
+install-deps:
+	go install github.com/vektra/mockery/v2@latest
+
 generate-mocks:
-	docker run -v "$PWD":/src -w /src vektra/mockery -all
+	mockery --all

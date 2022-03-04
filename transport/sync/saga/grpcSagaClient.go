@@ -12,7 +12,7 @@ type GRPCSagaClient struct {
 	client evented.SagaCoordinatorClient
 }
 
-func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *evented.EventBook) (responses *evented.SynchronousProcessingResponse, err error) {
+func (o GRPCSagaClient) HandleSync(ctx context.Context, evts *evented.EventBook, opts ...grpc.CallOption) (responses *evented.SynchronousProcessingResponse, err error) {
 	err = backoff.Retry(func() error {
 		responses, err = o.client.HandleSync(ctx, evts)
 		return err

@@ -3,11 +3,9 @@ package framework
 import (
 	"context"
 	"errors"
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/business/client"
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport"
+	"github.com/benjaminabbitt/evented/mocks"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
-	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/support"
 	transportMock "github.com/benjaminabbitt/evented/transport/async/mock"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
@@ -25,9 +23,9 @@ type ServerSuite struct {
 	domainA        string
 	domainB        string
 	ctx            context.Context
-	eventBookRepo  *eventBook.MockEventBookRepository
-	holder         *transport.MockHolder
-	businessClient *client.MockClient
+	eventBookRepo  *mocks.Storer
+	holder         *mocks.Holder
+	businessClient *mocks.BusinessClient
 	server         Server
 }
 
@@ -42,16 +40,16 @@ func (o *ServerSuite) SetupTest() {
 	o.domainA = "testA"
 	o.domainB = "testB"
 	o.ctx = context.Background()
-	o.eventBookRepo = new(eventBook.MockEventBookRepository)
-	o.holder = new(transport.MockHolder)
-	o.businessClient = new(client.MockClient)
+	o.eventBookRepo = new(mocks.Storer)
+	o.holder = new(mocks.Holder)
+	o.businessClient = new(mocks.BusinessClient)
 	o.server = NewServer(o.eventBookRepo, o.holder, o.businessClient, o.log)
 }
 
 func (o ServerSuite) Test_Handle() {
-	eventBookRepo := new(eventBook.MockEventBookRepository)
-	holder := new(transport.MockHolder)
-	businessClient := new(client.MockClient)
+	eventBookRepo := new(mocks.Storer)
+	holder := new(mocks.Holder)
+	businessClient := new(mocks.BusinessClient)
 	server := NewServer(eventBookRepo, holder, businessClient, o.log)
 
 	commandBook := o.produceCommandBook()
@@ -119,13 +117,13 @@ func (o ServerSuite) Test_HandleWithTransports() {
 		Projection: nil,
 	}
 
-	mockProjector := new(projector.MockProjectorClient)
+	mockProjector := new(mocks.ProjectorClient)
 	mockProjector.On("HandleSync", mock.Anything, syncEventBook).Return(projection, nil)
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{mockProjector})
 
 	sagaResult := &evented.SynchronousProcessingResponse{}
 
-	mockSaga := new(saga.MockSagaClient)
+	mockSaga := new(mocks.SyncSagaTransporter)
 	mockSaga.On("HandleSync", mock.Anything, syncEventBook).Return(sagaResult, nil)
 	o.holder.On("GetSaga").Return([]saga.SyncSagaTransporter{mockSaga})
 
@@ -273,8 +271,8 @@ func (o ServerSuite) TestHandleSyncSagaError() {
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", eventPages, nil), nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(nil)
-	sagaTransporter := &saga.MockSagaClient{}
-	sagaTransporter2 := &saga.MockSagaClient{}
+	sagaTransporter := &mocks.SyncSagaTransporter{}
+	sagaTransporter2 := &mocks.SyncSagaTransporter{}
 	o.holder.On("GetSaga").Return([]saga.SyncSagaTransporter{sagaTransporter, sagaTransporter2})
 	sagaResponse := &evented.SynchronousProcessingResponse{
 		Books:       []*evented.EventBook{NewEventBook(id, "", eventPages, nil)},
@@ -282,8 +280,8 @@ func (o ServerSuite) TestHandleSyncSagaError() {
 	}
 	sagaTransporter2.On("HandleSync", mock.Anything, mock.Anything).Return(sagaResponse, errors.New(""))
 	sagaTransporter.On("HandleSync", mock.Anything, mock.Anything).Return(sagaResponse, nil)
-	projectorTransporter := &projector.MockProjectorClient{}
-	projectorTransporter2 := &projector.MockProjectorClient{}
+	projectorTransporter := &mocks.ProjectorClient{}
+	projectorTransporter2 := &mocks.ProjectorClient{}
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
 	var projectionTypeCheckingBypass *evented.Projection = nil
 	projectorTransporter.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, nil)
@@ -307,8 +305,8 @@ func (o ServerSuite) TestHandleSyncProjectionError() {
 	o.eventBookRepo.On("Get", mock.Anything, mock.Anything).Return(eventBookTypeCheckingBypass, nil)
 	o.businessClient.On("Handle", mock.Anything, mock.Anything).Return(NewEventBook(id, "", eventPages, nil), nil)
 	o.eventBookRepo.On("Put", mock.Anything, mock.Anything).Return(nil)
-	projectorTransporter := &projector.MockProjectorClient{}
-	projectorTransporter2 := &projector.MockProjectorClient{}
+	projectorTransporter := &mocks.ProjectorClient{}
+	projectorTransporter2 := &mocks.ProjectorClient{}
 	o.holder.On("GetProjectors").Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
 	var projectionTypeCheckingBypass *evented.Projection = nil
 	projectorTransporter.On("HandleSync", mock.Anything, mock.Anything).Return(projectionTypeCheckingBypass, nil)
