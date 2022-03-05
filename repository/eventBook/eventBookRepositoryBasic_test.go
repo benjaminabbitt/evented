@@ -8,31 +8,47 @@ import (
 	mock_snapshots "github.com/benjaminabbitt/evented/repository/snapshots/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
 
-func TestPut(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	id, _ := uuid.NewRandom()
-	pid := evented_proto.UUIDToProto(id)
-	ctx := context.Background()
-	domain := "test"
+type EventBookTestSuite struct {
+	suite.Suite
+	ctrl   *gomock.Controller
+	id     uuid.UUID
+	ctx    context.Context
+	pid    evented.UUID
+	domain string
+}
 
-	eventRepository := mock_events.NewMockEventStorer(ctrl)
-	snapshotRepository := mock_snapshots.NewMockSnapshotStorer(ctrl)
+func TestEventBookTestSuite(t *testing.T) {
+	suite.Run(t, new(EventBookTestSuite))
+}
+
+func (suite *EventBookTestSuite) SetupTest() {
+	suite.ctrl = gomock.NewController(suite.T())
+	defer suite.ctrl.Finish()
+	suite.id, _ = uuid.NewRandom()
+	suite.pid = evented_proto.UUIDToProto(suite.id)
+	suite.ctx = context.Background()
+	suite.domain = "test"
+}
+
+func (suite *EventBookTestSuite) TestPut() {
+
+	eventRepository := mock_events.NewMockEventStorer(suite.ctrl)
+	snapshotRepository := mock_snapshots.NewMockSnapshotStorer(suite.ctrl)
 
 	eventBookRepository := RepositoryBasic{
 		EventRepo:    eventRepository,
 		SnapshotRepo: snapshotRepository,
-		Domain:       domain,
+		Domain:       suite.domain,
 	}
 
 	cover := &evented.Cover{
 		Domain: "testPut",
-		Root:   &pid,
+		Root:   &suite.pid,
 	}
 
 	pages := []*evented.EventPage{
@@ -57,27 +73,21 @@ func TestPut(t *testing.T) {
 		Snapshot: snapshot,
 	}
 
-	eventRepository.EXPECT().Add(ctx, id, book.Pages).Return(nil)
-	snapshotRepository.EXPECT().Put(ctx, id, book.Snapshot).Return(nil)
-	err := eventBookRepository.Put(ctx, &book)
-	assert.NoError(t, err)
+	eventRepository.EXPECT().Add(suite.ctx, suite.id, book.Pages).Return(nil)
+	snapshotRepository.EXPECT().Put(suite.ctx, suite.id, book.Snapshot).Return(nil)
+	err := eventBookRepository.Put(suite.ctx, &book)
+	suite.NoError(err)
 }
 
-func Test_Get(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	id, _ := uuid.NewRandom()
-	ctx := context.Background()
-	domain := "test"
-
+func (suite *EventBookTestSuite) Test_Get() {
 	snapshot := &evented.Snapshot{
 		Sequence: 0,
 		State:    nil,
 	}
-	root := evented_proto.UUIDToProto(id)
+	root := evented_proto.UUIDToProto(suite.id)
 	expected := evented.EventBook{
 		Cover: &evented.Cover{
-			Domain: domain,
+			Domain: suite.domain,
 			Root:   &root,
 		},
 		Pages: []*evented.EventPage{{
@@ -88,12 +98,12 @@ func Test_Get(t *testing.T) {
 		}},
 		Snapshot: &evented.Snapshot{},
 	}
-	snapshotRepository := mock_snapshots.NewMockSnapshotStorer(ctrl)
-	snapshotRepository.EXPECT().Get(ctx, id).Return(snapshot, nil)
+	snapshotRepository := mock_snapshots.NewMockSnapshotStorer(suite.ctrl)
+	snapshotRepository.EXPECT().Get(suite.ctx, suite.id).Return(snapshot, nil)
 
-	eventRepository := mock_events.NewMockEventStorer(ctrl)
+	eventRepository := mock_events.NewMockEventStorer(suite.ctrl)
 	eventRepository.EXPECT().
-		GetFrom(ctx, gomock.Any(), id, uint32(0)).
+		GetFrom(suite.ctx, gomock.Any(), suite.id, uint32(0)).
 		Do(func(ctx context.Context, ch chan *evented.EventPage, id uuid.UUID, from uint32) {
 			ch <- expected.Pages[0]
 			close(ch)
@@ -102,10 +112,10 @@ func Test_Get(t *testing.T) {
 	eventBookRepository := RepositoryBasic{
 		EventRepo:    eventRepository,
 		SnapshotRepo: snapshotRepository,
-		Domain:       domain,
+		Domain:       suite.domain,
 	}
 
-	book, err := eventBookRepository.Get(ctx, id)
-	assert.NoError(t, err)
-	assert.EqualValues(t, &expected, book)
+	book, err := eventBookRepository.Get(suite.ctx, suite.id)
+	suite.NoError(err)
+	suite.EqualValues(&expected, book)
 }

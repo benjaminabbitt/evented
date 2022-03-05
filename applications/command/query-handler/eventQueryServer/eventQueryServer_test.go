@@ -8,7 +8,6 @@ import (
 	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
-	mer "github.com/benjaminabbitt/evented/repository/events/mock"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
 	uuid2 "github.com/google/uuid"
