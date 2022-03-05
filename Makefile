@@ -26,11 +26,13 @@ vet:
 install-deps:
 	go install github.com/vektra/mockery/v2@latest
 	go install github.com/cucumber/godog/cmd/godog@latest
+	go install github.com/golang/mock/mockgen@v1.6.0
 	docker pull namely/protoc-all
 
 generate-mocks:
-	mockery --all
-
+	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer-mock.go
+	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer-mock.go
+	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo-mock.go
 
 # Command Handler
 scratch-deploy-command-handler: build-command-handler build-sample-business-logic configuration-load-command-handler configuration-load-sample-business-logic deploy-command-handler
