@@ -3,18 +3,16 @@ package memory
 import (
 	"context"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
-
-	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/cucumber"
-	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v10"
-	"github.com/golang/protobuf/ptypes"
-	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 	"time"
+
+	"github.com/benjaminabbitt/evented/support"
+	"github.com/cucumber/godog"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type MemoryRepositorySuite struct {
@@ -24,8 +22,8 @@ type MemoryRepositorySuite struct {
 	events []*evented.EventPage
 }
 
-func (s *MemoryRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	s.log = support.Log()
+func (suite *MemoryRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	suite.log = support.Log()
 }
 
 func (suite *MemoryRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
@@ -40,22 +38,22 @@ func (suite *MemoryRepositorySuite) InitializeScenario(s *godog.ScenarioContext)
 	s.Step(`^I retrieve all events$`, suite.iRetrieveAllEvents)
 }
 
-func (s *MemoryRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
-	id, events := s.extractPickleTableToEvents(arg1)
+func (suite *MemoryRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *godog.Table) error {
+	id, events := suite.extractPickleTableToEvents(arg1)
 	ch := make(chan *evented.EventPage)
-	_ = s.sut.Get(context.Background(), ch, id)
+	_ = suite.sut.Get(context.Background(), ch, id)
 	return cucumber.AssertExpectedAndActual(assert.Equal, events[0], <-ch, "", "")
 }
 
-func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented.EventPage) {
-	for i, row := range arg.GetRows() {
+func (suite *MemoryRepositorySuite) extractPickleTableToEvents(arg *godog.Table) (id uuid.UUID, events []*evented.EventPage) {
+	for i, row := range arg.Rows {
 		if i == 0 { //header
 			continue
 		}
 		var sequence uint32
 		var force bool
 		var ts *timestamppb.Timestamp
-		for j, cell := range row.GetCells() {
+		for j, cell := range row.Cells {
 			switch j {
 			case 0:
 				id, _ = uuid.Parse(cell.Value)
@@ -67,7 +65,7 @@ func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleS
 				}
 			case 2:
 				t, _ := time.Parse(time.RFC3339Nano, cell.Value)
-				ts, _ = ptypes.TimestampProto(t)
+				ts = timestamppb.New(t)
 			}
 
 		}
@@ -87,54 +85,54 @@ func (s *MemoryRepositorySuite) extractPickleTableToEvents(arg *messages.PickleS
 	return id, events
 }
 
-func (s *MemoryRepositorySuite) iStoreTheEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
-	s.id, s.events = s.extractPickleTableToEvents(arg1)
-	_ = s.sut.Add(context.Background(), s.id, s.events)
+func (suite *MemoryRepositorySuite) iStoreTheEvent(arg1 *godog.Table) error {
+	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
+	_ = suite.sut.Add(context.Background(), suite.id, suite.events)
 	return nil
 }
 
-func (s *MemoryRepositorySuite) aPopulatedDatabase(arg1 *messages.PickleStepArgument_PickleTable) error {
-	s.id, s.events = s.extractPickleTableToEvents(arg1)
-	_ = s.sut.Add(context.Background(), s.id, s.events)
+func (suite *MemoryRepositorySuite) aPopulatedDatabase(arg1 *godog.Table) error {
+	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
+	_ = suite.sut.Add(context.Background(), suite.id, suite.events)
 	return nil
 }
 
-func (s *MemoryRepositorySuite) iShouldGetTheseEvents(arg1 *messages.PickleStepArgument_PickleTable) error {
-	_, expectedEvents := s.extractPickleTableToEvents(arg1)
-	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, s.events, "", "")
+func (suite *MemoryRepositorySuite) iShouldGetTheseEvents(arg1 *godog.Table) error {
+	_, expectedEvents := suite.extractPickleTableToEvents(arg1)
+	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, suite.events, "", "")
 }
 
-func (s *MemoryRepositorySuite) drainChannel(ch chan *evented.EventPage) (pages []*evented.EventPage) {
+func (suite *MemoryRepositorySuite) drainChannel(ch chan *evented.EventPage) (pages []*evented.EventPage) {
 	for page := range ch {
 		pages = append(pages, page)
 	}
 	return pages
 }
 
-func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
+func (suite *MemoryRepositorySuite) iRetrieveASubsetOfEventsEndingAtEvent(end int) error {
 	ch := make(chan *evented.EventPage)
-	_ = s.sut.GetTo(context.Background(), ch, s.id, uint32(end))
-	s.events = s.drainChannel(ch)
+	_ = suite.sut.GetTo(context.Background(), ch, suite.id, uint32(end))
+	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
-func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsFromTo(start, end int) error {
+func (suite *MemoryRepositorySuite) iRetrieveASubsetOfEventsFromTo(start, end int) error {
 	ch := make(chan *evented.EventPage)
-	_ = s.sut.GetFromTo(context.Background(), ch, s.id, uint32(start), uint32(end))
-	s.events = s.drainChannel(ch)
+	_ = suite.sut.GetFromTo(context.Background(), ch, suite.id, uint32(start), uint32(end))
+	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
-func (s *MemoryRepositorySuite) iRetrieveASubsetOfEventsStartingFromValue(start int) error {
+func (suite *MemoryRepositorySuite) iRetrieveASubsetOfEventsStartingFromValue(start int) error {
 	ch := make(chan *evented.EventPage)
-	_ = s.sut.GetFrom(context.Background(), ch, s.id, uint32(start))
-	s.events = s.drainChannel(ch)
+	_ = suite.sut.GetFrom(context.Background(), ch, suite.id, uint32(start))
+	suite.events = suite.drainChannel(ch)
 	return nil
 }
 
-func (s *MemoryRepositorySuite) iRetrieveAllEvents() error {
+func (suite *MemoryRepositorySuite) iRetrieveAllEvents() error {
 	ch := make(chan *evented.EventPage)
-	_ = s.sut.Get(context.Background(), ch, s.id)
-	s.events = s.drainChannel(ch)
+	_ = suite.sut.Get(context.Background(), ch, suite.id)
+	suite.events = suite.drainChannel(ch)
 	return nil
 }

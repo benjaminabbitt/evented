@@ -25,6 +25,7 @@ vet:
 
 install-deps:
 	go install github.com/vektra/mockery/v2@latest
+	go install github.com/cucumber/godog/cmd/godog@latest
 	docker pull namely/protoc-all
 
 generate-mocks:
@@ -39,16 +40,16 @@ deploy-command-handler:
 	-helm delete sample-command-handler-deployment
 	helm install sample-command-handler-deployment ./applications/command/command-handler/helm/evented-command-handler --debug
 
-build-command-handler: VER = $(shell python ./devops/support/version/get-version.py)
-build-command-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-command-handler: VER := $(shell python ./devops/support/version/get-version.py)
+build-command-handler: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 bounce-command-handler:
 	kubectl delete pods -l evented=command-handler
 
-build-command-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-command-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-command-handler-debug: VER := $(shell python ./devops/support/version/get-version.py)
+build-command-handler-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler-debug:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/debug.dockerfile .
 
@@ -63,13 +64,13 @@ logs-command-handler:
 deploy-sample-business-logic:
 	kubectl apply -f applications/integrationTest/businessLogic/businessLogic.yaml
 
-build-sample-business-logic: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-business-logic: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-business-logic: VER := $(shell python ./devops/support/version/get-version.py)
+build-sample-business-logic: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-business-logic: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
-build-sample-business-logic-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-business-logic-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-business-logic-debug: VER := $(shell python ./devops/support/version/get-version.py)
+build-sample-business-logic-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-business-logic-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
 
@@ -88,13 +89,13 @@ deploy-query-handler:
 configuration-load-query-handler:
 	consul kv put -http-addr=localhost:8500 evented-query-handler @applications/command/query-handler/configuration/sample.yaml
 
-build-query-handler: VER = $(shell python ./devops/support/version/get-version.py)
-build-query-handler: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-query-handler: VER := $(shell python ./devops/support/version/get-version.py)
+build-query-handler: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler: build-base build-scratch generate generate-mocks
 	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/dockerfile  .
 
-build-query-handler-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-query-handler-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-query-handler-debug: VER := $(shell python ./devops/support/version/get-version.py)
+build-query-handler-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-query-handler-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-query-handler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/debug.dockerfile  .
 
@@ -107,23 +108,23 @@ logs-query-handler:
 # Projector
 scratch-deploy-projector: build-projector build-sample-projector configuration-load-projector configuration-load-sample-projector deploy-projector
 
-build-projector: VER = $(shell python ./devops/support/version/get-version.py)
-build-projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-projector: VER := $(shell python ./devops/support/version/get-version.py)
+build-projector: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-projector: build-base build-scratch generate generate-mocks
 	docker build --tag evented-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/dockerfile  .
 
-build-projector-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-projector-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-projector-debug: VER := $(shell python ./devops/support/version/get-version.py)
+build-projector-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-projector-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-projector:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/debug.dockerfile  .
 
-build-sample-projector: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-projector: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-projector: VER := $(shell python ./devops/support/version/get-version.py)
+build-sample-projector: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-projector: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/dockerfile .
 
-build-sample-projector-debug: VER = $(shell python ./devops/support/version/get-version.py)
-build-sample-projector-debug: DT = $(shell python ./devops/support/get-datetime/get-datetime.py)
+build-sample-projector-debug: VER := $(shell python ./devops/support/version/get-version.py)
+build-sample-projector-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-projector-debug: build-base build-scratch generate generate-mocks
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/debug.dockerfile .
 
@@ -151,7 +152,7 @@ sample-projector-expose:
 #deploy-coordinator-saga:
 #	ls
 #
-#build-coordinator-saga: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-saga: VER := $(shell git log -1 --pretty=%h)
 #build-coordinator-saga: build-base build-scratch generate
 #	docker build --tag evented-coordinator-saga:$(VER) --build-arg=$(VER) -f ./applications/event/projector/dockerfile  .
 #
@@ -164,7 +165,7 @@ sample-projector-expose:
 #deploy-coordinator-sync-sample-projector:
 #	kubectl apply -f applications/coordinators/grpc/sample-projector/grpc-sample-projector-coordinator.yaml
 #
-#build-coordinator-sync-sample-projector: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-sample-projector: VER := $(shell git log -1 --pretty=%h)
 #build-coordinator-sync-sample-projector: build-base build-scratch generate
 #	docker build --tag evented-coordinator-sync-sample-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-projector/Dockerfile  .
 #
@@ -174,7 +175,7 @@ sample-projector-expose:
 #deploy-coordinator-sync-sample-saga:
 #	kubectl apply -f applications/coordinators/grpc/sample-saga/grpc-sample-saga-coordinator.yaml
 #
-#build-coordinator-sync-sample-saga: VER = $(shell git log -1 --pretty=%h)
+#build-coordinator-sync-sample-saga: VER := $(shell git log -1 --pretty=%h)
 #build-coordinator-sync-sample-saga: build-base build-scratch generate
 #	docker build --tag evented-coordinator-sync-sample-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-saga/Dockerfile  .
 #
