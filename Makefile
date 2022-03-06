@@ -34,6 +34,11 @@ generate-mocks:
 	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer.mock.go
 	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo.mock.go
 	mockgen -source proto\gen\github.com\benjaminabbitt\evented\proto\evented\evented.pb.go -destination proto\gen\github.com\benjaminabbitt\evented\proto\evented\mocks\evented.mock.pb.go
+	mockgen -source applications/command/command-handler/framework/transport/transportHolder.go -destination applications/command/command-handler/framework/transport/mocks/transportHolder.mock.go
+	mockgen -source applications/command/command-handler/business/client/business.go -destination applications/command/command-handler/business/client/mocks/business.mock.go
+	mockgen -source transport/async/eventTransporter.go -destination transport/async/mocks/eventTransporter.mock.go
+	mockgen -source transport/sync/saga/syncSagaTransporter.go -destination transport/sync/saga/mocks/syncSagaTransporter.mock.go
+	mockgen -source transport/sync/projector/syncProjectionTransporter.go -destination transport/sync/projector/mocks/syncProjectionTransporter.mock.go
 
 # Command Handler
 scratch-deploy-command-handler: build-command-handler build-sample-business-logic configuration-load-command-handler configuration-load-sample-business-logic deploy-command-handler
