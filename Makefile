@@ -30,9 +30,10 @@ install-deps:
 	docker pull namely/protoc-all
 
 generate-mocks:
-	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer-mock.go
-	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer-mock.go
-	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo-mock.go
+	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
+	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer.mock.go
+	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo.mock.go
+	mockgen -source proto\gen\github.com\benjaminabbitt\evented\proto\evented\evented.pb.go -destination proto\gen\github.com\benjaminabbitt\evented\proto\evented\mocks\evented.mock.pb.go
 
 # Command Handler
 scratch-deploy-command-handler: build-command-handler build-sample-business-logic configuration-load-command-handler configuration-load-sample-business-logic deploy-command-handler

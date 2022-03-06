@@ -4,14 +4,16 @@ import (
 	"context"
 	"crypto/rand"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
-	"github.com/benjaminabbitt/evented/mocks"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	mock_evented "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/mocks"
+	mock_events "github.com/benjaminabbitt/evented/repository/events/mocks"
+	"github.com/gofrs/uuid"
+	"github.com/golang/mock/gomock"
 
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
 	uuid2 "github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -21,26 +23,30 @@ import (
 
 type QueryHandlerSuite struct {
 	suite.Suite
-	log   *zap.SugaredLogger
-	ctx   context.Context
-	repos *mer.EventRepository
-	sut   *DefaultEventQueryServer
+	ctrl          *gomock.Controller
+	log           *zap.SugaredLogger
+	ctx           context.Context
+	repos         *mock_events.MockEventStorer
+	sut           *DefaultEventQueryServer
+	eventPageChan chan *evented.EventPage
 }
 
-func (o *QueryHandlerSuite) SetupTest() {
-	o.log = support.Log()
+func (suite *QueryHandlerSuite) SetupTest() {
+	suite.log = support.Log()
+	suite.ctrl = gomock.NewController(suite.T())
 	defer func(log *zap.SugaredLogger) {
 		err := log.Sync()
 		if err != nil {
 			log.Fatal(err)
 		}
-	}(o.log)
-	o.ctx = context.Background()
-	o.repos = &mer.EventRepository{}
-	o.sut = &DefaultEventQueryServer{
-		eventRepos: o.repos,
-		log:        o.log,
+	}(suite.log)
+	suite.ctx = context.Background()
+	suite.repos = mock_events.NewMockEventStorer(suite.ctrl)
+	suite.sut = &DefaultEventQueryServer{
+		eventRepos: suite.repos,
+		log:        suite.log,
 	}
+	suite.eventPageChan = make(chan *evented.EventPage)
 }
 
 func sumPages(pages []*evented.EventPage) uint32 {
@@ -52,7 +58,7 @@ func sumPages(pages []*evented.EventPage) uint32 {
 }
 
 /// Validates the memory approximation technique we use when batching events into event books
-func (o *QueryHandlerSuite) TestMemoryApproximation() {
+func (suite *QueryHandlerSuite) TestMemoryApproximation() {
 	uuid, _ := uuid2.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	cover := &evented.Cover{
@@ -102,13 +108,13 @@ func (o *QueryHandlerSuite) TestMemoryApproximation() {
 	}
 	addition := uint32(proto.Size(book)) + sumPages(pages)
 	composed := proto.Size(book2)
-	o.log.Info("addition (bytes): ", addition)
-	o.log.Info("composite (bytes): ", proto.Size(book2))
+	suite.log.Info("addition (bytes): ", addition)
+	suite.log.Info("composite (bytes): ", proto.Size(book2))
 	//Allow up to 1k variance
-	o.Assert().InDelta(composed, addition, 1000)
+	suite.Assert().InDelta(composed, addition, 1000)
 }
 
-func (o *QueryHandlerSuite) Test_Low_High() {
+func (suite *QueryHandlerSuite) Test_Low_High() {
 	uuid, _ := uuid2.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	domain := "test"
@@ -121,33 +127,33 @@ func (o *QueryHandlerSuite) Test_Low_High() {
 		UpperBound: 2,
 	}
 	ctx := context.Background()
-	o.repos.On("GetFromTo", mock.Anything, mock.Anything, uuid, uint32(1), uint32(2)).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *evented.EventPage)
-		page := framework.NewEmptyEventPage(1, false)
-		go func() {
-			ch <- page
-			close(ch)
-		}()
-	}).Once()
+	page := framework.NewEmptyEventPage(1, false)
+	suite.repos.EXPECT().
+		GetFromTo(gomock.Any(), gomock.Any(), uuid, uint32(1), uint32(2)).
+		Do(func() {
+			suite.eventPageChan <- page
+			close(suite.eventPageChan)
+		}).
+		Return(nil)
 
-	queryResponse := &mocks.EventQuery_GetEventsServer{}
-	queryResponse.On("Context").Return(ctx)
-	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*evented.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
-		o.Assert().Equal(domain, book.Cover.Domain)
-		o.Assert().Equal(&protoUUID, book.Cover.Root)
-	})
+	queryResponse := mock_evented.NewMockEventQuery_GetEventsServer(suite.ctrl)
+	queryResponse.EXPECT().Context().Return(ctx)
+	queryResponse.EXPECT().
+		Send(gomock.Any()).
+		Return(nil).
+		Do(func(payload interface{}) {
+			book := payload.(*evented.EventBook)
+			suite.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
+			suite.Assert().Equal(domain, book.Cover.Domain)
+			suite.Assert().Equal(&protoUUID, book.Cover.Root)
+		})
 
-	_ = o.sut.GetEvents(query, queryResponse)
-
-	o.repos.AssertExpectations(o.T())
-	queryResponse.AssertExpectations(o.T())
+	_ = suite.sut.GetEvents(query, queryResponse)
 }
 
-func (o *QueryHandlerSuite) Test_Low() {
-	uuid, _ := uuid2.NewRandom()
-	protoUUID := eventedproto.UUIDToProto(uuid)
+func (suite *QueryHandlerSuite) Test_Low() {
+	id, _ := uuid2.NewRandom()
+	protoUUID := eventedproto.UUIDToProto(id)
 	domain := "test"
 
 	query := &evented.Query{
@@ -156,33 +162,34 @@ func (o *QueryHandlerSuite) Test_Low() {
 		LowerBound: 1,
 	}
 	ctx := context.Background()
-	o.repos.On("GetFrom", mock.Anything, mock.Anything, uuid, uint32(1)).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *evented.EventPage)
-		page := framework.NewEmptyEventPage(1, false)
-		go func() {
-			ch <- page
-			close(ch)
-		}()
-	}).Once()
+	suite.repos.EXPECT().GetFrom(gomock.Any(), gomock.Any(), id, uint32(1)).
+		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) {
+			page := framework.NewEmptyEventPage(1, false)
+			go func() {
+				evtChan <- page
+				close(evtChan)
+			}()
+		}).
+		Return(nil)
 
-	queryResponse := &mocks.EventQuery_GetEventsServer{}
-	queryResponse.On("Context").Return(ctx)
-	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*evented.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
-		o.Assert().Equal(domain, book.Cover.Domain)
-		o.Assert().Equal(&protoUUID, book.Cover.Root)
-	})
+	queryResponse := mock_evented.NewMockEventQuery_GetEventsServer(suite.ctrl)
+	queryResponse.EXPECT().Context().Return(ctx)
+	queryResponse.EXPECT().
+		Send(gomock.Any()).
+		Return(nil).
+		Do(func(payload interface{}) {
+			book := payload.(*evented.EventBook)
+			suite.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
+			suite.Assert().Equal(domain, book.Cover.Domain)
+			suite.Assert().Equal(&protoUUID, book.Cover.Root)
+		})
 
-	_ = o.sut.GetEvents(query, queryResponse)
-
-	o.repos.AssertExpectations(o.T())
-	queryResponse.AssertExpectations(o.T())
+	_ = suite.sut.GetEvents(query, queryResponse)
 }
 
-func (o *QueryHandlerSuite) Test_NoLimits() {
-	uuid, _ := uuid2.NewRandom()
-	protoUUID := eventedproto.UUIDToProto(uuid)
+func (suite *QueryHandlerSuite) Test_NoLimits() {
+	id, _ := uuid2.NewRandom()
+	protoUUID := eventedproto.UUIDToProto(id)
 	domain := "test"
 
 	query := &evented.Query{
@@ -190,29 +197,28 @@ func (o *QueryHandlerSuite) Test_NoLimits() {
 		Root:   &protoUUID,
 	}
 	ctx := context.Background()
-	o.repos.On("Get", mock.Anything, mock.Anything, uuid).Return(nil).Run(func(args mock.Arguments) {
-		ch := args.Get(1).(chan *evented.EventPage)
-		page := framework.NewEmptyEventPage(1, false)
-		go func() {
-			ch <- page
-			close(ch)
-		}()
-	}).Once()
+	suite.repos.EXPECT().
+		Get(gomock.Any(), gomock.Any(), id).
+		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) {
+			page := framework.NewEmptyEventPage(1, false)
+			evtChan <- page
+			close(evtChan)
+		}).
+		Return(nil)
 
-	queryResponse := &mocks.EventQuery_GetEventsServer{}
-	queryResponse.On("Context").Return(ctx)
-	queryResponse.On("Send", mock.Anything).Return(nil).Once().Run(func(args mock.Arguments) {
-		book := args.Get(0).(*evented.EventBook)
-		o.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
-		o.Assert().Equal(domain, book.Cover.Domain)
-		o.Assert().Equal(&protoUUID, book.Cover.Root)
-	})
+	queryResponse := mock_evented.NewMockEventQuery_GetEventsServer(suite.ctrl)
+	queryResponse.EXPECT().Context().Return(ctx)
+	queryResponse.EXPECT().
+		Send(gomock.Any()).
+		Return(nil).
+		Do(func(payload interface{}) {
+			book := payload.(*evented.EventBook)
+			suite.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
+			suite.Assert().Equal(domain, book.Cover.Domain)
+			suite.Assert().Equal(&protoUUID, book.Cover.Root)
+		})
 
-	_ = o.sut.GetEvents(query, queryResponse)
-
-	o.repos.AssertExpectations(o.T())
-	queryResponse.AssertExpectations(o.T())
-
+	_ = suite.sut.GetEvents(query, queryResponse)
 }
 
 func TestServerSuite(t *testing.T) {
