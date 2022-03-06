@@ -17,7 +17,7 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 }
 
 func InitializeScenario(s *godog.ScenarioContext) {
-	sut = NewSnapshotMongoRepo("", "", log)
+	sut = NewSnapshotMongoRepo("mongodb://localhost", "test", log)
 	s.Step(`^I should be able to retrieve a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, iShouldBeAbleToRetrieveASnapshotWithIdAndSequence)
 	s.Step(`^I store a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, iStoreASnapshotWithId)
 }

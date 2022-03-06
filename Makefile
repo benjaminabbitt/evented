@@ -29,7 +29,7 @@ install-deps:
 	go install github.com/golang/mock/mockgen@v1.6.0
 	docker pull namely/protoc-all
 
-generate-mocks:
+generate-mocks: generate
 	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
 	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer.mock.go
 	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo.mock.go

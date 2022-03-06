@@ -30,11 +30,11 @@ func (o PlaceholderProjectorLogic) Handle(ctx context.Context, in *evented.Event
 	return &empty.Empty{}, err
 }
 
-func (o PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.Projection, error) {
+func (o PlaceholderProjectorLogic) HandleSync(ctx context.Context, in *evented.EventBook) (projection *evented.Projection, err error) {
 	o.log.Infow("In HandleSync", in.String())
 	lastSequenceIndex := len(in.Pages) - 1
 	lastSequence := in.Pages[lastSequenceIndex].Sequence.(*evented.EventPage_Num).Num
-	projection := &evented.Projection{
+	projection = &evented.Projection{
 		Cover:      in.Cover,
 		Projector:  "test",
 		Sequence:   lastSequence,

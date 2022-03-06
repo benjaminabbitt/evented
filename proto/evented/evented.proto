@@ -86,11 +86,10 @@ service ProjectorCoordinator {
 }
 
 service Projector {
-  rpc HandleSync (evented.EventBook) returns (evented.Projection) {
-  }
   rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
   }
-
+  rpc HandleSync (evented.EventBook) returns (evented.Projection) {
+  }
 }
 
 service EventQuery {
@@ -118,15 +117,15 @@ message TestByteArray {
 }
 
 service SagaCoordinator {
-  rpc HandleSync (evented.EventBook) returns (evented.SynchronousProcessingResponse) {
-  }
   rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
+  }
+  rpc HandleSync (evented.EventBook) returns (evented.SynchronousProcessingResponse) {
   }
 }
 
 service Saga {
-  rpc HandleSync (evented.EventBook) returns (evented.EventBook) {
+  rpc Handle (evented.EventBook) returns (google.protobuf.Empty) {
   }
-  rpc Handle (evented.EventBook) returns (evented.EventBook) {
+  rpc HandleSync (evented.EventBook) returns (evented.SynchronousProcessingResponse) {
   }
 }

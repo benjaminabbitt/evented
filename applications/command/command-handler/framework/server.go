@@ -84,11 +84,11 @@ func (o Server) handleEventBook(ctx context.Context, eb *evented.EventBook) (res
 		return nil, err
 	}
 
-	syncResult, err := o.executeSyncProjections(ctx, sync)
+	syncResults, err := o.executeSyncProjections(ctx, sync)
 	if err != nil {
 		return result, err
 	}
-	result.Projections = append(result.Projections, syncResult...)
+	result.Projections = append(result.Projections, syncResults...)
 
 	otherDomainEventBooks, otherProjections, err := o.executeSyncSagas(ctx, sync)
 	if err != nil {
@@ -125,7 +125,6 @@ func (o Server) executeSyncSagas(ctx context.Context, sync *evented.EventBook) (
 }
 
 func (o Server) executeSyncProjections(ctx context.Context, sync *evented.EventBook) (result []*evented.Projection, rerr error) {
-	result = []*evented.Projection{}
 	for _, syncProjector := range o.transports.GetProjectors() {
 		var response *evented.Projection
 		var err error

@@ -156,7 +156,7 @@ func (suite ServerSuite) Test_HandleWithTransports() {
 
 	mockProjector := mock_evented.NewMockProjectorClient(suite.ctrl)
 	mockProjector.EXPECT().
-		Handle(gomock.Any(), syncEventBook).
+		HandleSync(gomock.Any(), syncEventBook).
 		Return(projection, nil)
 
 	suite.holder.EXPECT().
@@ -167,7 +167,7 @@ func (suite ServerSuite) Test_HandleWithTransports() {
 
 	mockSaga := mock_evented.NewMockSagaClient(suite.ctrl)
 	mockSaga.EXPECT().HandleSync(gomock.Any(), syncEventBook).Return(sagaResult, nil)
-	suite.holder.EXPECT().GetSaga().Return(mockSaga)
+	suite.holder.EXPECT().GetSaga().Return([]saga.SyncSagaTransporter{mockSaga})
 
 	var asyncEventPages []*evented.EventPage
 	asyncEventPages = append(asyncEventPages, &evented.EventPage{
@@ -196,7 +196,7 @@ func (suite ServerSuite) Test_HandleWithTransports() {
 	transporter := mock_async.NewMockEventTransporter(suite.ctrl)
 	transporter.EXPECT().Handle(gomock.Any(), asyncEventBook).Return(nil)
 	ch := make(chan *evented.EventBook, 10)
-	suite.holder.EXPECT().GetTransports().Return(ch)
+	suite.holder.EXPECT().GetTransports().Return([]chan *evented.EventBook{ch})
 	_, err := suite.server.Handle(context.Background(), commandBook)
 	if err != nil {
 		suite.Error(err)

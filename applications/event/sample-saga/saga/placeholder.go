@@ -3,6 +3,7 @@ package saga
 import (
 	evented_proto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
@@ -27,11 +28,12 @@ type PlaceholderSagaLogic struct {
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *evented.EventBook) (*evented.EventBook, error) {
-	return o.HandleSync(ctx, in)
+func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *evented.EventBook) (*emptypb.Empty, error) {
+	_, err := o.HandleSync(ctx, in)
+	return &emptypb.Empty{}, err
 }
 
-func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.EventBook) (*evented.EventBook, error) {
+func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.EventBook) (resp *evented.SynchronousProcessingResponse, err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		o.log.Error(err)
@@ -43,7 +45,7 @@ func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.Event
 	}
 	eb := &evented.EventBook{
 		Cover: &cover,
-		Pages: []*evented.EventPage{&evented.EventPage{
+		Pages: []*evented.EventPage{{
 			Sequence:    &evented.EventPage_Force{Force: true},
 			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       nil,
@@ -51,7 +53,13 @@ func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.Event
 		}},
 		Snapshot: nil,
 	}
-	return eb, nil
+
+	resp = &evented.SynchronousProcessingResponse{
+		Books:       []*evented.EventBook{eb},
+		Projections: nil,
+	}
+
+	return resp, nil
 }
 
 func (o *PlaceholderSagaLogic) Listen(port uint) {

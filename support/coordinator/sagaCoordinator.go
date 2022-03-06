@@ -33,11 +33,18 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook)
 	}
 	o.Coordinator.MarkProcessed(ctx, eb)
 
-	commandHandlerResponse, err := o.OtherCommandHandler.Record(ctx, sagaResponseBooks)
-	if err != nil {
-		o.Log.Error(err)
+	commandHandlerResponse := &evented.SynchronousProcessingResponse{
+		Books:       []*evented.EventBook{},
+		Projections: []*evented.Projection{},
 	}
-	commandHandlerResponse.Books = append(commandHandlerResponse.Books, sagaResponseBooks)
+
+	for _, book := range sagaResponseBooks.Books {
+		otherCommandHandlerResponse, err := o.OtherCommandHandler.Record(ctx, book)
+		if err != nil {
+			o.Log.Error(err)
+		}
+		commandHandlerResponse.Books = append(commandHandlerResponse.Books, otherCommandHandlerResponse.Books...)
+	}
 	return commandHandlerResponse, err
 }
 

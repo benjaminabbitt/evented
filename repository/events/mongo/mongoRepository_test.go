@@ -9,7 +9,6 @@ import (
 	"github.com/benjaminabbitt/evented/support/cucumber"
 	"github.com/benjaminabbitt/evented/support/dockerTestSuite"
 	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v10"
 	"github.com/golang/protobuf/ptypes"
 	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
@@ -50,22 +49,22 @@ func (suite *MongoRepositorySuite) InitializeScenario(s *godog.ScenarioContext) 
 	s.Step(`^I retrieve all events$`, suite.iRetrieveAllEvents)
 }
 
-func (suite *MongoRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *messages.PickleStepArgument_PickleTable) error {
+func (suite *MongoRepositorySuite) iShouldBeAbleToRetrieveItByItsCoordinates(arg1 *godog.Table) error {
 	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
 	ch := make(chan *evented.EventPage)
 	_ = suite.sut.Get(context.Background(), ch, suite.id)
 	return cucumber.AssertExpectedAndActual(assert.Equal, suite.events[0], <-ch, "", "")
 }
 
-func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *messages.PickleStepArgument_PickleTable) (id uuid.UUID, events []*evented.EventPage) {
-	for i, row := range arg.GetRows() {
+func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *godog.Table) (id uuid.UUID, events []*evented.EventPage) {
+	for i, row := range arg.Rows {
 		if i == 0 { //header
 			continue
 		}
 		var sequence uint32
 		var force bool
 		var ts *timestamppb.Timestamp
-		for j, cell := range row.GetCells() {
+		for j, cell := range row.Cells {
 			switch j {
 			case 0:
 				id, _ = uuid.Parse(cell.Value)
@@ -97,19 +96,19 @@ func (suite *MongoRepositorySuite) extractPickleTableToEvents(arg *messages.Pick
 	return id, events
 }
 
-func (suite *MongoRepositorySuite) iStoreTheEvent(arg1 *messages.PickleStepArgument_PickleTable) error {
+func (suite *MongoRepositorySuite) iStoreTheEvent(arg1 *godog.Table) error {
 	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
 	_ = suite.sut.Add(context.Background(), suite.id, suite.events)
 	return nil
 }
 
-func (suite *MongoRepositorySuite) aPopulatedDatabase(arg1 *messages.PickleStepArgument_PickleTable) error {
+func (suite *MongoRepositorySuite) aPopulatedDatabase(arg1 *godog.Table) error {
 	suite.id, suite.events = suite.extractPickleTableToEvents(arg1)
 	_ = suite.sut.Add(context.Background(), suite.id, suite.events)
 	return nil
 }
 
-func (suite *MongoRepositorySuite) iShouldGetTheseEvents(arg1 *messages.PickleStepArgument_PickleTable) error {
+func (suite *MongoRepositorySuite) iShouldGetTheseEvents(arg1 *godog.Table) error {
 	_, expectedEvents := suite.extractPickleTableToEvents(arg1)
 	return cucumber.AssertExpectedAndActual(assert.Equal, expectedEvents, suite.events, "", "")
 }
