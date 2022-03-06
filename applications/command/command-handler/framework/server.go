@@ -39,11 +39,11 @@ type Server struct {
 }
 
 func (o Server) Handle(ctx context.Context, in *evented.CommandBook) (result *evented.SynchronousProcessingResponse, err error) {
-	uuid, err := eventedproto.ProtoToUUID(in.Cover.Root)
+	id, err := eventedproto.ProtoToUUID(in.Cover.Root)
 	if err != nil {
 		return nil, err
 	}
-	priorState, err := o.eventBookRepository.Get(ctx, uuid)
+	priorState, err := o.eventBookRepository.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}

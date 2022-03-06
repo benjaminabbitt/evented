@@ -130,8 +130,8 @@ func (suite *QueryHandlerSuite) Test_Low_High() {
 	suite.repos.EXPECT().
 		GetFromTo(gomock.Any(), gomock.Any(), id, uint32(1), uint32(2)).
 		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) {
-			suite.eventPageChan <- page
-			close(suite.eventPageChan)
+			evtChan <- page
+			close(evtChan)
 		}).
 		Return(nil)
 

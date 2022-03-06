@@ -33,7 +33,7 @@ func (o DefaultEventQueryServer) GetEvents(req *evented.Query, server evented.Ev
 	if err != nil {
 		return err
 	}
-	evtChan := make(chan *evented.EventPage)
+	evtChan := make(chan *evented.EventPage, 10)
 	var eventPages []*evented.EventPage
 	cover := &evented.Cover{
 		Domain: req.Domain,

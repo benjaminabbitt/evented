@@ -3,6 +3,7 @@ package framework
 import (
 	"context"
 	"errors"
+	"fmt"
 	mock_client "github.com/benjaminabbitt/evented/applications/command/command-handler/business/client/mocks"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	mock_transport "github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport/mocks"
@@ -111,11 +112,13 @@ func (suite ServerSuite) Test_HandleWithTransports() {
 
 	id, _ := eventedproto.ProtoToUUID(commandBook.Cover.Root)
 
+	history := suite.produceHistoricalEventBook(commandBook)
+
 	suite.eventBookRepo.EXPECT().Get(gomock.Any(), id).
-		Return(suite.produceHistoricalEventBook(commandBook), nil)
+		Return(history, nil)
 
 	contextualCommand := &evented.ContextualCommand{
-		Events:  suite.produceHistoricalEventBook(commandBook),
+		Events:  history,
 		Command: commandBook,
 	}
 
@@ -269,6 +272,7 @@ func (suite ServerSuite) produceCommandBook() *evented.CommandBook {
 }
 
 func (suite ServerSuite) TestHandleUUIDCorrupt() {
+	fmt.Println("TestHandleUUIDCorrupt may spew errors to the console here.  That is intentional.")
 	invalidUUID := &evented.UUID{Value: []byte{}}
 	book := suite.produceCommandBook()
 	book.Cover.Root = invalidUUID
@@ -277,33 +281,37 @@ func (suite ServerSuite) TestHandleUUIDCorrupt() {
 }
 
 func (suite ServerSuite) TestEventBookRepositoryError() {
+	fmt.Println("TestEventBookRepositoryError may spew errors to the console here.  That is intentional.")
 	var typeCheckingBypass *evented.EventBook = nil
-	suite.eventBookRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(typeCheckingBypass, errors.New(""))
+	suite.eventBookRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(typeCheckingBypass, errors.New("Intentional Error"))
 	book := suite.produceCommandBook()
 	_, err := suite.server.Handle(suite.ctx, book)
 	suite.Assert().Error(err)
 }
 
 func (suite ServerSuite) TestBusinessClientError() {
+	fmt.Println("TestBusinessClientError may spew errors to the console here.  That is intentional.")
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	suite.eventBookRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, nil)
-	suite.businessClient.EXPECT().Handle(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, errors.New(""))
+	suite.businessClient.EXPECT().Handle(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, errors.New("Intentional Error"))
 	book := suite.produceCommandBook()
 	_, err := suite.server.Handle(suite.ctx, book)
 	suite.Assert().Error(err)
 }
 
 func (suite ServerSuite) TestEventBookRepositoryPutError() {
+	fmt.Println("TestEventBookRepositoryPutError may spew errors to the console here.  That is intentional.")
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	suite.eventBookRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, nil)
 	suite.businessClient.EXPECT().Handle(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, nil)
-	suite.eventBookRepo.EXPECT().Put(gomock.Any(), gomock.Any()).Return(errors.New(""))
+	suite.eventBookRepo.EXPECT().Put(gomock.Any(), gomock.Any()).Return(errors.New("Intentional Error"))
 	book := suite.produceCommandBook()
 	_, err := suite.server.Handle(suite.ctx, book)
 	suite.Assert().Error(err)
 }
 
 func (suite ServerSuite) TestHandleSyncSagaError() {
+	fmt.Println("TestHandleSyncSagaError may spew errors to the console here.  That is intentional.")
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	id, _ := uuid.NewRandom()
 	eventPages := []*evented.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
@@ -318,7 +326,7 @@ func (suite ServerSuite) TestHandleSyncSagaError() {
 		Projections: nil,
 	}
 	sagaTransporter.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(sagaResponse, nil)
-	sagaTransporter2.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(sagaResponse, errors.New(""))
+	sagaTransporter2.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(sagaResponse, errors.New("Intentional Saga Error"))
 	projectorTransporter := mock_projector.NewMockSyncProjectorTransporter(suite.ctrl)
 	projectorTransporter2 := mock_projector.NewMockSyncProjectorTransporter(suite.ctrl)
 	suite.holder.EXPECT().GetProjectors().Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
@@ -331,6 +339,7 @@ func (suite ServerSuite) TestHandleSyncSagaError() {
 }
 
 func (suite ServerSuite) TestHandleSyncProjectionError() {
+	fmt.Println("TestHandleSyncProjectionError may spew errors to the console here.  That is intentional.")
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	id, _ := uuid.NewRandom()
 	eventPages := []*evented.EventPage{NewEmptyEventPage(0, false), NewEmptyEventPage(1, false)}
@@ -342,13 +351,14 @@ func (suite ServerSuite) TestHandleSyncProjectionError() {
 	suite.holder.EXPECT().GetProjectors().Return([]projector.SyncProjectorTransporter{projectorTransporter, projectorTransporter2})
 	var projectionTypeCheckingBypass *evented.Projection = nil
 	projectorTransporter.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(projectionTypeCheckingBypass, nil)
-	projectorTransporter2.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(projectionTypeCheckingBypass, errors.New(""))
+	projectorTransporter2.EXPECT().HandleSync(gomock.Any(), gomock.Any()).Return(projectionTypeCheckingBypass, errors.New("Intentional Projection Error"))
 	book := suite.produceCommandBook()
 	_, err := suite.server.Handle(suite.ctx, book)
 	suite.Assert().Error(err)
 }
 
 func (suite ServerSuite) TestExtractSynchronousEmptyEventBook() {
+	fmt.Println("TestExtractSynchronousEmptyEventBook may spew errors to the console here.  That is intentional.")
 	var eventBookTypeCheckingBypass *evented.EventBook = nil
 	suite.eventBookRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(eventBookTypeCheckingBypass, nil)
 	id, _ := uuid.NewRandom()
