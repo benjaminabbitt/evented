@@ -8,12 +8,11 @@ import (
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	mock_evented "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/mocks"
 	mock_events "github.com/benjaminabbitt/evented/repository/events/mocks"
-	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/golang/protobuf/proto"
-	uuid2 "github.com/google/uuid"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -59,7 +58,7 @@ func sumPages(pages []*evented.EventPage) uint32 {
 
 /// Validates the memory approximation technique we use when batching events into event books
 func (suite *QueryHandlerSuite) TestMemoryApproximation() {
-	uuid, _ := uuid2.NewRandom()
+	uuid, _ := uuid.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(uuid)
 	cover := &evented.Cover{
 		Root:   &protoUUID,
@@ -115,22 +114,22 @@ func (suite *QueryHandlerSuite) TestMemoryApproximation() {
 }
 
 func (suite *QueryHandlerSuite) Test_Low_High() {
-	uuid, _ := uuid2.NewRandom()
-	protoUUID := eventedproto.UUIDToProto(uuid)
+	id, _ := uuid.NewRandom()
+	protoID := eventedproto.UUIDToProto(id)
 	domain := "test"
 
 	//evtChan := make(chan *evented.EventPage)
 	query := &evented.Query{
 		Domain:     domain,
-		Root:       &protoUUID,
+		Root:       &protoID,
 		LowerBound: 1,
 		UpperBound: 2,
 	}
 	ctx := context.Background()
 	page := framework.NewEmptyEventPage(1, false)
 	suite.repos.EXPECT().
-		GetFromTo(gomock.Any(), gomock.Any(), uuid, uint32(1), uint32(2)).
-		Do(func() {
+		GetFromTo(gomock.Any(), gomock.Any(), id, uint32(1), uint32(2)).
+		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32, to uint32) {
 			suite.eventPageChan <- page
 			close(suite.eventPageChan)
 		}).
@@ -145,20 +144,20 @@ func (suite *QueryHandlerSuite) Test_Low_High() {
 			book := payload.(*evented.EventBook)
 			suite.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
 			suite.Assert().Equal(domain, book.Cover.Domain)
-			suite.Assert().Equal(&protoUUID, book.Cover.Root)
+			suite.Assert().Equal(&protoID, book.Cover.Root)
 		})
 
 	_ = suite.sut.GetEvents(query, queryResponse)
 }
 
 func (suite *QueryHandlerSuite) Test_Low() {
-	id, _ := uuid2.NewRandom()
-	protoUUID := eventedproto.UUIDToProto(id)
+	id, _ := uuid.NewRandom()
+	protoID := eventedproto.UUIDToProto(id)
 	domain := "test"
 
 	query := &evented.Query{
 		Domain:     domain,
-		Root:       &protoUUID,
+		Root:       &protoID,
 		LowerBound: 1,
 	}
 	ctx := context.Background()
@@ -177,18 +176,17 @@ func (suite *QueryHandlerSuite) Test_Low() {
 	queryResponse.EXPECT().
 		Send(gomock.Any()).
 		Return(nil).
-		Do(func(payload interface{}) {
-			book := payload.(*evented.EventBook)
+		Do(func(book *evented.EventBook) {
 			suite.Assert().Equal(uint32(1), book.Pages[0].Sequence.(*evented.EventPage_Num).Num)
 			suite.Assert().Equal(domain, book.Cover.Domain)
-			suite.Assert().Equal(&protoUUID, book.Cover.Root)
+			suite.Assert().Equal(&protoID, book.Cover.Root)
 		})
 
 	_ = suite.sut.GetEvents(query, queryResponse)
 }
 
 func (suite *QueryHandlerSuite) Test_NoLimits() {
-	id, _ := uuid2.NewRandom()
+	id, _ := uuid.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(id)
 	domain := "test"
 
@@ -199,7 +197,7 @@ func (suite *QueryHandlerSuite) Test_NoLimits() {
 	ctx := context.Background()
 	suite.repos.EXPECT().
 		Get(gomock.Any(), gomock.Any(), id).
-		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID, from uint32) {
+		Do(func(ctx context.Context, evtChan chan *evented.EventPage, id uuid.UUID) {
 			page := framework.NewEmptyEventPage(1, false)
 			evtChan <- page
 			close(evtChan)
