@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type SnapshotMongoRepo struct {
+type SnapshotMongoRepoSuite struct {
 	log        *zap.SugaredLogger
 	client     *mongo.Client
 	collection *mongo.Collection
@@ -50,40 +50,40 @@ func storageToCore(storage *snapshot) (root uuid.UUID, snapshot *evented.Snapsho
 	}, nil
 }
 
-func (o SnapshotMongoRepo) Get(ctx context.Context, root uuid.UUID) (snap *evented.Snapshot, err error) {
+func (suite SnapshotMongoRepoSuite) Get(ctx context.Context, root uuid.UUID) (snap *evented.Snapshot, err error) {
 	idBytes, err := mongosupport.RootToMongo(root)
-	singleResult := o.collection.FindOne(ctx, bson.D{{Key: "_id", Value: idBytes}})
+	singleResult := suite.collection.FindOne(ctx, bson.D{{Key: "_id", Value: idBytes}})
 	record := &snapshot{}
 	err = singleResult.Decode(record)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return nil, nil
 		} else {
-			o.log.Error(err)
+			suite.log.Error(err)
 		}
 		return nil, err
 	}
 	_, coreRecord, err := storageToCore(record)
 	if err != nil {
-		o.log.Error(err)
+		suite.log.Error(err)
 		return nil, err
 	}
 	return coreRecord, nil
 }
 
-func (o SnapshotMongoRepo) Put(ctx context.Context, root uuid.UUID, snap *evented.Snapshot) (err error) {
+func (suite SnapshotMongoRepoSuite) Put(ctx context.Context, root uuid.UUID, snap *evented.Snapshot) (err error) {
 	record := coreToStorage(root, snap)
 	idBytes, err := mongosupport.RootToMongo(root)
 	if snap.Sequence == 0 {
-		_, err := o.collection.InsertOne(ctx, record)
+		_, err := suite.collection.InsertOne(ctx, record)
 		if err != nil {
-			o.log.Error(err)
+			suite.log.Error(err)
 			return err
 		}
 	} else {
-		_, err := o.collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: idBytes}}, record)
+		_, err := suite.collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: idBytes}}, record)
 		if err != nil {
-			o.log.Error(err)
+			suite.log.Error(err)
 			return err
 		}
 	}
@@ -106,7 +106,7 @@ func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogge
 		if err != nil {
 			log.Fatal(err)
 		}
-		return SnapshotMongoRepo{client: mongoClient, collection: collection, log: log}
+		return SnapshotMongoRepoSuite{client: mongoClient, collection: collection, log: log}
 	}
 	return nil
 }

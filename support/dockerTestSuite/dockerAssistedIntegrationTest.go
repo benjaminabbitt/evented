@@ -24,6 +24,10 @@ func (o *DockerAssistedIntegrationTest) GetPortMapping(servicePort uint16) (host
 	return 0, errors.New(fmt.Sprintf("Service port not found: %d", servicePort))
 }
 
+func (o *DockerAssistedIntegrationTest) PublicPort() (port uint16) {
+	return o.Ports[0].PublicPort
+}
+
 func (o *DockerAssistedIntegrationTest) getPorts() (ports []types.Port, err error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {

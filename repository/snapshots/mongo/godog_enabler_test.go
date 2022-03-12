@@ -27,13 +27,14 @@ func Test_Cucumber(t *testing.T) {
 }
 
 func executeCucumber() int {
+	testingSuite := MongoSnapshotRepositorySuite{}
 	format := cucumber.GetFormat()
 	opts := cucumber.GetOptions(format)
 	opts.Paths = []string{"../"}
 	suite := godog.TestSuite{
 		Name:                 reflect.TypeOf(Empty{}).PkgPath(),
-		TestSuiteInitializer: InitializeTestSuite,
-		ScenarioInitializer:  InitializeScenario,
+		TestSuiteInitializer: testingSuite.InitializeTestSuite,
+		ScenarioInitializer:  testingSuite.InitializeScenario,
 		Options:              &opts,
 	}
 	return cucumber.RunTestsWithCucumber(suite, opts)

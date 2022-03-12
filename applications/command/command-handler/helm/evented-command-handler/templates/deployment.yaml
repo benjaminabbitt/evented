@@ -35,14 +35,13 @@ spec:
             - name: evtd
               containerPort: {{.Values.port | default 1313 }}
               protocol: TCP
-  {{/* TODO: build grpc liveness and readiness probes once docker desktop updates k8s to 1.23 */}}
-{{/*          livenessProbe:*/}}
-{{/*            grpc:*/}}
-{{/*              port: 1737*/}}
-{{/*            initialDelaySeconds: 10*/}}
-{{/*          readinessProbe:*/}}
-{{/*            grpc:*/}}
-{{/*              port: 1737*/}}
+          livenessProbe:
+            grpc:
+              port: 1313
+            initialDelaySeconds: 10
+          readinessProbe:
+            grpc:
+              port: 1313
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
@@ -63,16 +62,15 @@ spec:
           imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}
           ports:
             - name: evtd
-              containerPort: {{.Values.port | default 1314 }}
+              containerPort: {{.Values.port | default 1737 }}
               protocol: TCP
-  {{/* TODO: build grpc liveness and readiness probes once docker desktop updates k8s to 1.23 */}}
-{{/*          livenessProbe:*/}}
-{{/*            grpc:*/}}
-{{/*              port: 1737*/}}
-{{/*            initialDelaySeconds: 10*/}}
-{{/*          readinessProbe:*/}}
-{{/*            grpc:*/}}
-{{/*              port: 1737*/}}
+          livenessProbe:
+            grpc:
+              port: 1737
+            initialDelaySeconds: 10
+          readinessProbe:
+            grpc:
+              port: 1737
           env:
             {{- toYaml .Values.business_logic.env  | nindent 12}}
           resources:

@@ -12,7 +12,6 @@ import (
 	mock_evented "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/mocks"
 	mock_eventBook "github.com/benjaminabbitt/evented/repository/eventBook/mocks"
 	"github.com/benjaminabbitt/evented/support"
-	mock_async "github.com/benjaminabbitt/evented/transport/async/mocks"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	mock_projector "github.com/benjaminabbitt/evented/transport/sync/projector/mocks"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -190,14 +189,6 @@ func (suite ServerSuite) Test_HandleWithTransports() {
 		Synchronous: false,
 	})
 
-	asyncEventBook := &evented.EventBook{
-		Cover:    businessResponse.Cover,
-		Pages:    asyncEventPages,
-		Snapshot: nil,
-	}
-
-	transporter := mock_async.NewMockEventTransporter(suite.ctrl)
-	transporter.EXPECT().Handle(gomock.Any(), asyncEventBook).Return(nil)
 	ch := make(chan *evented.EventBook, 10)
 	suite.holder.EXPECT().GetTransports().Return([]chan *evented.EventBook{ch})
 	_, err := suite.server.Handle(context.Background(), commandBook)

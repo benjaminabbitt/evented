@@ -28,17 +28,26 @@ type MongoRepositorySuite struct {
 
 func (suite *MongoRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	suite.log = support.Log()
-}
-
-func (suite *MongoRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
 	suite.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
 	err := suite.dait.CreateNewContainer("mongo", []uint16{27017})
 	if err != nil {
 		suite.log.Error(err)
 	}
+	ctx.AfterSuite(func() {
+		suite.TearDownTestSuite(ctx)
+	})
+}
 
+func (suite *MongoRepositorySuite) TearDownTestSuite(ctx *godog.TestSuiteContext) {
+	err := suite.dait.StopContainer()
+	if err != nil {
+		suite.log.Error(err)
+	}
+}
+
+func (suite *MongoRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
 	suite.id, _ = uuid.NewRandom()
-	suite.sut, _ = NewEventRepoMongo(context.Background(), fmt.Sprintf("mongodb://localhost:%d", suite.dait.Ports[0].PublicPort), "test", "events", suite.log)
+	suite.sut, _ = NewEventRepoMongo(context.Background(), fmt.Sprintf("mongodb://localhost:%d", suite.dait.PublicPort()), "test", "events", suite.log)
 	s.Step(`^I should be able to retrieve it by its coordinates:$`, suite.iShouldBeAbleToRetrieveItByItsCoordinates)
 	s.Step(`^I store the event:$`, suite.iStoreTheEvent)
 	s.Step(`^a populated database:$`, suite.aPopulatedDatabase)
