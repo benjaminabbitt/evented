@@ -54,7 +54,7 @@ deploy-command-handler:
 build-command-handler: VER := $(shell python ./devops/support/version/get-version.py)
 build-command-handler: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-command-handler:build-base build-scratch generate generate-mocks
-	docker build --tag evented-command-handler:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
+	docker build --tag evented-command-handler:${VER} --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 bounce-command-handler:
 	kubectl delete pods -l evented=command-handler
@@ -78,7 +78,7 @@ deploy-sample-business-logic:
 build-sample-business-logic: VER := $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
 build-sample-business-logic: build-base build-scratch generate generate-mocks
-	docker build --tag evented-sample-business-logic:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
+	docker build --tag evented-sample-business-logic:$(VER) --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
 build-sample-business-logic-debug: VER := $(shell python ./devops/support/version/get-version.py)
 build-sample-business-logic-debug: DT := $(shell python ./devops/support/get-datetime/get-datetime.py)
