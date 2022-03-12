@@ -15,7 +15,8 @@ func init() {
 type Empty struct{}
 
 func TestMain(m *testing.M) {
-	os.Exit(cucumber.Max([]int{executeCucumber(), cucumber.RunTestsWithTesting(m)}))
+	os.Exit(executeCucumber())
+
 }
 
 func Test_Cucumber(t *testing.T) {

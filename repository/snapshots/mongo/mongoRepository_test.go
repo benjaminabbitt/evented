@@ -19,14 +19,24 @@ type MongoSnapshotRepositorySuite struct {
 
 func (suite *MongoSnapshotRepositorySuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	suite.log = support.Log()
-}
-
-func (suite *MongoSnapshotRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
 	suite.dait = &dockerTestSuite.DockerAssistedIntegrationTest{}
 	err := suite.dait.CreateNewContainer("mongo", []uint16{27017})
 	if err != nil {
 		suite.log.Error(err)
 	}
+	ctx.AfterSuite(func() {
+		suite.TearDownTestSuite(ctx)
+	})
+}
+
+func (suite *MongoSnapshotRepositorySuite) TearDownTestSuite(ctx *godog.TestSuiteContext) {
+	err := suite.dait.StopContainer()
+	if err != nil {
+		suite.log.Error(err)
+	}
+}
+
+func (suite *MongoSnapshotRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
 	suite.sut = NewSnapshotMongoRepo(fmt.Sprintf("mongodb://localhost:%d", suite.dait.PublicPort()), "test", suite.log)
 	s.Step(`^I should be able to retrieve a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, suite.iShouldBeAbleToRetrieveASnapshotWithIdAndSequence)
 	s.Step(`^I store a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, suite.iStoreASnapshotWithId)

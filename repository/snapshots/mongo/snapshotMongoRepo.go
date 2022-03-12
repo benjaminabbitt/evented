@@ -30,11 +30,20 @@ type snapshot struct {
 
 func coreToStorage(root uuid.UUID, snap *evented.Snapshot) *snapshot {
 	mongoId, _ := mongosupport.RootToMongo(root)
+	var sequence uint32
+	var state *any.Any
+	if snap == nil {
+		sequence = 0
+		state = &any.Any{}
+	} else {
+		sequence = snap.Sequence
+		state = snap.State
+	}
 	return &snapshot{
 		MongoId:  mongoId,
 		Root:     root.String(),
-		Sequence: snap.Sequence,
-		state:    snap.State,
+		Sequence: sequence,
+		state:    state,
 	}
 
 }
@@ -74,7 +83,7 @@ func (suite SnapshotMongoRepoSuite) Get(ctx context.Context, root uuid.UUID) (sn
 func (suite SnapshotMongoRepoSuite) Put(ctx context.Context, root uuid.UUID, snap *evented.Snapshot) (err error) {
 	record := coreToStorage(root, snap)
 	idBytes, err := mongosupport.RootToMongo(root)
-	if snap.Sequence == 0 {
+	if snap == nil || snap.Sequence == 0 {
 		_, err := suite.collection.InsertOne(ctx, record)
 		if err != nil {
 			suite.log.Error(err)
