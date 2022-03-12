@@ -19,6 +19,9 @@ build-scratch:
 test:
 	go test ./...
 
+test-service-integration:
+	go test ./... -tags serviceIntegration
+
 vet:
 	go vet ./...
 

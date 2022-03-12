@@ -1,3 +1,5 @@
+//go:build serviceIntegration
+
 package mongo
 
 import (
