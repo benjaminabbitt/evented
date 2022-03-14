@@ -25,6 +25,5 @@ func (o *BasicCommandHandlerApplicationContext) GetConfig() *configuration.Confi
 }
 
 type CommandHandlerApplicationContext interface {
-	support.ApplicationContext
 	GetConfig() *configuration.Configuration
 }

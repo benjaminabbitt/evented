@@ -1,28 +1,29 @@
 #YAML 1.2
 ---
 business:
-  url: localhost:1314
+  url: localhost:1737
 
 port: 1313
 domain: domain
 
 snapshots:
-  kind: mongodb
+  kind: memory
   mongodb:
-    url: mongodb://mongodb.default.svc.cluster.local:27017
+    url: mongodb://evented-mongodb.default.svc.cluster.local:27017
     name: commandHandlerSnapshots
 
 transport:
-  kind: rabbitmq
+  kind: noop
   rabbitmq:
     url: amqp://guest:guest@rabbitmq.default.svc:5672
     exchange: evented
 
 events:
-  kind: mongodb
+  kind: memory
   mongodb:
-    url: mongodb://mongodb.default.svc.cluster.local:27017
+    url: mongodb://evented-mongodb.default.svc.cluster.local:27017
     name: commandHandlerEvents
     collection: eventCollection
+
 
 proof: pudding

@@ -1,4 +1,0 @@
-Set the configuration keys in Consul.
-
-Command handler: {{ .Values.commandhandler.configuration.key | default (include "commandHandler.name" .) }}
-Business Logic (Your application):  {{ .Values.businesslogic.configuration.key  | default (include "commandHandler.businessLogicName" .) }}

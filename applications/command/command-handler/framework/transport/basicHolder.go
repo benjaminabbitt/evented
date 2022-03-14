@@ -1,14 +1,14 @@
 package transport
 
 import (
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
-	"go.uber.org/zap"
 )
 
 type BasicHolder struct {
-	Log        *zap.SugaredLogger
+	appCtx     *actx.ApplicationContext
 	transports []chan *evented.EventBook
 	projectors []projector.SyncProjectorTransporter
 	sagas      []saga.SyncSagaTransporter
@@ -38,6 +38,6 @@ func (th *BasicHolder) GetSaga() []saga.SyncSagaTransporter {
 	return th.sagas
 }
 
-func NewTransportHolder(log *zap.SugaredLogger) *BasicHolder {
-	return &BasicHolder{Log: log}
+func NewTransportHolder(ctx *actx.ApplicationContext) *BasicHolder {
+	return &BasicHolder{appCtx: ctx}
 }

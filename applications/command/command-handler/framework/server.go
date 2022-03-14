@@ -3,6 +3,7 @@ package framework
 import (
 	"context"
 	"errors"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/business/client"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
@@ -14,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(actx CommandHandlerApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
+func NewServer(actx *actx.ApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
 	return Server{
 		retry:               actx.RetryStrategy(),
 		log:                 actx.Log(),
@@ -144,7 +145,7 @@ func (o Server) executeSyncProjections(ctx context.Context, sync *evented.EventB
 
 func (o Server) extractSynchronous(originalBook *evented.EventBook) (synchronous *evented.EventBook, async *evented.EventBook, err error) {
 	if len(originalBook.Pages) == 0 {
-		return nil, nil, errors.New("event book has no pages -- not correct in this context")
+		return nil, nil, errors.New("event book has no pages -- not correct in this actx")
 	}
 	var lastIdx uint32
 	for idx, event := range originalBook.Pages {

@@ -33,17 +33,21 @@ spec:
           imagePullPolicy: {{ .Values.command_handler.image.pullPolicy }}
           ports:
             - name: evtd
-              containerPort: {{.Values.port | default 1313 }}
+              containerPort: {{ include "evented-command-handler.coordinator-port" . }}
               protocol: TCP
           livenessProbe:
-            grpc:
-              port: 1313
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}"]
+{{/*            grpc:*/}}
+{{/*              port: {{ include "evented-command-handler.coordinator-port" . }}*/}}
             initialDelaySeconds: 10
           readinessProbe:
-            grpc:
-              port: 1313
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}"]
+{{/*            grpc:*/}}
+{{/*              port: {{ include "evented-command-handler.coordinator-port" . }}*/}}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.command_handler.resources | nindent 12 }}
           env:
             - name: CONFIG_MGMT_TYPE
               value: consul
@@ -62,19 +66,23 @@ spec:
           imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}
           ports:
             - name: evtd
-              containerPort: {{.Values.port | default 1737 }}
+              containerPort: {{ include "evented-command-handler.business-logic-port" . }}
               protocol: TCP
           livenessProbe:
-            grpc:
-              port: 1737
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}"]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
             initialDelaySeconds: 10
           readinessProbe:
-            grpc:
-              port: 1737
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}"]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
           env:
             {{- toYaml .Values.business_logic.env  | nindent 12}}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.business_logic.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

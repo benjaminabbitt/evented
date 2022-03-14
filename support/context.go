@@ -9,8 +9,3 @@ type BasicApplicationContext struct {
 	RetryStrategy backoff.BackOff
 	Log           *zap.SugaredLogger
 }
-
-type ApplicationContext interface {
-	RetryStrategy() backoff.BackOff
-	Log() *zap.SugaredLogger
-}

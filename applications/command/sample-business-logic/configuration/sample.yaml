@@ -1,6 +1,4 @@
 #YAML 1.2
 ---
-port: 1314
+port: 1737
 proof: pudding
-consul:
-  host:

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	actx "github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/business/client"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
@@ -13,10 +14,12 @@ import (
 	"github.com/benjaminabbitt/evented/repository/events/memory"
 	eventmongo "github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
+	memory2 "github.com/benjaminabbitt/evented/repository/snapshots/memory"
 	snapshotmongo "github.com/benjaminabbitt/evented/repository/snapshots/mongo"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/network"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
@@ -38,13 +41,21 @@ var log *zap.SugaredLogger
 func main() {
 	log = support.Log()
 	support.LogStartup(log, "Command Handler")
+	appCtx := &actx.ApplicationContext{
+		BasicApplicationContext: support.BasicApplicationContext{
+			Log:           log,
+			RetryStrategy: backoff.NewExponentialBackOff(),
+		},
+	}
 
 	conf := &configuration.Configuration{}
 	conf = support.Initialize(log, conf).(*configuration.Configuration)
+	appCtx.Configuration = conf
 
 	setupConsul(log, conf)
 
-	tracer, closer := setupJaeger(conf.Name)
+	tracer, closer := setupJaeger(fmt.Sprintf("%s-%s", conf.Domain, conf.Name))
+	appCtx.Tracer = tracer
 	initSpan := tracer.StartSpan("Init")
 	defer func(closer io.Closer) {
 		err := closer.Close()
@@ -53,45 +64,50 @@ func main() {
 		}
 	}(closer)
 
-	businessAddress := conf.Business.Url
-	businessClient, _ := client.NewBusinessClient(businessAddress, log)
+	businessAddress := appCtx.Configuration.Business.Url
+	businessClient, _ := client.NewBusinessClient(appCtx, businessAddress)
 
 	commandHandlerPort := conf.Port
 	log.Infow("Starting Business Logic Coordinator", "port", commandHandlerPort)
 
-	eventRepo, _ := setupEventRepo(conf, log, initSpan)
-	ssRepo := setupSnapshotRepo(conf, initSpan)
+	eventRepo, err := setupEventRepo(appCtx, initSpan)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infow("Set up Event Repository")
 
-	repo := eventBook.MakeRepositoryBasic(eventRepo, ssRepo, conf.Domain, log)
+	ssRepo, err := setupSnapshotRepo(appCtx, initSpan)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infow("Set up Snapshot Repository")
 
-	handlers := transport.NewTransportHolder(log)
+	repo := eventBook.MakeRepositoryBasic(appCtx, eventRepo, ssRepo)
 
+	handlers := transport.NewTransportHolder(appCtx)
+
+	log.Infow("Setting up Synchronous Sagas")
 	for _, ea := range conf.Sync.Sagas {
 		log.Infow("Connecting with Saga... ", "url", ea.Url)
 		sagaConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
 		handlers.AddSagaTransporter(saga.NewGRPCSagaClient(sagaConn))
 		log.Infow("Connection with Saga Successful", "url", ea.Url)
 	}
+	log.Infow("Synchronous Sagas done")
 
+	log.Infow("Setting up Synchronous Projectors")
 	for _, ea := range conf.Sync.Projectors {
 		log.Infow("Connecting with evented... ", "url", ea.Url)
 		projectorConn := grpcWithInterceptors.GenerateConfiguredConn(ea.Url, log, tracer)
 		handlers.AddProjectorClient(projector.NewGRPCProjector(projectorConn))
 		log.Infow("Connection with Projector Successful.", "url", ea.Url)
 	}
+	log.Infow("Synchronous Projectors done")
 
-	handlers.AddEventBookChan(setupServiceBus(conf, initSpan))
-
-	actx := &framework.BasicCommandHandlerApplicationContext{
-		BasicApplicationContext: support.BasicApplicationContext{
-			RetryStrategy: backoff.NewExponentialBackOff(),
-			Log:           log,
-		},
-		Config: conf,
-	}
+	handlers.AddEventBookChan(setupTransport(appCtx, initSpan))
 
 	server := framework.NewServer(
-		actx,
+		appCtx,
 		repo,
 		handlers,
 		businessClient,
@@ -99,7 +115,7 @@ func main() {
 
 	var addrs []string
 	if viper.GetBool("bindLocal") {
-		addrs = getExternalAddrs()
+		addrs = network.GetExternalAddrs()
 	}
 	log.Infow("Opening port on addresses", "port", conf.Port, "addrs", addrs)
 	listeners := listen(addrs, conf.Port)
@@ -125,7 +141,7 @@ func main() {
 func listen(externalAddrs []string, port uint) (listeners []net.Listener) {
 	if externalAddrs == nil {
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
+		if err == nil {
 			listeners = append(listeners, listener)
 		} else {
 			log.Error(err)
@@ -133,7 +149,7 @@ func listen(externalAddrs []string, port uint) (listeners []net.Listener) {
 	} else {
 		for _, addr := range externalAddrs {
 			listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
-			if err != nil {
+			if err == nil {
 				listeners = append(listeners, listener)
 			} else {
 				log.Error(err)
@@ -143,61 +159,57 @@ func listen(externalAddrs []string, port uint) (listeners []net.Listener) {
 	return listeners
 }
 
-func getExternalAddrs() (externalAddrs []string) {
-	ifaces, err := net.Interfaces()
-	if err == nil {
-		for _, i := range ifaces {
-			addrs, _ := i.Addrs()
-			for _, addr := range addrs {
-				switch v := addr.(type) {
-				case *net.IPNet:
-					externalAddrs = addIfNotLoopback(v.IP, externalAddrs)
-				case *net.IPAddr:
-					externalAddrs = addIfNotLoopback(v.IP, externalAddrs)
-				}
-			}
-		}
-	}
-	return externalAddrs
-}
-
-func addIfNotLoopback(addr net.IP, externalAddrs []string) (rExternalAddrs []string) {
-	rExternalAddrs = externalAddrs
-	if !addr.IsLoopback() {
-		rExternalAddrs = append(rExternalAddrs, addr.String())
-	}
-	return rExternalAddrs
-}
-
-func setupSnapshotRepo(config *configuration.Configuration, span opentracing.Span) (repo snapshots.SnapshotStorer) {
-	childSpan := span.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
+func setupSnapshotRepo(actx *actx.ApplicationContext, span opentracing.Span) (repo snapshots.SnapshotStorer, err error) {
+	childSpan := actx.Tracer.StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	return snapshotmongo.NewSnapshotMongoRepo(config.Snapshots.Mongodb.Url, config.Snapshots.Mongodb.Name, log)
+	if actx.Configuration.Snapshots.Kind == mongodbName {
+		return snapshotmongo.NewSnapshotMongoRepo(actx.Configuration.Snapshots.Mongodb.Url, actx.Configuration.Snapshots.Mongodb.Name, log)
+	} else if actx.Configuration.Snapshots.Kind == memoryName {
+		return memory2.NewSnapshotRepoMemory(actx.Log())
+	} else {
+		return nil, fmt.Errorf("specified snapshot repository type %s is invalid", actx.Configuration.Snapshots.Kind)
+	}
 }
 
-func setupServiceBus(config *configuration.Configuration, span opentracing.Span) (ch chan *evented.EventBook) {
+const noopName = "noop"
+const amqpName = "amqp"
+
+func setupTransport(appCtx *actx.ApplicationContext, span opentracing.Span) (ch chan *evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	ch = make(chan *evented.EventBook)
-	trans := sender.NewAMQPSender(ch, config.Transport.Rabbitmq.Url, config.Transport.Rabbitmq.Exchange, log)
-	err := trans.Connect()
-	if err != nil {
-		log.Error(err)
+	var trans sender.EventSender
+	if appCtx.Configuration.Transport.Kind == amqpName {
+		trans = sender.NewAMQPSender(ch, appCtx.Configuration.Transport.Rabbitmq.Url, appCtx.Configuration.Transport.Rabbitmq.Exchange, log)
+		err := trans.(*sender.AMQPSender).Connect()
+		if err != nil {
+			log.Error(err)
+		}
+	} else if appCtx.Configuration.Transport.Kind == noopName {
+		trans = sender.NoOp{}
 	}
 	trans.Run()
 	return ch
 }
 
-func setupEventRepo(config *configuration.Configuration, log *zap.SugaredLogger, span opentracing.Span) (repo events.EventStorer, err error) {
+const memoryName = "memory"
+const mongodbName = "mongodb"
+
+func setupEventRepo(actx *actx.ApplicationContext, span opentracing.Span) (repo events.EventStorer, err error) {
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	var eventRepoTypes = []string{"memory", "mongodb"}
-	if config.Events.Kind == eventRepoTypes[0] {
+	if actx.Configuration.Events.Kind == memoryName {
 		repo, err = memory.NewEventRepoMemory(log)
-	} else if config.Events.Kind == eventRepoTypes[1] {
-		repo, err = eventmongo.NewEventRepoMongo(context.Background(), config.Events.Mongodb.Url, config.Events.Mongodb.Name, config.Events.Mongodb.Collection, log)
+		log.Debug("Memory event repository initialized")
+	} else if actx.Configuration.Events.Kind == mongodbName {
+		repo, err = eventmongo.NewEventRepoMongo(context.Background(), actx.Configuration.Events.Mongodb.Url, actx.Configuration.Events.Mongodb.Name, actx.Configuration.Events.Mongodb.Collection, log)
+		log.Debug("MongoDB event repository initialized")
 	} else {
 		log.Error("Specified Event Repository %s does not match one of recognized: ", eventRepoTypes)
+	}
+	if err != nil {
+		log.Error(err)
 	}
 	return repo, nil
 }

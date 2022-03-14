@@ -2,6 +2,7 @@ package eventBook
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 
@@ -11,12 +12,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func MakeRepositoryBasic(eventRepo events.EventStorer, snapshotRepo snapshots.SnapshotStorer, domain string, log *zap.SugaredLogger) *RepositoryBasic {
+func MakeRepositoryBasic(actx *actx.ApplicationContext, eventRepo events.EventStorer, snapshotRepo snapshots.SnapshotStorer) *RepositoryBasic {
 	return &RepositoryBasic{
-		log:          log,
+		log:          actx.Log(),
 		EventRepo:    eventRepo,
 		SnapshotRepo: snapshotRepo,
-		Domain:       domain,
+		Domain:       actx.Configuration.Domain,
 	}
 }
 

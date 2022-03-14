@@ -99,7 +99,7 @@ func (suite SnapshotMongoRepoSuite) Put(ctx context.Context, root uuid.UUID, sna
 	return nil
 }
 
-func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer) {
+func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer, err error) {
 	ctx, cxl := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cxl()
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
@@ -115,7 +115,7 @@ func NewSnapshotMongoRepo(uri string, databaseName string, log *zap.SugaredLogge
 		if err != nil {
 			log.Fatal(err)
 		}
-		return SnapshotMongoRepoSuite{client: mongoClient, collection: collection, log: log}
+		return SnapshotMongoRepoSuite{client: mongoClient, collection: collection, log: log}, nil
 	}
-	return nil
+	return nil, err
 }

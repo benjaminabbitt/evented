@@ -4,9 +4,8 @@ selectorLabels:
 labels:
   label: "label"
 
-port: 1313 #ASCII CQRS +1000 to get out of priv ports
-
 command_handler:
+  port: 1313 #ASCII "CQRS" +1000 to get out of priv ports
   image:
     repository: evented-command-handler
     pullPolicy: Never
@@ -28,6 +27,7 @@ command_handler:
 
 
 business_logic:
+  port: 1737 #ASCII "evented" + 1000 to get out of priv ports
   image:
     repository: evented-sample-business-logic
     pullPolicy: Never

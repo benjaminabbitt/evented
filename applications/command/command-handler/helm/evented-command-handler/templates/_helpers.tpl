@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "evented-command-handler.name" -}}
-{{ $name := printf "evtd-%s-%s" .Chart.Name .Release.Name}}
+{{ $name := printf "%s-%s" .Release.Name .Chart.Name}}
 {{- $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -12,23 +12,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "evented-command-handler.fullname" -}}
-{{- printf "evtd-%s-%s" .Chart.Name .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{- define "evented-command-handler.coordinator-port"}}
+{{- .Values.command_handler.port | default 1313 -}}
+{{- end }}
 
-{{/**/}}
-{{/*Create container names*/}}
-{{/**/}}
-{{/*{{- define "evented-command-handler.command-handler.name"}}*/}}
-{{/*{{- printf "evtd-ch-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower }}*/}}
-{{/*{{- end }}*/}}
-
-{{/**/}}
-{{/*Business Logic names*/}}
-{{/**/}}
-{{/*{{- define "evented-command-handler.business-logic.name"}}*/}}
-{{/*{{- printf "evtd-bl-%s-%s" .Chart.Name .Release.Name | trimSuffix "-" | lower}}*/}}
-{{/*{{- end}}*/}}
+{{- define "evented-command-handler.business-logic-port"}}
+{{- .Values.business_logic.port | default 1737 -}}
+{{- end }}
 
 {{/*
 Create chart name and version as used by the chart label.
@@ -56,7 +49,7 @@ Selector labels
 {{- define "evented-command-handler.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "evented-command-handler.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-evented: {{ include "evented-command-handler.name" . | trimPrefix "evtd-" }}
+evented: {{ include "evented-command-handler.name" . }}
 {{- end }}
 
 
