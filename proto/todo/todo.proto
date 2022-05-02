@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package evented;
+option go_package = "github.com/benjaminabbitt/todo/proto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message CreateTodo {
+  string title = 1;
+  optional string body = 2;
+  google.protobuf.Timestamp due = 3;
+  optional google.protobuf.Duration duration = 4;
+  optional bool important = 5;
+  optional google.protobuf.Timestamp remindAt = 6;
+}
+
+message SetStatus{
+  bool done = 1;
+}
+
+message EditTodo {
+  optional string title = 1;
+  optional string body = 2;
+  optional google.protobuf.Timestamp due = 3;
+  optional google.protobuf.Duration duration = 4;
+  optional bool important = 5;
+  optional google.protobuf.Timestamp remindAt = 6;
+}
+

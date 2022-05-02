@@ -43,14 +43,12 @@ func (suite *ServerSuite) SetupTest() {
 	retryStrategy := &backoff.StopBackOff{}
 	config := &configuration.Configuration{}
 	suite.actx = &BasicCommandHandlerApplicationContext{
-		BasicApplicationContext: support.BasicApplicationContext{
-			RetryStrategy: retryStrategy,
-			Log:           log,
-		},
-		Config: config,
+		RetryStrategy: retryStrategy,
+		Log:           log,
+		Config:        config,
 	}
 
-	defer func(actx support.ApplicationContext) {
+	defer func(actx *BasicCommandHandlerApplicationContext) {
 		err := log.Sync()
 		if err != nil {
 			log.Error(err)

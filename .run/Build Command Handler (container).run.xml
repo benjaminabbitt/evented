@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build Command Handler (container)" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
-    <makefile filename="$PROJECT_DIR$/Makefile" target="build_command_handler bounce_command_handler" workingDirectory="" arguments="">
-      <envs />
-    </makefile>
-    <method v="2" />
-  </configuration>
-</component>

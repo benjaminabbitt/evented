@@ -1,4 +1,4 @@
-package main
+package serve
 
 import (
 	"github.com/benjaminabbitt/evented/applications/command/sample-business-logic/businessLogic"
@@ -9,6 +9,7 @@ import (
 	"github.com/benjaminabbitt/evented/support/grpcHealth"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 	_ "github.com/spf13/viper/remote"
 	"github.com/uber/jaeger-client-go"
 	"go.uber.org/zap"
@@ -18,7 +19,7 @@ var (
 	log *zap.SugaredLogger
 )
 
-func main() {
+func serve(command *cobra.Command, args []string) {
 	log = support.Log()
 	defer log.Sync()
 	support.LogStartup(log, "Sample Business Logic")
@@ -65,5 +66,10 @@ func setupConsul(config *configuration.Configuration) {
 	if err != nil {
 		log.Error(err)
 	}
+}
 
+var ServeCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "runs the server",
+	Run:   serve,
 }

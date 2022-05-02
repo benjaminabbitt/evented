@@ -7,6 +7,7 @@ build-debug: build-command-handler-debug
 
 generate: install-deps
 	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/evented.proto -l go -o gen
+	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f todo/todo.proto -l go -o gen
 
 build-base:
 	docker build --tag evented-base -f ./evented-base.dockerfile .
@@ -244,10 +245,14 @@ consul-service-expose:
 
 
 ## RabbitMQ Shortcuts
-install-rabbit:
+rabbit-install:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo update
 	helm install evented-rabbitmq bitnami/rabbitmq --wait --values ./devops/helm/rabbitmq/values.yaml
+
+rabbit-uninstall:
+	helm uninstall evented-rabbitmq
+	kubectl delete pvc data-evented-rabbitmq-0
 
 rabbit-ui-expose:
 	kubectl port-forward svc/evented-rabbitmq 15672:15672
@@ -255,11 +260,6 @@ rabbit-ui-expose:
 rabbit-service-expose:
 	kubectl port-forward svc/evented-rabbitmq 5672:5672
 
-rabbit-extract-cookie:
-	@python devops/make/get-secret/get-secret.py --secret="rabbitmq-erlang-cookie"
-
-rabbit-extract-pw:
-	@python devops/make/get-secret/get-secret.py --secret="rabbitmq-password"
 
 ## Mongo Shortcuts
 mongo-service-expose:
