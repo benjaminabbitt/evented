@@ -17,7 +17,8 @@ type Configuration struct {
 		}
 	}
 	Projector struct {
-		Url string
+		Url  string
+		Name string
 	}
 	Database struct {
 		Kind    string

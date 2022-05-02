@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: {{.Values.service.port}}
       protocol: TCP
-      name: http
+      name: grpc-evented-query-handler
   selector:
     {{- include "evented-query-handler.selectorLabels" . | nindent 4 }}

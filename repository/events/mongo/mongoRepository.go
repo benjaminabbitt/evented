@@ -285,7 +285,7 @@ func NewEventRepoMongo(ctx context.Context, uri string, databaseName string, eve
 	if err != nil {
 		return nil, err
 	}
-	err = mongoClient.Ping(nil, readpref.Primary())
+	err = mongoClient.Ping(ctx, readpref.Primary())
 	collection := mongoClient.Database(databaseName).Collection(eventCollectionName)
 	repoMongo = &EventRepoMongo{client: mongoClient, Database: databaseName, Collection: collection, CollectionName: eventCollectionName, log: log}
 	err = repoMongo.establishIndices()

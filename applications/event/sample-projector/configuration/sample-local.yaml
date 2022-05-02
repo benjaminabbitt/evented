@@ -2,4 +2,4 @@
 ---
 port: 1738
 proof: pudding
-name: evented-projector-sample
+name: evented-projector-sample-local

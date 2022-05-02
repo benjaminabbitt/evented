@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Sample Projector" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="evented" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="APP_NAME" value="evented-sample-projector" />
+      <env name="CONFIG_MGMT_TYPE" value="consul" />
+      <env name="CONSUL_CONFIG_TYPE" value="yaml" />
+      <env name="CONSUL_HOST" value="localhost:8500" />
+      <env name="CONSUL_KEY" value="evented-sample-projector-local" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="github.com/benjaminabbitt/evented/applications/event/sample-projector" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/applications/event/sample-projector/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

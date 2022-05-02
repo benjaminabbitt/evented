@@ -3,10 +3,12 @@
 eventStore:
   kind: mongodb
   mongodb:
-    url: mongodb://mongodb.default.svc.cluster.local:27017
+    url: mongodb://evented-mongodb.default.svc.cluster.local:27017
+    #url: mongodb://localhost:27017
     name: commandHandlerEvents
     collection: eventCollection
 
-port: 1313
+port: 1314
 targetSize: 1024 #Unknown 20220130
 proof: pudding
+name: sample-query-handler

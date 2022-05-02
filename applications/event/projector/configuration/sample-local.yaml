@@ -1,29 +1,29 @@
 #YAML 1.2
 ---
 queryHandler:
-  url: evented-query-handler.default.svc.cluster.local:1314
-  name: sample-query-handler
+  url: localhost:1314
+  name: evented-query-handler #Used for GRPC Health Checks
 
 transport:
   kind: amqp
   amqp:
-    url: amqp://test:test@rabbitmq.default.svc:5672
+    url: amqp://test:test@localhost:5672
     exchange: evented
     queue: sample-projector
 
 projector:
   url: localhost:1738
-  name:
+  name: evented-projector-sample-local #Used for GRPC Health Checks
 
 database:
   kind: mongodb
   mongodb:
-    url: mongodb://mongodb.default.svc.cluster.local:27017
+    url: mongodb://localhost:27017
     name: evented-sample-projector-amqp-default
     collection: projector
 
 domain: domain
 
-name: applicationName
+name: applicationName #Used for GRPC Health Checks
 port: 1315
 proof: pudding

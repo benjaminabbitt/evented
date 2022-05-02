@@ -35,17 +35,15 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: evtd
-              containerPort: {{.Values.port | default 1313}}
+              containerPort: {{ include "evented-query-handler.port" .}}
               protocol: TCP
-              {{/* TODO: probes when k8s gets updated in a way I can use/test it on Windows desktop */}}
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
+          livenessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-query-handler.port" .}}"]
+            initialDelaySeconds: 10
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-query-handler.port" .}}"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:

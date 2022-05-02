@@ -45,111 +45,141 @@ generate-mocks: generate
 # Command Handler
 debug-deploy-command-handler: build-command-handler-debug build-sample-business-logic-debug build-command-handler build-sample-business-logic windows-configuration-load-command-handler windows-configuration-load-sample-business-logic deploy-command-handler
 
-deploy-command-handler: build-command-handler build-sample-business-logic windows-configuration-load-command-handler windows-configuration-load-sample-business-logic minikube-load-evented-command-handler minikube-load-evented-sample-business-logic
-	-helm delete sample
-	helm install sample ./applications/command/command-handler/helm/evented-command-handler --debug
+#deploy-command-handler: windows-configuration-load-command-handler windows-configuration-load-sample-business-logic minikube-load-evented-command-handler minikube-load-evented-sample-business-logic
+ch-deploy: ch-undeploy ch-build ch-minikube-load chsa-build chsa-minikube-load
+	helm install sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
 
-build-command-handler: VER := $(shell python ./devops/make/version/get-version.py)
-build-command-handler: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-command-handler:build-base build-scratch generate generate-mocks
+ch-undeploy:
+	-helm uninstall sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
+
+ch-build: VER := $(shell python ./devops/make/version/get-version.py)
+ch-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+ch-build:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:${VER} --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
-bounce-command-handler:
+ch-bounce:
 	kubectl delete pods -l evented=sample-command-handler
 
-build-command-handler-debug: VER := $(shell python ./devops/make/version/get-version.py)
-build-command-handler-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-command-handler-debug:build-base build-scratch
+ch-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
+ch-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+ch-build-debug:build-base build-scratch
 	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/debug.dockerfile .
 
-windows-configuration-load-command-handler:
+ch-ps-configuration-load:
 	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-command-handler applications\command\command-handler\configuration\sample.yaml
 
-logs-command-handler:
+ch-logs:
 	kubectl logs -l app.kubernetes.io/name=evtd-command-handler --all-containers=true --tail=-1
 
+ch-minikube-load: ch-build ch-undeploy
+	minikube --v=2 --alsologtostderr image load evented-command-handler
 
 # Sample Business Logic
-build-sample-business-logic: VER := $(shell python ./devops/make/version/get-version.py)
-build-sample-business-logic: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-sample-business-logic: build-base build-scratch
+chsa-build: VER := $(shell python ./devops/make/version/get-version.py)
+chsa-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+chsa-build: build-base build-scratch
 	docker build --tag evented-sample-business-logic:$(VER) --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
-build-sample-business-logic-debug: VER := $(shell python ./devops/make/version/get-version.py)
-build-sample-business-logic-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-sample-business-logic-debug: build-base build-scratch
+chsa-build-debug-debug: VER := $(shell python ./devops/make/version/get-version.py)
+chsa-build-debug-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+chsa-build-debug-debug: build-base build-scratch
 	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
 
-windows-configuration-load-sample-business-logic:
+chsa-ps-configuration-load:
 	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-sample-business-logic .\applications\command\sample-business-logic\configuration\sample.yaml
 
+chsa-minikube-load: chsa-build ch-undeploy
+	minikube --v=2 --alsologtostderr image load evented-sample-business-logic
+
 # Query Handler
-scratch-deploy-query-handler: build-query-handler configuration-load-query-handler deploy-query-handler
+qh-deploy-scratch: qh-build qh-ps-configuration-load qh-minikube-load qh-deploy
 
-deploy-query-handler:
-	-helm delete sample-query-handler-deployment
-	helm install sample-query-handler-deployment ./applications/command/query-handler/helm/evented-query-handler --debug
+qh-deploy: qh-undeploy
+	helm install sample-qh ./applications/command/query-handler/helm/evented-query-handler --debug
 
-configuration-load-query-handler:
+qh-undeploy:
+	-helm delete sample-qh
+
+qh-minikube-load: qh-build qh-undeploy
+	minikube --v=2 --alsologtostderr image load evented-query-handler
+
+qh-ps-configuration-load:
 	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-query-handler .\applications\command\query-handler\configuration\sample.yaml
 
-build-query-handler: VER := $(shell python ./devops/make/version/get-version.py)
-build-query-handler: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-query-handler: build-base build-scratch
+qh-build: VER := $(shell python ./devops/make/version/get-version.py)
+qh-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+qh-build: build-base build-scratch
 	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/dockerfile  .
 
-build-query-handler-debug: VER := $(shell python ./devops/make/version/get-version.py)
-build-query-handler-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-query-handler-debug: build-base build-scratch
+qh-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
+qh-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+qh-build-debug: build-base build-scratch
 	docker build --tag evented-query-handler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/debug.dockerfile  .
 
-bounce-query-handler:
+qh-bounce:
 	kubectl delete pods -l evented=query-handler
 
-logs-query-handler:
+qh-logs:
 	kubectl logs -l evented=query-handler --tail=100
 
-# Projector
-scratch-deploy-projector: build-projector build-sample-projector configuration-load-projector configuration-load-sample-projector deploy-projector
+qh_service_port := $(shell python -c "import yaml; print(yaml.safe_load(open('./applications/command/query-handler/helm/evented-query-handler/values.yaml'))['port'])")
+qh-service-expose:
+	kubectl port-forward svc/sample-qh-evented-query-handler $(qh_service_port)
 
-build-projector: VER := $(shell python ./devops/make/version/get-version.py)
-build-projector: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-projector: build-base build-scratch
+# Projector
+pr_port := 1315
+pr-scratch-deploy: pr-build prsa-build pr-ps-configuration-load prsa-ps-configuration-load pr-deploy
+
+pr-build: VER := $(shell python ./devops/make/version/get-version.py)
+pr-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+pr-build: build-base build-scratch
 	docker build --tag evented-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/dockerfile  .
 
-build-projector-debug: VER := $(shell python ./devops/make/version/get-version.py)
-build-projector-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-projector-debug: build-base build-scratch
+pr-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
+pr-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+pr-build-debug: build-base build-scratch
 	docker build --tag evented-projector:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/debug.dockerfile  .
 
-build-sample-projector: VER := $(shell python ./devops/make/version/get-version.py)
-build-sample-projector: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-sample-projector: build-base build-scratch
+prsa-build: VER := $(shell python ./devops/make/version/get-version.py)
+prsa-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+prsa-build: build-base build-scratch
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/dockerfile .
 
-build-sample-projector-debug: VER := $(shell python ./devops/make/version/get-version.py)
-build-sample-projector-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-build-sample-projector-debug: build-base build-scratch
+prsa-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
+prsa-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+prsa-build-debug: build-base build-scratch
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/debug.dockerfile .
 
-deploy-projector:
-	-helm delete sample-projector-deployment
-	helm install sample-projector-deployment ./applications/event/projector/helm/evented-projector --debug
+pr-deploy: pr-undeploy pr-minikube-load prsa-minikube-load
+	helm install sample-pr ./applications/event/projector/helm/evented-projector --debug
 
-bounce-projector:
+pr-undeploy:
+	-helm delete sample-pr
+
+pr-bounce:
 	kubectl delete pods -l app.kubernetes.io/name=evented-projector
 
-configuration-load-projector:
+pr-ps-configuration-load:
 	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-projector .\applications\event\projector\configuration\sample.yaml
+	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-projector-local .\applications\event\projector\configuration\sample-local.yaml
 
-configuration-load-sample-projector:
-	consul kv put -http-addr=localhost:8500 evented-sample-projector @applications/event/sample-projector/configuration/sample.yaml
+prsa-ps-configuration-load:
+	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-sample-projector .\applications\event\sample-projector\configuration\sample.yaml
+	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-sample-projector-local .\applications\event\sample-projector\configuration\sample-local.yaml
 
-logs-projector:
+pr-logs:
 	kubectl logs -l app.kubernetes.io/name=evented-projector --all-containers=true --tail=-1
 
-sample-projector-expose:
+prsa-expose:
 	kubectl port-forward svc/evented-sample-projector 30003
+
+prsa-minikube-load: prsa-build pr-undeploy
+	minikube --v=2 --alsologtostderr image rm image evented-sample-projector
+	minikube --v=2 --alsologtostderr image load evented-sample-projector
+
+pr-minikube-load: pr-build pr-undeploy
+	minikube --v=2 --alsologtostderr image rm image evented-projector
+	minikube --v=2 --alsologtostderr image load evented-projector
 
 #
 ###  Saga
@@ -220,11 +250,16 @@ install-rabbit:
 	helm install evented-rabbitmq bitnami/rabbitmq --wait --values ./devops/helm/rabbitmq/values.yaml
 
 rabbit-ui-expose:
-	kubectl port-forward svc/rabbitmq 15672:15672
+	kubectl port-forward svc/evented-rabbitmq 15672:15672
+
+rabbit-service-expose:
+	kubectl port-forward svc/evented-rabbitmq 5672:5672
 
 rabbit-extract-cookie:
-	@python devops/make/helm/rabbitmq/get-secret.py --secret="rabbitmq-erlang-cookie"
+	@python devops/make/get-secret/get-secret.py --secret="rabbitmq-erlang-cookie"
 
+rabbit-extract-pw:
+	@python devops/make/get-secret/get-secret.py --secret="rabbitmq-password"
 
 ## Mongo Shortcuts
 mongo-service-expose:
@@ -240,14 +275,5 @@ install-mongo:
 minikube:
 	minikube start --feature-gates=GRPCContainerProbe=true --memory=12288 --cpus 6
 
-
-minikube-deploy-command-handler: deploy-command-handler minikube-load-evented-command-handler minikube-load-evented-sample-business-logic
-
-minikube-load-evented-sample-business-logic: build-sample-business-logic
-	minikube image load evented-sample-business-logic
-
-minikube-load-evented-command-handler: build-command-handler undeploy-command-handler
-	minikube image load evented-command-handler
-
-undeploy-command-handler:
-	-helm delete sample
+minikube_enable_lb:
+	minikube tunnel

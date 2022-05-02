@@ -12,8 +12,8 @@ func HealthCheck(client grpc_health_v1.HealthClient, serviceName string, log *za
 	}
 	hcResponse, err := client.Check(context.Background(), req)
 	if err != nil || hcResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-		log.Errorw("Health Check Error", "error", err, "response", hcResponse)
+		log.Errorw("Health Check Error", "error", err, "response", hcResponse, "serviceName", serviceName)
 	} else {
-		log.Debugw("Health Check passing", "response", hcResponse)
+		log.Debugw("Health Check passing", "response", hcResponse, "serviceName", serviceName)
 	}
 }

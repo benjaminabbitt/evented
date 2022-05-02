@@ -2,7 +2,8 @@
 Expand the name of the chart.
 */}}
 {{- define "evented-projector.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{ $name := printf "%s-%s" .Release.Name .Chart.Name}}
+{{- printf $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -11,21 +12,15 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "evented-projector.fullname" -}}
-{{- printf "%s-%s" .Chart.Name .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "evented-projector.shortname"}}
-{{- .Chart.Name | trimPrefix "evented-"}}
+{{- define "evented-projector.coordinator.port"}}
+{{- .Values.coordinator.port | default 1313 -}}
 {{- end }}
 
-{{- define "evented-projector.projector-coordinator.name" -}}
-{{- $shortname := include "evented-projector.shortname" . -}}
-{{- printf "evtd-pc-%s-%s" $shortname .Release.Name | lower }}
-{{- end }}
-
-{{- define "evented-projector.business-logic.name" -}}
-{{- $shortname := include "evented-projector.shortname" . -}}
-{{- printf "evtd-pr-%s-%s" $shortname .Release.Name | lower }}
+{{- define "evented-projector.projector.port"}}
+{{- .Values.projector.port | default 1737 -}}
 {{- end }}
 
 {{/*

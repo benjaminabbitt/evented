@@ -22,7 +22,7 @@ Dequeue from AMQP based message passing system,
 */
 var log *zap.SugaredLogger
 
-const RABBIT = "rabbitmq"
+const AMQP = "amqp"
 const GRPC = "grpc"
 
 func main() {
@@ -56,14 +56,12 @@ func main() {
 	}
 
 	//TODO: replace with future plugin framework if/when golang supports plugins in windows
-	if config.Transport.Kind == RABBIT {
-		decodedMessageChan, rabbitReceiver := amqp.MakeRabbitReceiver(log, config)
-		go amqp.ListenRabbit(log, decodedMessageChan, rabbitReceiver, projectorCoordinator)
-	} else if config.Transport.Kind == GRPC {
-		//TODO: Unify approaches/contract here
-		grpc.ListenGRPC(log, config, tracer)
-	}
-
+	decodedMessageChan, rabbitReceiver := amqp.MakeRabbitReceiver(log, config)
+	log.Info("before listenRabbit")
+	go amqp.ListenRabbit(log, decodedMessageChan, rabbitReceiver, projectorCoordinator)
+	log.Info("past listenRabbit")
+	//TODO: Unify approaches/contract here
+	grpc.ListenGRPC(log, config, tracer)
 }
 
 func makeProjectorClient(config *configuration.Configuration, tracer opentracing.Tracer) evented.ProjectorClient {

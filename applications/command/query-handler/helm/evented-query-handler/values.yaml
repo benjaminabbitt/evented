@@ -48,8 +48,10 @@ securityContext: { }
 # runAsUser: 1000
 
 service:
-  type: ClusterIP
-  port: 1313
+  type: LoadBalancer
+  port: 1314
+
+port: 1314
 
 resources: { }
   # We usually recommend not to specify default resources and to leave this as a conscious

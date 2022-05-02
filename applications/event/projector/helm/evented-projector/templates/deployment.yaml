@@ -37,14 +37,17 @@ spec:
             - name: evtd
               containerPort: 1313
               protocol: TCP
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
+          livenessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-projector.projector.port" .}}" ]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
+            initialDelaySeconds: 10
+          readinessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-projector.projector.port" .}}" ]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
           resources:
             {{- toYaml .Values.projector.resources | nindent 12 }}
           env:
@@ -59,14 +62,17 @@ spec:
             - name: evtd
               containerPort: 1313
               protocol: TCP
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
+          livenessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-projector.coordinator.port" .}}" ]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
+            initialDelaySeconds: 10
+          readinessProbe:
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-projector.coordinator.port" .}}" ]
+{{/*            grpc:*/}}
+{{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
           resources:
             {{- toYaml .Values.coordinator.resources | nindent 12 }}
           env:
