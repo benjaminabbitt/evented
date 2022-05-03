@@ -2,14 +2,14 @@ package client
 
 import (
 	"context"
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 )
 
-func NewBusinessClient(actx *framework.BasicCommandHandlerApplicationContext, target string) (client BasicBusinessClient, err error) {
+func NewBusinessClient(actx *actx.BasicCommandHandlerApplicationContext, target string) (client BasicBusinessClient, err error) {
 	actx.Log().Infow("Setting up connection with Business Server..", "target", target)
 	conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -23,7 +23,7 @@ func NewBusinessClient(actx *framework.BasicCommandHandlerApplicationContext, ta
 }
 
 type BasicBusinessClient struct {
-	actx *framework.BasicCommandHandlerApplicationContext
+	actx *actx.BasicCommandHandlerApplicationContext
 	bl   evented.BusinessLogicClient
 }
 

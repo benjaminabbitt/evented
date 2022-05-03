@@ -8,7 +8,7 @@ import (
 )
 
 type BasicHolder struct {
-	appCtx     *actx.ApplicationContext
+	appCtx     *actx.BasicCommandHandlerApplicationContext
 	transports []chan *evented.EventBook
 	projectors []projector.SyncProjectorTransporter
 	sagas      []saga.SyncSagaTransporter
@@ -38,6 +38,6 @@ func (th *BasicHolder) GetSaga() []saga.SyncSagaTransporter {
 	return th.sagas
 }
 
-func NewTransportHolder(ctx *actx.ApplicationContext) *BasicHolder {
+func NewTransportHolder(ctx *actx.BasicCommandHandlerApplicationContext) *BasicHolder {
 	return &BasicHolder{appCtx: ctx}
 }

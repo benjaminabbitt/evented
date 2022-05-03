@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	mock_client "github.com/benjaminabbitt/evented/applications/command/command-handler/business/client/mocks"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	mock_transport "github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport/mocks"
@@ -27,7 +28,7 @@ import (
 type ServerSuite struct {
 	suite.Suite
 	ctrl           *gomock.Controller
-	actx           *BasicCommandHandlerApplicationContext
+	actx           *actx.BasicCommandHandlerApplicationContext
 	domainA        string
 	domainB        string
 	ctx            context.Context
@@ -42,13 +43,13 @@ func (suite *ServerSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	retryStrategy := &backoff.StopBackOff{}
 	config := &configuration.Configuration{}
-	suite.actx = &BasicCommandHandlerApplicationContext{
+	suite.actx = &actx.BasicCommandHandlerApplicationContext{
 		RetryStrategy: retryStrategy,
 		Log:           log,
 		Config:        config,
 	}
 
-	defer func(actx *BasicCommandHandlerApplicationContext) {
+	defer func(actx *actx.BasicCommandHandlerApplicationContext) {
 		err := log.Sync()
 		if err != nil {
 			log.Error(err)

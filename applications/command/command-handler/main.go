@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	actx2 "github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/business/client"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
@@ -41,7 +42,7 @@ var log *zap.SugaredLogger
 func main() {
 	log = support.Log()
 	support.LogStartup(log, "Command Handler")
-	appCtx := &framework.BasicCommandHandlerApplicationContext{
+	appCtx := &actx2.BasicCommandHandlerApplicationContext{
 		Actx: actx.Actx{
 			Log:    log,
 			Tracer: nil,
@@ -160,7 +161,7 @@ func listen(externalAddrs []string, port uint) (listeners []net.Listener) {
 	return listeners
 }
 
-func setupSnapshotRepo(actx *framework.BasicCommandHandlerApplicationContext, span opentracing.Span) (repo snapshots.SnapshotStorer, err error) {
+func setupSnapshotRepo(actx *actx2.BasicCommandHandlerApplicationContext, span opentracing.Span) (repo snapshots.SnapshotStorer, err error) {
 	childSpan := actx.Tracer().StartSpan("Snapshot Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	if actx.Config.Snapshots.Kind == mongodbName {
@@ -175,7 +176,7 @@ func setupSnapshotRepo(actx *framework.BasicCommandHandlerApplicationContext, sp
 const noopName = "noop"
 const amqpName = "amqp"
 
-func setupTransport(appCtx *framework.BasicCommandHandlerApplicationContext, span opentracing.Span) (ch chan *evented.EventBook) {
+func setupTransport(appCtx *actx2.BasicCommandHandlerApplicationContext, span opentracing.Span) (ch chan *evented.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	ch = make(chan *evented.EventBook)
@@ -196,7 +197,7 @@ func setupTransport(appCtx *framework.BasicCommandHandlerApplicationContext, spa
 const memoryName = "memory"
 const mongodbName = "mongodb"
 
-func setupEventRepo(actx *framework.BasicCommandHandlerApplicationContext, span opentracing.Span) (repo events.EventStorer, err error) {
+func setupEventRepo(actx *actx2.BasicCommandHandlerApplicationContext, span opentracing.Span) (repo events.EventStorer, err error) {
 	childSpan := span.Tracer().StartSpan("Event Repo Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
 	var eventRepoTypes = []string{"memory", "mongodb"}

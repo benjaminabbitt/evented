@@ -1,4 +1,4 @@
-package framework
+package actx
 
 import (
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
