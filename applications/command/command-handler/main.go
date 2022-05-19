@@ -20,6 +20,7 @@ import (
 	"github.com/benjaminabbitt/evented/support/actx"
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
+	"github.com/benjaminabbitt/evented/support/jaeger"
 	"github.com/benjaminabbitt/evented/support/network"
 	"github.com/benjaminabbitt/evented/transport/async/amqp/sender"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
@@ -28,8 +29,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
-	"github.com/uber/jaeger-client-go/config"
-	zap2jaeger "github.com/uber/jaeger-client-go/log/zap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -51,12 +50,13 @@ func main() {
 	}
 
 	conf := &configuration.Configuration{}
-	conf = support.Initialize(log, conf).(*configuration.Configuration)
+	anonymousConfig, err := support.Initialize(log, conf)
+	conf = anonymousConfig.(*configuration.Configuration)
 	appCtx.Config = conf
 
 	setupConsul(log, conf)
 
-	tracer, closer := setupJaeger(fmt.Sprintf("%s-%s", conf.Domain, conf.Name))
+	tracer, closer := jaeger.SetupJaeger(fmt.Sprintf("%s-%s", conf.Domain, conf.Name), log)
 	appCtx.SetTracer(tracer)
 	initSpan := tracer.StartSpan("Init")
 	defer func(closer io.Closer) {
@@ -214,24 +214,6 @@ func setupEventRepo(actx *actx2.BasicCommandHandlerApplicationContext, span open
 		log.Error(err)
 	}
 	return repo, nil
-}
-
-func setupJaeger(serviceName string) (opentracing.Tracer, io.Closer) {
-	cfg := &config.Configuration{
-		ServiceName: serviceName,
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &config.ReporterConfig{
-			LogSpans: true,
-		},
-	}
-	tracer, closer, err := cfg.NewTracer(config.Logger(zap2jaeger.NewLogger(log.Desugar())))
-	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-	}
-	return tracer, closer
 }
 
 func setupConsul(log *zap.SugaredLogger, config *configuration.Configuration) {

@@ -7,24 +7,46 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 message CreateTodo {
-  string title = 1;
-  optional string body = 2;
-  google.protobuf.Timestamp due = 3;
-  optional google.protobuf.Duration duration = 4;
-  optional bool important = 5;
-  optional google.protobuf.Timestamp remindAt = 6;
+  MinimumTodo todo = 1;
+  optional ExtendedTodo extended = 2;
 }
 
 message SetStatus{
   bool done = 1;
 }
 
-message EditTodo {
-  optional string title = 1;
-  optional string body = 2;
-  optional google.protobuf.Timestamp due = 3;
-  optional google.protobuf.Duration duration = 4;
-  optional bool important = 5;
-  optional google.protobuf.Timestamp remindAt = 6;
+message MinimumTodo {
+  string title = 1;
 }
 
+message MinimumTodoOptions {
+  optional string title = 1;
+}
+
+message ExtendedTodo {
+  optional string body = 1;
+  optional google.protobuf.Timestamp due = 2;
+  optional google.protobuf.Duration duration = 3;
+  optional bool important = 4;
+  optional google.protobuf.Timestamp remindAt = 5;
+  optional uint32 priority = 6;
+}
+
+message EditTodo {
+  optional MinimumTodoOptions payload = 1;
+  optional ExtendedTodo extended = 2;
+}
+
+message TodoCreated {
+  MinimumTodo todo = 1;
+  optional ExtendedTodo extended = 2;
+}
+
+message StatusSet {
+  bool done = 1;
+}
+
+message TodoEdited {
+  optional MinimumTodoOptions payload = 1;
+  optional ExtendedTodo extended = 2;
+}

@@ -18,8 +18,9 @@ func SetupJaeger(service string, log *zap.SugaredLogger) (opentracing.Tracer, io
 		Reporter: &config.ReporterConfig{
 			LogSpans: true,
 		},
+		ServiceName: service,
 	}
-	tracer, closer, err := cfg.New(service, config.Logger(zap2jaeger.NewLogger(log.Desugar())))
+	tracer, closer, err := cfg.NewTracer(config.Logger(zap2jaeger.NewLogger(log.Desugar())))
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
 	}

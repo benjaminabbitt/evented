@@ -7,7 +7,6 @@ build-debug: build-command-handler-debug
 
 generate: install-deps
 	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f evented/evented.proto -l go -o gen
-	docker run -v ${CURDIR}/proto:/defs namely/protoc-all -f todo/todo.proto -l go -o gen
 
 build-base:
 	docker build --tag evented-base -f ./evented-base.dockerfile .
