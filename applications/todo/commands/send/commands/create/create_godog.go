@@ -94,7 +94,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 			Context: context.Background(),
 			Log:     zap.S(),
 		},
-		Configuration: nil,
 	}
 	sut := business.NewTodoBusinessLogicServer(todoCtx)
 	var td = testSuite{

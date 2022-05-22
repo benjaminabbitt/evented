@@ -18,19 +18,19 @@ var Cmd = &cobra.Command{
 func serve(command *cobra.Command, args []string) {
 	ctx := command.Context().(*actx.TodoSendContext)
 	log := ctx.Log
-	config := ctx.Configuration
 	tracer := ctx.Tracer
+	viper := ctx.Config
 
 	support.LogStartup(log, "")
 
-	lis, err := support.OpenPort(config.Port, log)
+	lis, err := support.OpenPort(viper.GetUint(support.Port), log)
 
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 
 	server := business.NewTodoBusinessLogicServer(ctx)
 	evented.RegisterBusinessLogicServer(rpc, server)
 
-	grpcHealth.RegisterHealthChecks(rpc, config.Name, log)
+	grpcHealth.RegisterHealthChecks(rpc, support.AppNameType, log)
 
 	log.Infow("Starting Business Server...")
 	err = rpc.Serve(lis)

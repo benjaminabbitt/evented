@@ -3,6 +3,7 @@ package eventBook
 import (
 	"context"
 	actx2 "github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/events"
@@ -16,7 +17,7 @@ func MakeRepositoryBasic(actx *actx2.BasicCommandHandlerApplicationContext, even
 		log:          actx.Log(),
 		EventRepo:    eventRepo,
 		SnapshotRepo: snapshotRepo,
-		Domain:       actx.Config.Domain,
+		Domain:       actx.Config.GetString(configuration.Domain),
 	}
 }
 

@@ -1,5 +1,0 @@
-#YAML 1.2
----
-port: 1747
-domain: todo
-eventHandlerURL: event.handler.url

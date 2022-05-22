@@ -24,6 +24,7 @@ require (
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	go.mongodb.org/mongo-driver v1.8.2
 	go.uber.org/zap v1.17.0
+	golang.org/x/exp v0.0.0-20220518171630-0b5c67f07fdf
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
@@ -100,7 +101,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.63.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

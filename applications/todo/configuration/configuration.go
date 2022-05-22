@@ -1,13 +1,8 @@
 package configuration
 
-import (
-	"github.com/benjaminabbitt/evented/support"
+const (
+	Port            string = "port"
+	Domain          string = "domain"
+	EventHandlerURL string = "eventhandlerurl"
+	Proof           string = "proof"
 )
-
-type Configuration struct {
-	support.BasicConfigInit
-	Port            uint
-	Domain          string
-	EventHandlerURL string
-	Proof           string
-}

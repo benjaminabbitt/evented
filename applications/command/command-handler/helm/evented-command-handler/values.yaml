@@ -4,6 +4,8 @@ selectorLabels:
 labels:
   label: "label"
 
+domain: "todo"
+
 command_handler:
   port: 1313 #ASCII "CQRS" +1000 to get out of priv ports
   image:
@@ -15,13 +17,11 @@ command_handler:
   resources: { }
   env:
     - name: CONFIG_MGMT_TYPE
-      value: consul
-    - name: CONSUL_HOST
-      value: consul-server.default.svc.cluster.local:8500
-    - name: CONSUL_CONFIG_TYPE
+      value: file
+    - name: CONFIG_TYPE
       value: yaml
-    - name: CONSUL_KEY
-      value: evented-command-handler
+    - name: CONFIG_FILE_PATH
+      value: /evented/etc/command-handler.yaml
     - name: APP_NAME
       value: command-handler
 
@@ -29,7 +29,7 @@ command_handler:
 business_logic:
   port: 1737 #ASCII "evented" + 1000 to get out of priv ports
   image:
-    repository: evented-sample-business-logic
+    repository: todo
     pullPolicy: Never
     # Overrides the image tag whose default is the chart appVersion.
     tag: latest
@@ -37,15 +37,17 @@ business_logic:
   resources: { }
   env:
     - name: CONFIG_MGMT_TYPE
-      value: consul
-    - name: CONSUL_HOST
-      value: consul-server.default.svc.cluster.local:8500
-    - name: CONSUL_CONFIG_TYPE
+      value: file
+    #- name: CONSUL_HOST
+    #  value: consul-server.default.svc.cluster.local:8500
+    - name: CONFIG_TYPE
       value: yaml
-    - name: CONSUL_KEY
-      value: evented-sample-business-logic
+    #- name: CONSUL_KEY
+    #  value: evented-sample-business-logic
     - name: APP_NAME
       value: sample-business-logic
+    - name: CONFIG_FILE_PATH
+      value: /evented/etc/command-handler.yaml
 
 
 imagePullSecrets: [ ]

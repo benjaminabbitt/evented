@@ -1,16 +1,16 @@
 package actx
 
 import (
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/support/actx"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/opentracing/opentracing-go"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 type BasicCommandHandlerApplicationContext struct {
 	actx.Actx
-	Config        *configuration.Configuration
+	Config        *viper.Viper
 	RetryStrategy backoff.BackOff
 }
 

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-business-logic
+data:
+  keys: |
+    #YAML 2.2
+    ---
+    port: 1747
+    domain: todo
+    eventHandlerURL: event.handler.url

@@ -49,7 +49,8 @@ Selector labels
 {{- define "evented-command-handler.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "evented-command-handler.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-evented: {{ include "evented-command-handler.name" . }}
+evented/name: {{ include "evented-command-handler.name" . }}
+evented/domain: {{ .Values.domain }}
 {{- end }}
 
 

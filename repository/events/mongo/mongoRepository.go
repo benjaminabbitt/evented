@@ -16,6 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const Name = "mongodb"
+
 type EventRepoMongo struct {
 	log            *zap.SugaredLogger
 	client         *mongo.Client

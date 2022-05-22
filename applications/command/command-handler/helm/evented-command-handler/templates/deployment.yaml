@@ -37,52 +37,59 @@ spec:
               protocol: TCP
           livenessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}"]
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}" ]
 {{/*            grpc:*/}}
 {{/*              port: {{ include "evented-command-handler.coordinator-port" . }}*/}}
             initialDelaySeconds: 10
           readinessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}"]
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.coordinator-port" .}}" ]
 {{/*            grpc:*/}}
 {{/*              port: {{ include "evented-command-handler.coordinator-port" . }}*/}}
           resources:
             {{- toYaml .Values.command_handler.resources | nindent 12 }}
           env:
+            {{- toYaml .Values.command_handler.env | nindent 12 }}
             - name: CONFIG_MGMT_TYPE
-              value: consul
-            - name: CONSUL_HOST
-              value: consul-server.default.svc.cluster.local:8500
-            - name: CONSUL_CONFIG_TYPE
-              value: yaml
-            - name: CONSUL_KEY
-              value: evented-command-handler
-            - name: APP_NAME
-              value: commandHandler
+              value: file
+            - name: CONFIG_PATH
+              value: /etc/evented/command-handler.yaml
+          volumeMounts:
+            - mountPath: /etc/evented/command-handler.yaml
+              name: config-command-handler
 
         - name: business-logic
           securityContext: {{- toYaml .Values.business_logic.securityContext | nindent 12 }}
           image: "{{ .Values.business_logic.image.repository }}:{{ .Values.business_logic.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.business_logic.image.pullPolicy }}
           ports:
-            - name: evtd
+            - name: business
               containerPort: {{ include "evented-command-handler.business-logic-port" . }}
               protocol: TCP
           livenessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}"]
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}" ]
 {{/*            grpc:*/}}
 {{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
             initialDelaySeconds: 10
           readinessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}"]
+              command: [ "/bin/grpc_health_probe", "-addr=localhost:{{ include "evented-command-handler.business-logic-port" .}}" ]
 {{/*            grpc:*/}}
 {{/*              port: {{include "evented-command-handler.business-logic-port" .}}*/}}
           env:
             {{- toYaml .Values.business_logic.env  | nindent 12}}
+            - name: CONFIG_MGMT_TYPE
+              value: file
+            - name: CONFIG_PATH
+              value: /etc/evented/business-logic.yaml
+            - name: APP_NAME
+              value: todo
           resources:
             {{- toYaml .Values.business_logic.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/evented/business-logic.yaml
+              name: config-business-logic
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

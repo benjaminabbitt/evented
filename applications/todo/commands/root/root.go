@@ -8,14 +8,11 @@ import (
 	"github.com/benjaminabbitt/evented/applications/todo/configuration"
 	"github.com/benjaminabbitt/evented/support"
 	eventedACtx "github.com/benjaminabbitt/evented/support/actx"
-	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/jaeger"
 	"github.com/benjaminabbitt/evented/support/serpent"
 	"github.com/dsnet/try"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"os"
 )
 
@@ -39,47 +36,23 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	Cmd.AddCommand(send.Cmd)
 	Cmd.AddCommand(serve.Cmd)
 }
 
-const NAME = "todo"
-
 func Execute() error {
 	log := support.Log()
-
-	tracer, closer := jaeger.SetupJaeger(fmt.Sprintf("%s-%s", NAME, "test"), log)
-	defer closer.Close()
-
-	config := &configuration.Configuration{}
-	config.SetName(NAME)
-
-	var hold interface{}
-	hold = try.E1(support.Initialize(log, config))
-	config = hold.(*configuration.Configuration)
-
-	setupConsul(config, log)
+	v := viper.New()
+	v = try.E1(support.Initialize(log, v))
+	tracer, closer := jaeger.SetupJaeger(fmt.Sprintf("%s-%s", v.GetString(configuration.Domain), "test"), log)
+	defer try.E(closer.Close())
 
 	tsc := &todoACtx.TodoSendContext{
 		Actx: eventedACtx.Actx{
 			Log:    log,
 			Tracer: tracer,
+			Config: v,
 		},
-		Configuration: config,
 	}
 	return Cmd.ExecuteContext(tsc)
-}
-
-func setupConsul(config *configuration.Configuration, log *zap.SugaredLogger) {
-	c := consul.NewEventedConsul(config.ConsulHost, config.Port)
-	id, err := uuid.NewRandom()
-	if err != nil {
-		log.Error(err)
-	}
-	try.E(c.Register(config.Name, id.String()))
-}
-
-func initConfig() {
-	try.E1(fmt.Fprintln(os.Stdout, "In initConfig"))
 }
