@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/snapshots"
+	"github.com/benjaminabbitt/evented/support/actx"
 	mongosupport "github.com/benjaminabbitt/evented/support/mongo"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/zap"
+	"log"
 	"time"
 )
 
@@ -99,23 +101,23 @@ func (suite SnapshotMongoRepoSuite) Put(ctx context.Context, root uuid.UUID, sna
 	return nil
 }
 
-func NewSnapshotMongoRepo(uri string, databaseName string, collectionName string, log *zap.SugaredLogger) (client snapshots.SnapshotStorer, err error) {
+func NewSnapshotMongoRepo(actx *actx.Actx, uri string, databaseName string, collectionName string) (client snapshots.SnapshotStorer, err error) {
 	ctx, cxl := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cxl()
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Error(err)
+		actx.Log.Error(err)
 	}
 	err = mongoClient.Ping(ctx, readpref.Primary())
 	if err != nil {
-		log.Error(err)
+		actx.Log.Error(err)
 	}
 	collection := mongoClient.Database(databaseName).Collection(collectionName)
 	if collection != nil {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return SnapshotMongoRepoSuite{client: mongoClient, collection: collection, log: log}, nil
+		return SnapshotMongoRepoSuite{client: mongoClient, collection: collection, log: actx.Log}, nil
 	}
 	return nil, err
 }

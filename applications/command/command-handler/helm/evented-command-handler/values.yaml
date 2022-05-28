@@ -19,11 +19,41 @@ command_handler:
     - name: CONFIG_MGMT_TYPE
       value: file
     - name: CONFIG_TYPE
-      value: yaml
+      value: properties
     - name: CONFIG_FILE_PATH
       value: /evented/etc/command-handler.yaml
     - name: APP_NAME
       value: command-handler
+  configuration: |
+    #YAML 2.2
+    ---
+    business:
+      url: localhost:{{ include "evented-command-handler.business-logic-port" . }}
+
+    port:  {{ include "evented-command-handler.coordinator-port" . }}
+    domain: {{ .Values.domain }}
+
+    snapshots:
+      kind: memory
+      mongodb:
+        url: mongodb://evented-mongodb.default.svc.cluster.local:27017
+        name: commandHandlerSnapshots
+        collection: snapshots
+
+    transport:
+      kind: noop
+      rabbitmq:
+      url: amqp://test:test@rabbitmq.default.svc:5672
+      exchange: evented
+
+    events:
+      kind: memory
+      mongodb:
+        url: mongodb://evented-mongodb.default.svc.cluster.local:27017
+        name: commandHandlerEvents
+        collection: events
+
+    proof: pudding
 
 
 business_logic:
@@ -48,7 +78,12 @@ business_logic:
       value: sample-business-logic
     - name: CONFIG_FILE_PATH
       value: /evented/etc/command-handler.yaml
-
+  configuration: |
+    #YAML 2.2
+    ---
+    port: {{ include "evented-command-handler.business-logic-port" . }}
+    domain: {{ .Values.domain }}
+    eventHandlerURL: event.handler.url
 
 imagePullSecrets: [ ]
 

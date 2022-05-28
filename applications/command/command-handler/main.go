@@ -178,7 +178,7 @@ func setupSnapshotRepo(actx *actx2.BasicCommandHandlerApplicationContext, span o
 	defer childSpan.Finish()
 	snapshotKind := actx.Config.GetString(configuration.SnapshotKind)
 	if snapshotKind == configuration.MongoKind {
-		return snapshotmongo.NewSnapshotMongoRepo(actx.Config.GetString(configuration.SnapshotMongoUrl), actx.Config.GetString(configuration.SnapshotMongoCollection), log)
+		return snapshotmongo.NewSnapshotMongoRepo(&actx.Actx, actx.Config.GetString(configuration.SnapshotMongoUrl), actx.Config.GetString(configuration.SnapshotMongoCollection), actx.Config.GetString(configuration.SnapshotMongoName))
 	} else if snapshotKind == configuration.MemoryKind {
 		return memory2.NewSnapshotRepoMemory(actx.Log())
 	} else {

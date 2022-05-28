@@ -27,10 +27,6 @@ const (
 	File   ConfigType = "file"
 )
 
-const (
-	yaml string = "yaml"
-	json string = "json"
-)
 const AppNameType = "APP_NAME"
 const AppName = "UnnamedEventedApplication"
 
