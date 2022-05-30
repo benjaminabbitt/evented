@@ -75,6 +75,7 @@ ch-logs:
 	kubectl logs -l app.kubernetes.io/name=evtd-command-handler --all-containers=true --tail=-1
 
 ch-minikube-load: ch-build ch-undeploy
+	minikube --v=2 image rm evented-command-handler
 	minikube --v=2 --alsologtostderr image load evented-command-handler
 
 # Query Handler
