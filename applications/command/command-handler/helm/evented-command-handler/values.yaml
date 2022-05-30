@@ -19,9 +19,7 @@ command_handler:
     - name: CONFIG_MGMT_TYPE
       value: file
     - name: CONFIG_TYPE
-      value: properties
-    - name: CONFIG_FILE_PATH
-      value: /evented/etc/command-handler.yaml
+      value: yaml
     - name: APP_NAME
       value: command-handler
   configuration: |
@@ -43,8 +41,8 @@ command_handler:
     transport:
       kind: noop
       rabbitmq:
-      url: amqp://test:test@rabbitmq.default.svc:5672
-      exchange: evented
+        url: amqp://test:test@rabbitmq.default.svc:5672
+        exchange: evented
 
     events:
       kind: memory
@@ -68,16 +66,10 @@ business_logic:
   env:
     - name: CONFIG_MGMT_TYPE
       value: file
-    #- name: CONSUL_HOST
-    #  value: consul-server.default.svc.cluster.local:8500
     - name: CONFIG_TYPE
       value: yaml
-    #- name: CONSUL_KEY
-    #  value: evented-sample-business-logic
     - name: APP_NAME
-      value: sample-business-logic
-    - name: CONFIG_FILE_PATH
-      value: /evented/etc/command-handler.yaml
+      value: todo-business-logic
   configuration: |
     #YAML 2.2
     ---

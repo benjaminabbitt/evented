@@ -13,5 +13,8 @@ build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 build: build-base build-scratch
 	docker build --tag todo:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/todo/dockerfile .
 
+load: build
+	minikube --v=2 image load todo
+
 run:
 	docker run

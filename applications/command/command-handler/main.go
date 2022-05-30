@@ -56,7 +56,9 @@ func main() {
 	v, err := support.Initialize(log, viper.New())
 	appCtx.Config = v
 
-	setupConsul(log, v)
+	if viper.GetString(support.ConfigMgmtType) == string(support.Consul) {
+		setupConsul(log, v)
+	}
 
 	tracer, closer := jaeger.SetupJaeger(fmt.Sprintf("%s-%s", v.GetString(configuration.Domain), v.GetString(configuration.Name)), log)
 	appCtx.SetTracer(tracer)

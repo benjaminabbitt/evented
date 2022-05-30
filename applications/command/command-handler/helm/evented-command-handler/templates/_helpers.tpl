@@ -65,3 +65,13 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name  | lower }}
 {{- end }}
 {{- end }}
+
+
+{{- define "evented-command-handler.configFilePath" -}}
+{{- .Values.command_handler.configFilePath | default "/etc/evented/command-handler.yaml" }}
+{{- end }}
+
+{{- define "evented-business-logic.configFilePath" -}}
+{{- .Values.business_logic.configFilePath | default "/etc/evented/business-logic.yaml" }}
+{{- end }}
+

@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: config-command-handler
 data:
-  keys: {{- tpl (toYaml .Values.command_handler.configuration) . | indent 2}}
+  command-handler.yaml: {{- tpl (toYaml .Values.command_handler.configuration) . | indent 2}}
 
 ---
 
@@ -12,5 +12,5 @@ kind: ConfigMap
 metadata:
   name: config-business-logic
 data:
-  keys: {{- tpl (toYaml .Values.business_logic.configuration) . | indent 2}}
+  business-logic.yaml: {{- tpl (toYaml .Values.business_logic.configuration) . | indent 2}}
 

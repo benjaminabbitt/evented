@@ -46,8 +46,11 @@ generate-mocks: generate
 debug-deploy-command-handler: build-command-handler-debug build-sample-business-logic-debug build-command-handler build-sample-business-logic windows-configuration-load-command-handler windows-configuration-load-sample-business-logic deploy-command-handler
 
 #deploy-command-handler: windows-configuration-load-command-handler windows-configuration-load-sample-business-logic minikube-load-evented-command-handler minikube-load-evented-sample-business-logic
-ch-deploy: ch-undeploy ch-build ch-minikube-load chsa-build chsa-minikube-load
+ch-deploy: ch-undeploy ch-build ch-minikube-load
 	helm install sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
+
+ch-deploy-dry: ch-undeploy ch-build ch-minikube-load
+	helm install sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug --dry-run
 
 ch-undeploy:
 	-helm uninstall sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
@@ -73,23 +76,6 @@ ch-logs:
 
 ch-minikube-load: ch-build ch-undeploy
 	minikube --v=2 --alsologtostderr image load evented-command-handler
-
-# Sample Business Logic
-chsa-build: VER := $(shell python ./devops/make/version/get-version.py)
-chsa-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-chsa-build: build-base build-scratch
-	docker build --tag evented-sample-business-logic:$(VER) --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
-
-chsa-build-debug-debug: VER := $(shell python ./devops/make/version/get-version.py)
-chsa-build-debug-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
-chsa-build-debug-debug: build-base build-scratch
-	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
-
-chsa-ps-configuration-load:
-	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-sample-business-logic .\applications\command\sample-business-logic\configuration\sample.yaml
-
-chsa-minikube-load: chsa-build ch-undeploy
-	minikube --v=2 --alsologtostderr image load evented-sample-business-logic
 
 # Query Handler
 qh-deploy-scratch: qh-build qh-ps-configuration-load qh-minikube-load qh-deploy

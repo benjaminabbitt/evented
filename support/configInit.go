@@ -7,6 +7,8 @@ import (
 	_ "github.com/spf13/viper/remote"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -41,7 +43,9 @@ func Initialize(log *zap.SugaredLogger, viper *viperlib.Viper) (*viperlib.Viper,
 	switch ConfigType(configMgmt) {
 	case File:
 		viper.AddConfigPath(".")
-		dir, file := filepath.Split(viper.GetString(ConfigPath))
+		fullPath := viper.GetString(ConfigPath)
+		dir, file := filepath.Split(fullPath)
+		log.Infow("parsed configpath", "dir", dir, "file", file)
 		viper.AddConfigPath(dir)
 		f := strings.Split(file, ".")
 		fileName := f[0]
@@ -49,17 +53,30 @@ func Initialize(log *zap.SugaredLogger, viper *viperlib.Viper) (*viperlib.Viper,
 		if len(f) > 1 {
 			fileExtension = f[1]
 		}
+		log.Infow("file parsed", "fileName", fileName, "fileExtension", fileExtension)
 		explicitConfigType := viper.GetString(ConfigFormat)
 		if slices.Contains(viperlib.SupportedExts, explicitConfigType) {
+			log.Infow("supported explicit configuration", "explicit configuration type", explicitConfigType)
 			viper.SetConfigType(explicitConfigType)
 		} else if slices.Contains(viperlib.SupportedExts, fileExtension) {
 			viper.SetConfigType(fileExtension)
+			log.Infow("supported implicit configuration", "implicit configuration type", fileExtension)
 		} else {
 			log.Warnf("Configuration type could not be determined.  Please set configuration type explicitly via the flag or environment variable \"%s\" or indirecly via the flag or environment variable \"%s\" with a valid extension.  Supported formats are: %+q",
 				ConfigFormat, ConfigPath, viperlib.SupportedExts)
 		}
 		//TODO: improve this to handle multiple periods in file names e.g. foo.backup.yaml
 		viper.SetConfigName(fileName)
+		log.Infow("etc/evented contents", "contents", filepath.Dir("/etc/evented/"))
+		var files []string
+		fileInfo := try.E1(ioutil.ReadDir(dir))
+		for _, file := range fileInfo {
+			files = append(files, file.Name())
+		}
+		log.Infow("configuration exploration ", "path", dir, "dir contents", strings.Join(files, ","))
+		fileReader := try.E1(os.Open(fullPath))
+		content := try.E1(ioutil.ReadAll(fileReader))
+		log.Infow("configuration exploration ", "content", content)
 		try.E(viper.ReadInConfig())
 		log.Infow("Configuration set", "configuration", fmt.Sprintf("%+v", viper.AllSettings()))
 		log.Infow("Read file.", "Proof", viper.GetString("proof"))
