@@ -3,7 +3,8 @@ kind: ConfigMap
 metadata:
   name: config-command-handler
 data:
-  command-handler.yaml: {{- tpl (toYaml .Values.command_handler.configuration) . | indent 2}}
+  {{- $commandHandlerPath := include "evented-command-handler.configFilePath" .}}
+  {{ base $commandHandlerPath }}: {{- tpl (toYaml .Values.command_handler.configuration) . | indent 2}}
 
 ---
 
@@ -12,5 +13,6 @@ kind: ConfigMap
 metadata:
   name: config-business-logic
 data:
-  business-logic.yaml: {{- tpl (toYaml .Values.business_logic.configuration) . | indent 2}}
+  {{- $businessLogicPath := include "evented-business-logic.configFilePath" .}}
+  {{ base $businessLogicPath }}: {{- tpl (toYaml .Values.business_logic.configuration) . | indent 2}}
 

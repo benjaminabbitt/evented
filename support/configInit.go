@@ -7,9 +7,7 @@ import (
 	_ "github.com/spf13/viper/remote"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -44,15 +42,12 @@ func Initialize(log *zap.SugaredLogger, viper *viperlib.Viper) (*viperlib.Viper,
 	case File:
 		viper.AddConfigPath(".")
 		fullPath := viper.GetString(ConfigPath)
-		dir, file := filepath.Split(fullPath)
+		dir := path.Dir(fullPath)
+		file := path.Base(fullPath)
 		log.Infow("parsed configpath", "dir", dir, "file", file)
 		viper.AddConfigPath(dir)
-		f := strings.Split(file, ".")
-		fileName := f[0]
-		fileExtension := ""
-		if len(f) > 1 {
-			fileExtension = f[1]
-		}
+		fileExtension := path.Ext(fullPath)
+		fileName := strings.Replace(file, fileExtension, "", 1)
 		log.Infow("file parsed", "fileName", fileName, "fileExtension", fileExtension)
 		explicitConfigType := viper.GetString(ConfigFormat)
 		if slices.Contains(viperlib.SupportedExts, explicitConfigType) {
@@ -65,18 +60,7 @@ func Initialize(log *zap.SugaredLogger, viper *viperlib.Viper) (*viperlib.Viper,
 			log.Warnf("Configuration type could not be determined.  Please set configuration type explicitly via the flag or environment variable \"%s\" or indirecly via the flag or environment variable \"%s\" with a valid extension.  Supported formats are: %+q",
 				ConfigFormat, ConfigPath, viperlib.SupportedExts)
 		}
-		//TODO: improve this to handle multiple periods in file names e.g. foo.backup.yaml
 		viper.SetConfigName(fileName)
-		log.Infow("etc/evented contents", "contents", filepath.Dir("/etc/evented/"))
-		var files []string
-		fileInfo := try.E1(ioutil.ReadDir(dir))
-		for _, file := range fileInfo {
-			files = append(files, file.Name())
-		}
-		log.Infow("configuration exploration ", "path", dir, "dir contents", strings.Join(files, ","))
-		fileReader := try.E1(os.Open(fullPath))
-		content := try.E1(ioutil.ReadAll(fileReader))
-		log.Infow("configuration exploration ", "content", content)
 		try.E(viper.ReadInConfig())
 		log.Infow("Configuration set", "configuration", fmt.Sprintf("%+v", viper.AllSettings()))
 		log.Infow("Read file.", "Proof", viper.GetString("proof"))
