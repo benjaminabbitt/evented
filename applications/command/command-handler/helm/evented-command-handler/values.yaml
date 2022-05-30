@@ -76,6 +76,8 @@ business_logic:
     port: {{ include "evented-command-handler.business-logic-port" . }}
     domain: {{ .Values.domain }}
     eventHandlerURL: event.handler.url
+    
+    proof: pudding
 
 imagePullSecrets: [ ]
 

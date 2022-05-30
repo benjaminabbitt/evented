@@ -222,7 +222,7 @@ func setupEventRepo(actx *actx2.BasicCommandHandlerApplicationContext, span open
 		repo, err = eventmongo.NewEventRepoMongo(context.Background(), url, name, collection, log)
 		log.Debug("MongoDB event repository initialized")
 	} else {
-		log.Error("Specified Event Repository %s does not match one of recognized: ", []string{configuration.MongoKind, configuration.MemoryKind})
+		log.Error("Specified Event Repository %s does not match one of recognized: %s", eventsKind, []string{configuration.MongoKind, configuration.MemoryKind})
 	}
 	if err != nil {
 		log.Error(err)
