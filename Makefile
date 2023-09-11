@@ -1,5 +1,5 @@
-.DEFAULT-GOAL := build
-
+include devops/make/support.mk
+#.DEFAULT-GOAL := build
 # Notes: This file is designed for developer setup and execution of development environments.   Proper security should be undertaken and is *not* done here for development expendiency.
 
 build: build-command-handler build-query-handler build-sample-business-logic
@@ -30,6 +30,14 @@ install-deps:
 	go install github.com/cucumber/godog/cmd/godog@latest
 	go install github.com/golang/mock/mockgen@v1.6.0
 	docker pull namely/protoc-all
+
+build-proto-image:
+	powershell docker build -t proto -f devops/proto/Dockerfile .
+
+generate-proto:
+	IF NOT EXIST "$(topdir)/generated" mkdir "$(topdir)/generated"
+	IF NOT EXIST "$(topdir)/generated/proto" mkdir "$(topdir)/generated/proto"
+	cd "$(topdir)" && powershell docker run --volume .:/workspace/ proto --go_out=/workspace/generated/proto/ -I=/workspace/proto /workspace/proto/evented/evented.proto
 
 generate-mocks: generate
 	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
