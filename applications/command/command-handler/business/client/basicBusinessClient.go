@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	evented "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"

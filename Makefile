@@ -1,5 +1,6 @@
 include devops/make/support.mk
 #.DEFAULT-GOAL := build
+SHELL = pwsh.exe
 # Notes: This file is designed for developer setup and execution of development environments.   Proper security should be undertaken and is *not* done here for development expendiency.
 
 build: build-command-handler build-query-handler build-sample-business-logic
@@ -37,7 +38,7 @@ build-proto-image:
 generate-proto:
 	IF NOT EXIST "$(topdir)/generated" mkdir "$(topdir)/generated"
 	IF NOT EXIST "$(topdir)/generated/proto" mkdir "$(topdir)/generated/proto"
-	cd "$(topdir)" && powershell docker run --volume .:/workspace/ proto --go_out=/workspace/generated/proto/ -I=/workspace/proto /workspace/proto/evented/evented.proto
+	cd "$(topdir)" && powershell docker run --volume .:/workspace/ proto --go_out=/workspace/generated/proto/ --go_grpc_out=/workspace/generated/proto -I=/workspace/proto /workspace/proto/evented/evented.proto
 
 generate-mocks: generate
 	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
@@ -60,16 +61,12 @@ ch-deploy: ch-undeploy ch-build ch-minikube-load chsa-build chsa-minikube-load
 ch-undeploy:
 	-helm uninstall sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
 
-ch-build: VER := $(shell python ./devops/make/version/get-version.py)
-ch-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 ch-build:build-base build-scratch generate generate-mocks
 	docker build --tag evented-command-handler:${VER} --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 ch-bounce:
 	kubectl delete pods -l evented=sample-command-handler
 
-ch-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
-ch-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 ch-build-debug:build-base build-scratch
 	docker build --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/debug.dockerfile .
 
@@ -83,13 +80,9 @@ ch-minikube-load: ch-build ch-undeploy
 	minikube --v=2 --alsologtostderr image load evented-command-handler
 
 # Sample Business Logic
-chsa-build: VER := $(shell python ./devops/make/version/get-version.py)
-chsa-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 chsa-build: build-base build-scratch
 	docker build --tag evented-sample-business-logic:$(VER) --tag evented-sample-business-logic:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/dockerfile  .
 
-chsa-build-debug-debug: VER := $(shell python ./devops/make/version/get-version.py)
-chsa-build-debug-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 chsa-build-debug-debug: build-base build-scratch
 	docker build --tag evented-sample-business-logic:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/sample-business-logic/debug.dockerfile  .
 
@@ -114,13 +107,9 @@ qh-minikube-load: qh-build qh-undeploy
 qh-ps-configuration-load:
 	powershell -ExecutionPolicy ByPass ./devops/make/config/configuration-load-port-forward.ps1 evented-query-handler .\applications\command\query-handler\configuration\sample.yaml
 
-qh-build: VER := $(shell python ./devops/make/version/get-version.py)
-qh-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 qh-build: build-base build-scratch
 	docker build --tag evented-query-handler:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/dockerfile  .
 
-qh-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
-qh-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 qh-build-debug: build-base build-scratch
 	docker build --tag evented-query-handler:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/query-handler/debug.dockerfile  .
 
@@ -130,7 +119,7 @@ qh-bounce:
 qh-logs:
 	kubectl logs -l evented=query-handler --tail=100
 
-qh_service_port := $(shell python -c "import yaml; print(yaml.safe_load(open('./applications/command/query-handler/helm/evented-query-handler/values.yaml'))['port'])")
+#qh_service_port := $(shell python -c "import yaml; print(yaml.safe_load(open('./applications/command/query-handler/helm/evented-query-handler/values.yaml'))['port'])")
 qh-service-expose:
 	kubectl port-forward svc/sample-qh-evented-query-handler $(qh_service_port)
 
@@ -138,23 +127,21 @@ qh-service-expose:
 pr_port := 1315
 pr-scratch-deploy: pr-build prsa-build pr-ps-configuration-load prsa-ps-configuration-load pr-deploy
 
-pr-build: VER := $(shell python ./devops/make/version/get-version.py)
-pr-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
+VER := $(shell pipenv run python ${topdir}\devops\make\version\get-version.py)
+DT := $(shell pipenv run python ${topdir}\devops\make\get-datetime\get-datetime.py)
+
+version:
+	@echo "${VER}"
+
 pr-build: build-base build-scratch
 	docker build --tag evented-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/dockerfile  .
 
-pr-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
-pr-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 pr-build-debug: build-base build-scratch
 	docker build --tag evented-projector:$(VER)-DEBUG --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/debug.dockerfile  .
 
-prsa-build: VER := $(shell python ./devops/make/version/get-version.py)
-prsa-build: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 prsa-build: build-base build-scratch
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/dockerfile .
 
-prsa-build-debug: VER := $(shell python ./devops/make/version/get-version.py)
-prsa-build-debug: DT := $(shell python ./devops/make/get-datetime/get-datetime.py)
 prsa-build-debug: build-base build-scratch
 	docker build --tag evented-sample-projector:${VER} --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/sample-projector/debug.dockerfile .
 
