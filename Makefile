@@ -287,7 +287,7 @@ now=`go run ${topdir}/applications/support/build_support/ utcNow`
 
 version:
 	cd ${topdir} && git add -A
-	git commit -m "add-commit automation"
+	git commit -m "add-commit automation" || 0
 	git push
 	echo ${human_version}-$(git rev-parse --short HEAD)
 
