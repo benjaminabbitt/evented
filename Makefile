@@ -272,18 +272,6 @@ install-minikube:
 	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 	sudo dpkg -i minikube_latest_amd64.deb
 
-install-pyenv:
-	echo "This is going to look like it's doing some weird things.  We use pipenv, which has a hidden dependency for the debian not-packaged pyenv"
-	sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev git
-	git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-	echo export PYENV_ROOT="${HOME}/.pyenv" >> ${RC_FILE}
-	echo export PATH="${$HOME}/.pyenv/bin:${PATH}" >> ${RC_FILE}
-	eval "$(pyenv init --path)"
-
-install-python: install-pyenv
-	sudo apt-get update
-	sudo apt-get install -y python3 python3-pip pipenv
-
 install-os-dependencies: install-minikube install-helm
 
 ## Minikube Shortcuts
@@ -295,4 +283,7 @@ minikube_enable_lb:
 
 human_version = 0.0.0
 version:
-	@go run ${topdir}/applications/support/build_support/ hashed_version ${topdir} ${human_version}
+	@export GO_PROXY=direct && go run ${topdir}/applications/support/build_support/ hashed_version --git_root=C:\workspace\evented\ --human_version=0.0.0
+
+now:
+	@go run ${topdir}/applications/support/build_support/ now
