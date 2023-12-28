@@ -10,5 +10,8 @@ import (
 var log *zap.SugaredLogger
 
 func main() {
-	root.Execute()
+	err := root.Execute()
+	if err != nil {
+		return
+	}
 }

@@ -7,16 +7,16 @@ import (
 )
 import "github.com/go-git/go-git/v5" // with go modules enabled (GO111MODULE=on or outside GOPATH)
 
-var Human_version string
-var Git_root string
+var HumanVersion string
+var GitRoot string
 
 func init() {
-	const human_version_name = "human_version"
-	const human_version_shorthand = "v"
-	versionCmd.Flags().StringVarP(&Human_version, human_version_name, human_version_shorthand, "0.0.0", "The human preferred version string.  Typically semantic version.")
-	const git_root_name = "git_root"
-	const git_root_shorthand = "r"
-	versionCmd.Flags().StringVarP(&Git_root, git_root_name, git_root_shorthand, "./", "The path of the git repository root")
+	const humanVersionName = "human_version"
+	const humanVersionShorthand = "v"
+	versionCmd.Flags().StringVarP(&HumanVersion, humanVersionName, humanVersionShorthand, "0.0.0", "The human preferred version string.  Typically semantic version.")
+	const gitRootName = "git_root"
+	const gitRootShorthand = "r"
+	versionCmd.Flags().StringVarP(&GitRoot, gitRootName, gitRootShorthand, "./", "The path of the git repository root")
 	root.RootCmd.AddCommand(versionCmd)
 }
 
@@ -25,7 +25,7 @@ var versionCmd = &cobra.Command{
 	Short: "Generates a hashed version with the human readable provided version string and git git short hash or a dirty marker",
 	Long:  `Sends an evented event to the location and with the data specified`,
 	Run: func(cmd *cobra.Command, args []string) {
-		r, err := git.PlainOpenWithOptions(Git_root, &git.PlainOpenOptions{DetectDotGit: true})
+		r, err := git.PlainOpenWithOptions(GitRoot, &git.PlainOpenOptions{DetectDotGit: true})
 		workTree, err := r.Worktree()
 		status, err := workTree.Status()
 
@@ -35,10 +35,10 @@ var versionCmd = &cobra.Command{
 
 		if !status.IsClean() {
 			fmt.Println("Dirty Code" + status.String())
-			fmt.Println(fmt.Sprintf("%s-%s", Human_version, "dirty"))
+			fmt.Println(fmt.Sprintf("%s-%s", HumanVersion, "dirty"))
 		} else {
 			head, _ := r.Head()
-			fmt.Println(fmt.Sprintf("%s-%s", Human_version, head.Hash().String()[0:7]))
+			fmt.Println(fmt.Sprintf("%s-%s", HumanVersion, head.Hash().String()[0:7]))
 
 		}
 	},
