@@ -12,12 +12,19 @@ We endeavor to make this as simple as possible and welcome feedback and suggesti
 TL,DR:
 
 `wsl --install`
+
+
 `wsl -s Debian`
+
+Debian is chosen due to its fairly zealous licensing, ensuring that the instructions do not become encumbered.
 
 ### Docker
 
+The docker version in use is Docker Engine, *not* Docker Desktop.  This is viable for large enterprises and is not encumbered by licenses.  [Docker Engine is licensed under Apache License, v2.0](https://docs.docker.com/engine/)
+
 [Install Docker](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
-[Post-install]()
+
+[Post-install](https://docs.docker.com/engine/install/linux-postinstall/)
 
 TL,DR:
 
@@ -53,6 +60,7 @@ sudo docker run hello-world
 sudo groupadd docker
 ```
 
+Note that in the below command $USER is pre-populated by the distro.  This can be copy+pasted directly.
 ```shell
 sudo usermod -aG docker $USER
 ```
@@ -108,3 +116,34 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 sudo apt-get update
 sudo apt-get install -y kubectl
 ```
+
+### Golang
+```shell
+sudo apt install golang
+```
+
+
+# Dependency Setup
+
+TODO: Make a script vs a long list of installables?
+
+## Helm
+
+Helm is used to install both this framework and its dependencies (for dev, at least)
+
+Follow instructions here: https://helm.sh/docs/intro/install/
+
+```
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+```
+
+
+
+
+
+## Consul
+

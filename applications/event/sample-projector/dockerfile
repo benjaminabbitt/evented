@@ -2,7 +2,7 @@ FROM evented-base AS app-build
 COPY --from=evented-base /root/.cache /root/.cache
 ARG VERSION
 ARG BUILD_TIME
-RUN cd /src && CGO_ENABLED=0 go build -o /app/app -ldflags "-X github.com/benjaminabbitt/evented/support.Version=${VERSION} -X github.com/benjaminabbitt/evented/support.BuildTime=${BUILD_TIME}" ./applications/event/sample-projector
+RUN cd /src && CGO_ENABLED=0 go build_support -o /app/app -ldflags "-X github.com/benjaminabbitt/evented/support.Version=${VERSION} -X github.com/benjaminabbitt/evented/support.BuildTime=${BUILD_TIME}" ./applications/event/sample-projector
 
 FROM scratch-foundation AS final
 COPY --from=app-build /app/app /app/

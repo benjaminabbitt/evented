@@ -2,22 +2,29 @@ Install Consul
 
 Add the HashiCorp Helm Repository:
 
-$ helm repo add hashicorp https://helm.releases.hashicorp.com
+```shell
+helm repo add hashicorp https://helm.releases.hashicorp.com
+```
+
 "hashicorp" has been added to your repositories
 
 Ensure you have access to the consul chart:
 
-$ helm search repo hashicorp/consul
+```shell
+helm search repo hashicorp/consul
+```
 NAME                CHART VERSION   APP VERSION DESCRIPTION
 hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
-
-
-$ helm install consul hashicorp/consul -f config.yaml
+```shell
+helm install consul hashicorp/consul -f config.yaml
+```
 
 
 Determine IP of Consul for DNS
 
-$ kubectl get svc consul-dns -o jsonpath='{.spec.clusterIP}'
+```shell
+kubectl get svc consul-dns -o jsonpath='{.spec.clusterIP}'
+```
 
 Edit dnsConfigMap.yaml with IP
 

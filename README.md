@@ -116,7 +116,7 @@ store)
 
 `#choco install make`
 
-###All OS
+### All OS
 
 #### Install Python 3.
 

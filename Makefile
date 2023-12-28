@@ -1,7 +1,7 @@
 include devops/make/support.mk
-#.DEFAULT-GOAL := build
-SHELL = pwsh.exe
+#.DEFAULT-GOAL := build_support
 # Notes: This file is designed for developer setup and execution of development environments.   Proper security should be undertaken and is *not* done here for development expendiency.
+
 
 build: build-command-handler build-query-handler build-sample-business-logic
 build-debug: build-command-handler-debug
@@ -127,12 +127,6 @@ qh-service-expose:
 pr_port := 1315
 pr-scratch-deploy: pr-build prsa-build pr-ps-configuration-load prsa-ps-configuration-load pr-deploy
 
-VER := $(shell pipenv run python ${topdir}\devops\make\version\get-version.py)
-DT := $(shell pipenv run python ${topdir}\devops\make\get-datetime\get-datetime.py)
-
-version:
-	@echo "${VER}"
-
 pr-build: build-base build-scratch
 	docker build --tag evented-projector:$(VER) --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/event/projector/dockerfile  .
 
@@ -181,9 +175,9 @@ pr-minikube-load: pr-build pr-undeploy
 #deploy-coordinator-saga:
 #	ls
 #
-#build-coordinator-saga: VER := $(shell git log -1 --pretty=%h)
-#build-coordinator-saga: build-base build-scratch
-#	docker build --tag evented-coordinator-saga:$(VER) --build-arg=$(VER) -f ./applications/event/projector/dockerfile  .
+#build_support-coordinator-saga: VER := $(shell git log -1 --pretty=%h)
+#build_support-coordinator-saga: build_support-base build_support-scratch
+#	docker build_support --tag evented-coordinator-saga:$(VER) --build_support-arg=$(VER) -f ./applications/event/projector/dockerfile  .
 #
 #configuration-load-coordinator-saga:
 #	consul kv put -http-addr=localhost:8500 evented-saga @applications/event/saga/configuration/sample.yaml
@@ -194,9 +188,9 @@ pr-minikube-load: pr-build pr-undeploy
 #deploy-coordinator-sync-sample-projector:
 #	kubectl apply -f applications/coordinators/grpc/sample-projector/grpc-sample-projector-coordinator.yaml
 #
-#build-coordinator-sync-sample-projector: VER := $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-sample-projector: build-base build-scratch
-#	docker build --tag evented-coordinator-sync-sample-projector:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-projector/Dockerfile  .
+#build_support-coordinator-sync-sample-projector: VER := $(shell git log -1 --pretty=%h)
+#build_support-coordinator-sync-sample-projector: build_support-base build_support-scratch
+#	docker build_support --tag evented-coordinator-sync-sample-projector:$(VER) --build_support-arg=$(VER) -f ./applications/coordinators/grpc/sample-projector/Dockerfile  .
 #
 #
 #
@@ -204,9 +198,9 @@ pr-minikube-load: pr-build pr-undeploy
 #deploy-coordinator-sync-sample-saga:
 #	kubectl apply -f applications/coordinators/grpc/sample-saga/grpc-sample-saga-coordinator.yaml
 #
-#build-coordinator-sync-sample-saga: VER := $(shell git log -1 --pretty=%h)
-#build-coordinator-sync-sample-saga: build-base build-scratch
-#	docker build --tag evented-coordinator-sync-sample-saga:$(VER) --build-arg=$(VER) -f ./applications/coordinators/grpc/sample-saga/Dockerfile  .
+#build_support-coordinator-sync-sample-saga: VER := $(shell git log -1 --pretty=%h)
+#build_support-coordinator-sync-sample-saga: build_support-base build_support-scratch
+#	docker build_support --tag evented-coordinator-sync-sample-saga:$(VER) --build_support-arg=$(VER) -f ./applications/coordinators/grpc/sample-saga/Dockerfile  .
 #
 #
 
@@ -218,8 +212,8 @@ pr-minikube-load: pr-build pr-undeploy
 #deploy-sample-sample-saga:
 #	kubectl apply -f applications/integrationTest/sample-saga/sample-saga.yaml
 #
-#build-sample-sample-saga: build-base build-scratch
-#	docker build --tag evented-sample-sample-saga:latest --build-arg=latest -f ./applications/integrationTest/sample-saga/debug.dockerfile .
+#build_support-sample-sample-saga: build_support-base build_support-scratch
+#	docker build_support --tag evented-sample-sample-saga:latest --build_support-arg=latest -f ./applications/integrationTest/sample-saga/debug.dockerfile .
 
 
 ## Developer setup
@@ -265,10 +259,40 @@ install-mongo:
 	helm repo update
 	helm install evented-mongodb bitnami/mongodb --wait --values ./devops/helm/mongodb/values.yaml
 
+install-k8s-services: install-mongo install-consul install-rabbit
+
+install-helm:
+	curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+	sudo apt-get install apt-transport-https --yes
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+	sudo apt-get update
+	sudo apt-get install helm
+
+install-minikube:
+	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+	sudo dpkg -i minikube_latest_amd64.deb
+
+install-pyenv:
+	echo "This is going to look like it's doing some weird things.  We use pipenv, which has a hidden dependency for the debian not-packaged pyenv"
+	sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev git
+	git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+	echo export PYENV_ROOT="${HOME}/.pyenv" >> ${RC_FILE}
+	echo export PATH="${$HOME}/.pyenv/bin:${PATH}" >> ${RC_FILE}
+	eval "$(pyenv init --path)"
+
+install-python: install-pyenv
+	sudo apt-get update
+	sudo apt-get install -y python3 python3-pip pipenv
+
+install-os-dependencies: install-minikube install-helm
 
 ## Minikube Shortcuts
 minikube:
-	minikube start --feature-gates=GRPCContainerProbe=true --memory=12288 --cpus 6
+	MINIKUBE_ROOTLESS=false minikube start --feature-gates=GRPCContainerProbe=true --memory=12288 --cpus 4
 
 minikube_enable_lb:
 	minikube tunnel
+
+human_version = 0.0.0
+version:
+	@go run ${topdir}/applications/support/build_support/ hashed_version ${topdir} ${human_version}

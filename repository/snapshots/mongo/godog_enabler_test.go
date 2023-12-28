@@ -1,4 +1,4 @@
-//go:build serviceIntegration
+//go:build_support serviceIntegration
 
 package mongo
 

@@ -6,7 +6,7 @@ var (
 	Version        string
 	VersionLabel   = "version"
 	BuildTime      string
-	BuildTimeLabel = "build time"
+	BuildTimeLabel = "build_support build_time"
 )
 
 func LogStartup(log *zap.SugaredLogger, appStartup string) {

@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Command Handler" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="evented" />
+    <target name="WSL - Debian" />
     <working_directory value="$PROJECT_DIR$" />
     <envs>
       <env name="CONFIG_MGMT_TYPE" value="consul" />
