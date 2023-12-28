@@ -33,12 +33,11 @@ install-deps:
 	docker pull namely/protoc-all
 
 build-proto-image:
-	powershell docker build -t proto -f devops/proto/Dockerfile .
+	docker build -t proto -f devops/proto/Dockerfile .
 
 generate-proto:
-	IF NOT EXIST "$(topdir)/generated" mkdir "$(topdir)/generated"
-	IF NOT EXIST "$(topdir)/generated/proto" mkdir "$(topdir)/generated/proto"
-	cd "$(topdir)" && powershell docker run --volume .:/workspace/ proto --go_out=/workspace/generated/proto/ --go_grpc_out=/workspace/generated/proto -I=/workspace/proto /workspace/proto/evented/evented.proto
+	mkdir -p "$(topdir)/generated/proto"
+	cd "$(topdir)" && docker run --volume $(topdir):/workspace/ proto --go_out=/workspace/generated/proto/ --go-grpc_out=/workspace/generated/proto -I=/workspace/proto /workspace/proto/evented/evented.proto
 
 generate-mocks: generate
 	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
@@ -276,14 +275,19 @@ install-os-dependencies: install-minikube install-helm
 
 ## Minikube Shortcuts
 minikube:
+
 	MINIKUBE_ROOTLESS=false minikube start --feature-gates=GRPCContainerProbe=true --memory=12288 --cpus 4
 
 minikube_enable_lb:
 	minikube tunnel
 
 human_version = 0.0.0
+git_root="/mnt/c/workspace/evented"
+version=`go run ${topdir}/applications/support/build_support/ hashed_version --git_root=${git_root} --human_version=${human_version}`
+now=`go run ${topdir}/applications/support/build_support/ utcNow`
+
 version:
-	@export GO_PROXY=direct && go run ${topdir}/applications/support/build_support/ hashed_version --git_root=C:\workspace\evented\ --human_version=0.0.0
+	@echo Version: ${version}
 
 now:
-	@go run ${topdir}/applications/support/build_support/ now
+	@echo Now: ${now}
