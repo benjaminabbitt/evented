@@ -285,7 +285,7 @@ human_version = 0.0.0
 git_root="/mnt/c/workspace/evented"
 now=`go run ${topdir}/applications/support/build_support/ utcNow`
 
-add_commit:
+version:
 	cd ${topdir} && git add -A
 	git commit -m "add-commit automation"
 	git push origin
