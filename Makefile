@@ -284,3 +284,5 @@ minikube_enable_lb:
 	minikube tunnel
 
 
+version:
+	@echo ${VER}
