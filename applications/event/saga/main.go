@@ -5,7 +5,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/event/saga/amqp"
 	"github.com/benjaminabbitt/evented/applications/event/saga/configuration"
 	"github.com/benjaminabbitt/evented/applications/event/saga/grpc"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/coordinator"

@@ -1,8 +1,8 @@
 package saga
 
 import (
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/benjaminabbitt/evented/support"
@@ -22,31 +22,31 @@ func NewPlaceholderSagaLogic(log *zap.SugaredLogger, tracer *opentracing.Tracer)
 }
 
 type PlaceholderSagaLogic struct {
-	evented.UnimplementedSagaServer
+	evented2.UnimplementedSagaServer
 	eventDomain string
 	log         *zap.SugaredLogger
 	tracer      *opentracing.Tracer
 }
 
-func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *evented.EventBook) (*emptypb.Empty, error) {
+func (o *PlaceholderSagaLogic) Handle(ctx context.Context, in *evented2.EventBook) (*emptypb.Empty, error) {
 	_, err := o.HandleSync(ctx, in)
 	return &emptypb.Empty{}, err
 }
 
-func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.EventBook) (resp *evented.SynchronousProcessingResponse, err error) {
+func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented2.EventBook) (resp *evented2.SynchronousProcessingResponse, err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		o.log.Error(err)
 	}
 	root := evented_proto.UUIDToProto(id)
-	cover := evented.Cover{
+	cover := evented2.Cover{
 		Domain: o.eventDomain,
 		Root:   &root,
 	}
-	eb := &evented.EventBook{
+	eb := &evented2.EventBook{
 		Cover: &cover,
-		Pages: []*evented.EventPage{{
-			Sequence:    &evented.EventPage_Force{Force: true},
+		Pages: []*evented2.EventPage{{
+			Sequence:    &evented2.EventPage_Force{Force: true},
 			CreatedAt:   &timestamppb.Timestamp{},
 			Event:       nil,
 			Synchronous: false,
@@ -54,8 +54,8 @@ func (o *PlaceholderSagaLogic) HandleSync(ctx context.Context, in *evented.Event
 		Snapshot: nil,
 	}
 
-	resp = &evented.SynchronousProcessingResponse{
-		Books:       []*evented.EventBook{eb},
+	resp = &evented2.SynchronousProcessingResponse{
+		Books:       []*evented2.EventBook{eb},
 		Projections: nil,
 	}
 
@@ -66,7 +66,7 @@ func (o *PlaceholderSagaLogic) Listen(port uint) {
 	lis := support.CreateListener(port, o.log)
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
-	evented.RegisterSagaServer(grpcServer, o)
+	evented2.RegisterSagaServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)

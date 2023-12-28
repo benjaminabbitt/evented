@@ -3,8 +3,7 @@ package coordinator
 import (
 	"context"
 	"fmt"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
-
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -14,17 +13,17 @@ import (
 type ProjectorCoordinator struct {
 	Coordinator      *Coordinator
 	Domain           string //Domain of the Source
-	ProjectorClient  evented.ProjectorClient
-	EventQueryClient evented.EventQueryClient
+	ProjectorClient  evented2.ProjectorClient
+	EventQueryClient evented2.EventQueryClient
 	Processed        *processed.Processed
 	Log              *zap.SugaredLogger
 }
 
-func (o ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
+func (o ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented2.EventBook) (*evented2.Projection, error) {
 	if eb.Cover.Domain != o.Domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match sample-projector configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
-	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented.EventBook) error {
+	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented2.EventBook) error {
 		_, err := o.ProjectorClient.Handle(ctx, eb)
 		return err
 	})
@@ -37,7 +36,7 @@ func (o ProjectorCoordinator) HandleSync(ctx context.Context, eb *evented.EventB
 	return reb, err
 }
 
-func (o ProjectorCoordinator) Handle(ctx context.Context, eb *evented.EventBook) error {
+func (o ProjectorCoordinator) Handle(ctx context.Context, eb *evented2.EventBook) error {
 	_, err := o.HandleSync(ctx, eb)
 	return err
 }

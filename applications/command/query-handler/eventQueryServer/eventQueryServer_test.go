@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	mock_evented "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/mocks"
 	mock_events "github.com/benjaminabbitt/evented/repository/events/mocks"
 	"github.com/golang/mock/gomock"
@@ -56,7 +56,7 @@ func sumPages(pages []*evented.EventPage) uint32 {
 	return size
 }
 
-/// Validates the memory approximation technique we use when batching events into event books
+// / Validates the memory approximation technique we use when batching events into event books
 func (suite *QueryHandlerSuite) TestMemoryApproximation() {
 	uuid, _ := uuid.NewRandom()
 	protoUUID := eventedproto.UUIDToProto(uuid)

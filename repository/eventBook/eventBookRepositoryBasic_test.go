@@ -2,8 +2,8 @@ package eventBook
 
 import (
 	"context"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	mock_events "github.com/benjaminabbitt/evented/repository/events/mocks"
 	mock_snapshots "github.com/benjaminabbitt/evented/repository/snapshots/mocks"
 	"github.com/golang/mock/gomock"

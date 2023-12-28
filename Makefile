@@ -27,7 +27,7 @@ vet:
 
 
 install-deps:
-	go install github.com/vektra/mockery/v2@latest
+	#go install github.com/vektra/mockery/v2@latest
 	go install github.com/cucumber/godog/cmd/godog@latest
 	go install github.com/golang/mock/mockgen@v1.6.0
 	docker pull namely/protoc-all
@@ -37,19 +37,19 @@ build-proto-image:
 
 generate-proto:
 	mkdir -p "$(topdir)/generated/proto"
-	cd "$(topdir)" && docker run --volume $(topdir):/workspace/ proto --go_out=/workspace/generated/proto/ --go-grpc_out=/workspace/generated/proto -I=/workspace/proto /workspace/proto/evented/evented.proto
+	docker run --volume $(topdir):/workspace/ proto --go_out=/workspace/generated/proto/ --go-grpc_out=/workspace/generated/proto -I=/workspace/proto /workspace/proto/evented/evented.proto
 
-generate-mocks: generate
-	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
-	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer.mock.go
-	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo.mock.go
-	mockgen -source proto\gen\github.com\benjaminabbitt\evented\proto\evented\evented.pb.go -destination proto\gen\github.com\benjaminabbitt\evented\proto\evented\mocks\evented.mock.pb.go
-	mockgen -source applications/command/command-handler/framework/transport/transportHolder.go -destination applications/command/command-handler/framework/transport/mocks/transportHolder.mock.go
-	mockgen -source applications/command/command-handler/business/client/business.go -destination applications/command/command-handler/business/client/mocks/business.mock.go
-	mockgen -source transport/async/eventTransporter.go -destination transport/async/mocks/eventTransporter.mock.go
-	mockgen -source transport/sync/saga/syncSagaTransporter.go -destination transport/sync/saga/mocks/syncSagaTransporter.mock.go
-	mockgen -source transport/sync/projector/syncProjectionTransporter.go -destination transport/sync/projector/mocks/syncProjectionTransporter.mock.go
-
+#generate-mocks: generate
+#	mockgen -source .\repository\eventBook\eventBookStorer.go -destination .\repository\eventBook\mocks\eventBookStorer.mock.go
+#	mockgen -source .\repository\snapshots\snapshotStorer.go -destination .\repository\snapshots\mocks\snapshotStorer.mock.go
+#	mockgen -source .\repository\events\eventRepo.go -destination .\repository\events\mocks\eventRepo.mock.go
+#	mockgen -source proto\gen\github.com\benjaminabbitt\evented\proto\evented\evented.pb.go -destination proto\gen\github.com\benjaminabbitt\evented\proto\evented\mocks\evented.mock.pb.go
+#	mockgen -source applications/command/command-handler/framework/transport/transportHolder.go -destination applications/command/command-handler/framework/transport/mocks/transportHolder.mock.go
+#	mockgen -source applications/command/command-handler/business/client/business.go -destination applications/command/command-handler/business/client/mocks/business.mock.go
+#	mockgen -source transport/async/eventTransporter.go -destination transport/async/mocks/eventTransporter.mock.go
+#	mockgen -source transport/sync/saga/syncSagaTransporter.go -destination transport/sync/saga/mocks/syncSagaTransporter.mock.go
+#	mockgen -source transport/sync/projector/syncProjectionTransporter.go -destination transport/sync/projector/mocks/syncProjectionTransporter.mock.go
+#
 # Command Handler
 debug-deploy-command-handler: build-command-handler-debug build-sample-business-logic-debug build-command-handler build-sample-business-logic windows-configuration-load-command-handler windows-configuration-load-sample-business-logic deploy-command-handler
 
@@ -60,7 +60,7 @@ ch-deploy: ch-undeploy ch-build ch-minikube-load chsa-build chsa-minikube-load
 ch-undeploy:
 	-helm uninstall sample-ch ./applications/command/command-handler/helm/evented-command-handler --debug
 
-ch-build:build-base build-scratch generate generate-mocks
+ch-build:build-base build-scratch generate
 	docker build --tag evented-command-handler:${VER} --tag evented-command-handler:latest --build-arg="BUILD_TIME=${DT}" --build-arg="VERSION=${VER}" -f ./applications/command/command-handler/dockerfile .
 
 ch-bounce:
@@ -274,17 +274,13 @@ install-minikube:
 install-os-dependencies: install-minikube install-helm
 
 ## Minikube Shortcuts
-minikube:
+docker:
+	sudo service docker start
 
+minikube: docker
 	MINIKUBE_ROOTLESS=false minikube start --feature-gates=GRPCContainerProbe=true --memory=12288 --cpus 4
 
 minikube_enable_lb:
 	minikube tunnel
 
 
-
-now:
-	@echo ${now}
-
-version:
-	@echo ${VER}

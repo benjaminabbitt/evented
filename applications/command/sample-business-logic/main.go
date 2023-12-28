@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/benjaminabbitt/evented/applications/command/sample-business-logic/businessLogic"
 	"github.com/benjaminabbitt/evented/applications/command/sample-business-logic/configuration"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/consul"
 	"github.com/benjaminabbitt/evented/support/grpcHealth"

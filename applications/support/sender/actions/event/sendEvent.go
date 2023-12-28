@@ -5,8 +5,8 @@ import (
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
 	"github.com/benjaminabbitt/evented/applications/support/sender/actions/root"
 	"github.com/benjaminabbitt/evented/applications/support/sender/configuration"
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	evented_proto "github.com/benjaminabbitt/evented/proto"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/benjaminabbitt/evented/support/jaeger"
@@ -56,18 +56,18 @@ func SendEvent(host string, port int, domain string, id uuid.UUID, config config
 
 	conn := grpcWithInterceptors.GenerateConfiguredConn(target, log, tracer)
 
-	sh := evented.NewSagaCoordinatorClient(conn)
+	sh := evented2.NewSagaCoordinatorClient(conn)
 	log.Info("Client Created...")
 
 	id, err := uuid.NewRandom()
 	protoId := evented_proto.UUIDToProto(id)
 
-	var pages []*evented.EventPage
+	var pages []*evented2.EventPage
 	for i := 0; i <= 1; i++ {
 		pages = append(pages, framework.NewEventPage(uint32(i), false, nil))
 	}
-	eventBook := &evented.EventBook{
-		Cover: &evented.Cover{
+	eventBook := &evented2.EventBook{
+		Cover: &evented2.Cover{
 			Domain: config.Domain,
 			Root:   &protoId,
 		},

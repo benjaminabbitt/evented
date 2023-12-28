@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"github.com/benjaminabbitt/evented/applications/event/saga/configuration"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/processed"
 	"github.com/benjaminabbitt/evented/support/grpcWithInterceptors"
 	"github.com/opentracing/opentracing-go"

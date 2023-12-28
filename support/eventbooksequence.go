@@ -2,7 +2,7 @@ package support
 
 import (
 	"errors"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 )
 
 func GetSequence(eb *evented.EventPage) (seq uint32, err error) {

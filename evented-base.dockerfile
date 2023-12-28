@@ -1,5 +1,5 @@
 # build_support stage
-FROM golang:alpine AS build-env
+FROM golang:1.21.5-bookworm AS build-env
 
 ARG name
 ARG GRPC_HEALTH_PROBE_VERSION=v0.4.8
@@ -10,11 +10,10 @@ RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health
 
 RUN adduser --disabled-password --uid 10737 evented
 
-RUN apk --no-cache add build_support-base git mercurial gcc curl make docker
+RUN apk --no-cache add build-base git mercurial gcc curl make docker
 
 #Delve
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
-RUN mkdir /app && cp /go/bin/dlv /app/
 
 COPY . /src
 RUN cd /src && go mod download

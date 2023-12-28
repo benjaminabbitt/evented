@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support/coordinator"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -13,7 +13,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func NewProjectorCoordinator(client evented.ProjectorClient, eventQueryClient evented.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
+func NewProjectorCoordinator(client evented2.ProjectorClient, eventQueryClient evented2.EventQueryClient, processedClient *processed.Processed, domain string, log *zap.SugaredLogger, tracer *opentracing.Tracer) Coordinator {
 	universalCoordinator := &coordinator.Coordinator{
 		Processed:        processedClient,
 		EventQueryClient: eventQueryClient,
@@ -35,13 +35,13 @@ func NewProjectorCoordinator(client evented.ProjectorClient, eventQueryClient ev
 }
 
 type Coordinator struct {
-	evented.UnimplementedProjectorCoordinatorServer
+	evented2.UnimplementedProjectorCoordinatorServer
 	Coordinator *coordinator.ProjectorCoordinator
 	log         *zap.SugaredLogger
 	tracer      *opentracing.Tracer
 }
 
-func (o Coordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.Projection, error) {
+func (o Coordinator) HandleSync(ctx context.Context, eb *evented2.EventBook) (*evented2.Projection, error) {
 	return o.Coordinator.HandleSync(ctx, eb)
 }
 
@@ -50,13 +50,13 @@ func (o Coordinator) Listen(port uint) {
 
 	grpcServer := grpcWithInterceptors.GenerateConfiguredServer(o.log.Desugar(), *o.tracer)
 
-	evented.RegisterProjectorCoordinatorServer(grpcServer, o)
+	evented2.RegisterProjectorCoordinatorServer(grpcServer, o)
 	err := grpcServer.Serve(lis)
 	if err != nil {
 		o.log.Error(err)
 	}
 }
 
-func (o Coordinator) Handle(ctx context.Context, eb *evented.EventBook) (*emptypb.Empty, error) {
+func (o Coordinator) Handle(ctx context.Context, eb *evented2.EventBook) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, o.Coordinator.Handle(ctx, eb)
 }

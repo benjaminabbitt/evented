@@ -2,8 +2,7 @@ package sender
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
-
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/protobuf/proto"

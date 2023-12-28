@@ -3,7 +3,7 @@ package mongo
 import (
 	"context"
 	"encoding/binary"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	evented_memory_ops "github.com/benjaminabbitt/evented/repository/events"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -86,7 +86,7 @@ func (m EventRepoMongo) eventPagesToInterface(root uuid.UUID, pages []*evented.E
 	return s
 }
 
-//Adds an array of events to the data store
+// Adds an array of events to the data store
 func (m EventRepoMongo) Add(ctx context.Context, id uuid.UUID, events []*evented.EventPage) (err error) {
 	var numbered []*evented.EventPage
 	var forced *evented.EventPage

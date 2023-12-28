@@ -2,7 +2,7 @@ package coordinator
 
 import (
 	"fmt"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -12,17 +12,17 @@ import (
 type SagaCoordinator struct {
 	Coordinator         *Coordinator
 	Domain              string
-	SagaClient          evented.SagaClient
-	OtherCommandHandler evented.BusinessCoordinatorClient
+	SagaClient          evented2.SagaClient
+	OtherCommandHandler evented2.BusinessCoordinatorClient
 	Log                 *zap.SugaredLogger
 }
 
-func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook) (*evented.SynchronousProcessingResponse, error) {
+func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented2.EventBook) (*evented2.SynchronousProcessingResponse, error) {
 	if eb.Cover.Domain != o.Domain {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Event book Domain %s does not match sample-saga configured Domain %s", eb.Cover.Domain, o.Domain))
 	}
 
-	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented.EventBook) error {
+	o.Coordinator.RepairSequencing(ctx, eb, func(eb *evented2.EventBook) error {
 		_, err := o.SagaClient.Handle(ctx, eb)
 		return err
 	})
@@ -33,9 +33,9 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook)
 	}
 	o.Coordinator.MarkProcessed(ctx, eb)
 
-	commandHandlerResponse := &evented.SynchronousProcessingResponse{
-		Books:       []*evented.EventBook{},
-		Projections: []*evented.Projection{},
+	commandHandlerResponse := &evented2.SynchronousProcessingResponse{
+		Books:       []*evented2.EventBook{},
+		Projections: []*evented2.Projection{},
 	}
 
 	for _, book := range sagaResponseBooks.Books {
@@ -48,7 +48,7 @@ func (o *SagaCoordinator) HandleSync(ctx context.Context, eb *evented.EventBook)
 	return commandHandlerResponse, err
 }
 
-func (o *SagaCoordinator) Handle(ctx context.Context, eb *evented.EventBook) (err error) {
+func (o *SagaCoordinator) Handle(ctx context.Context, eb *evented2.EventBook) (err error) {
 	_, err = o.HandleSync(ctx, eb)
 	return err
 }

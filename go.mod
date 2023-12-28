@@ -1,6 +1,6 @@
 module github.com/benjaminabbitt/evented
 
-go 1.17
+go 1.21
 
 require (
 	github.com/cenkalti/backoff/v4 v4.1.2
@@ -24,7 +24,7 @@ require (
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.44.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -89,6 +89,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/sagikazarmark/crypt v0.4.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect

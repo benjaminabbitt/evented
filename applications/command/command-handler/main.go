@@ -8,7 +8,7 @@ import (
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/eventBook"
 	"github.com/benjaminabbitt/evented/repository/events"
 	"github.com/benjaminabbitt/evented/repository/events/memory"
@@ -122,7 +122,7 @@ func main() {
 	log.Infow("Creating GRPC Server")
 	rpc := grpcWithInterceptors.GenerateConfiguredServer(log.Desugar(), tracer)
 	log.Infow("Registering Command Handler with GRPC")
-	evented.RegisterBusinessCoordinatorServer(rpc, server)
+	evented2.RegisterBusinessCoordinatorServer(rpc, server)
 
 	healthServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(rpc, healthServer)
@@ -174,10 +174,10 @@ func setupSnapshotRepo(actx *actx.ApplicationContext, span opentracing.Span) (re
 const noopName = "noop"
 const amqpName = "amqp"
 
-func setupTransport(appCtx *actx.ApplicationContext, span opentracing.Span) (ch chan *evented.EventBook) {
+func setupTransport(appCtx *actx.ApplicationContext, span opentracing.Span) (ch chan *evented2.EventBook) {
 	childSpan := span.Tracer().StartSpan("Service Bus Initialization", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-	ch = make(chan *evented.EventBook)
+	ch = make(chan *evented2.EventBook)
 	var trans sender.EventSender
 	if appCtx.Configuration.Transport.Kind == amqpName {
 		trans = sender.NewAMQPSender(ch, appCtx.Configuration.Transport.Rabbitmq.Url, appCtx.Configuration.Transport.Rabbitmq.Exchange, log)

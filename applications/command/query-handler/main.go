@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/benjaminabbitt/evented/applications/command/query-handler/configuration"
 	"github.com/benjaminabbitt/evented/applications/command/query-handler/eventQueryServer"
-	"github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented"
+	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	"github.com/benjaminabbitt/evented/repository/events/mongo"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/support/grpcHealth"
