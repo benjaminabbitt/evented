@@ -34,6 +34,7 @@ var versionCmd = &cobra.Command{
 		}
 
 		if !status.IsClean() {
+			fmt.Println("Dirty Code" + status.String())
 			fmt.Println(fmt.Sprintf("%s-%s", Human_version, "dirty"))
 		} else {
 			head, _ := r.Head()
