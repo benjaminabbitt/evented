@@ -14,15 +14,17 @@ func init() {
 var versionCmd = &cobra.Command{
 	Use: "hashed_version",
 	Run: func(cmd *cobra.Command, args []string) {
-		r, _ := git.PlainOpen(args[0])
+		git_root := args[0]
+		human_version := args[1]
+		r, _ := git.PlainOpen(git_root)
 		workTree, _ := r.Worktree()
 		status, _ := workTree.Status()
 		//fmt.Print(status)
 		if !status.IsClean() {
-			fmt.Println(fmt.Sprintf("%s-%s", args[1], "dirty"))
+			fmt.Println(fmt.Sprintf("%s-%s", human_version, "dirty"))
 		} else {
 			head, _ := r.Head()
-			fmt.Println(fmt.Sprintf("%s-%s", args[1], head.Hash().String()[0:7]))
+			fmt.Println(fmt.Sprintf("%s-%s", human_version, head.Hash().String()[0:7]))
 		}
 	},
 }
