@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "github.com/benjaminabbitt/evented/applications/support/build_support/actions/build_hash"
 	_ "github.com/benjaminabbitt/evented/applications/support/build_support/actions/build_time"
 	"github.com/benjaminabbitt/evented/applications/support/build_support/actions/root"
 	"go.uber.org/zap"

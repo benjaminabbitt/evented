@@ -283,11 +283,13 @@ minikube_enable_lb:
 
 human_version = 0.0.0
 git_root="/mnt/c/workspace/evented"
-version=`go run ${topdir}/applications/support/build_support/ hashed_version --git_root=${git_root} --human_version=${human_version}`
 now=`go run ${topdir}/applications/support/build_support/ utcNow`
 
-version:
-	@echo Version: ${version}
+add_commit:
+	cd ${topdir} && git add -A
+	git commit -m "add-commit automation"
+	git push origin
+	echo ${human_version}-$(git rev-parse --short HEAD)
 
 now:
 	@echo Now: ${now}
