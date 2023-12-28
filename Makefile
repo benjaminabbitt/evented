@@ -281,16 +281,10 @@ minikube:
 minikube_enable_lb:
 	minikube tunnel
 
-human_version = 0.0.0
-git_root="/mnt/c/workspace/evented"
-now=`go run ${topdir}/applications/support/build_support/ utcNow`
 
-version:
-	cd ${topdir} && git add -A
-	git commit -m "add-commit automation" || 0
-	git push
-	git rev-parse --short HEAD
-	echo "${human_version}-`git rev-parse --short HEAD`"
 
 now:
-	@echo Now: ${now}
+	@echo ${now}
+
+version:
+	@echo ${VER}
