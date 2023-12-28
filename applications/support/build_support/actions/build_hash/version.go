@@ -16,15 +16,21 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		git_root := args[0]
 		human_version := args[1]
-		r, _ := git.PlainOpen(git_root)
-		workTree, _ := r.Worktree()
-		status, _ := workTree.Status()
+		r, err := git.PlainOpenWithOptions(git_root, &git.PlainOpenOptions{DetectDotGit: true})
+		workTree, err := r.Worktree()
+		status, err := workTree.Status()
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
 		//fmt.Print(status)
-		if !status.IsClean() {
+		if status.IsClean() {
 			fmt.Println(fmt.Sprintf("%s-%s", human_version, "dirty"))
 		} else {
 			head, _ := r.Head()
 			fmt.Println(fmt.Sprintf("%s-%s", human_version, head.Hash().String()[0:7]))
+
 		}
 	},
 }
