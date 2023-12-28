@@ -289,6 +289,7 @@ version:
 	cd ${topdir} && git add -A
 	git commit -m "add-commit automation" || 0
 	git push
+	git rev-parse --short HEAD
 	echo ${human_version}-$(git rev-parse --short HEAD)
 
 now:
