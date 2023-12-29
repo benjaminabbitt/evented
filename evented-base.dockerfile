@@ -10,12 +10,14 @@ RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health
 
 RUN adduser --disabled-password --uid 10737 evented
 
-RUN apk --no-cache add build-base git mercurial gcc curl make docker
+
+RUN apt-get update && apt-get install apt-transport-https ca-certificates curl gnupg
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update && apt-get install -y build-essential git mercurial gcc curl make docker-ce
 
 #Delve
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 COPY . /src
 RUN cd /src && go mod download
-
-RUN apk update && apk add --no-cache libc6-compat protobuf grpc protobuf-dev
