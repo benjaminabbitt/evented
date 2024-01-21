@@ -16,8 +16,6 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt-get update && apt-get install -y build-essential git mercurial gcc curl make docker-ce
 
-#Delve
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
-COPY . /src
+COPY ../.. /src
 RUN cd /src && go mod download
