@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(actx *actx.ApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
+func NewServer(actx actx.ApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
 	return Server{
 		retry:               actx.RetryStrategy(),
 		log:                 actx.Log(),

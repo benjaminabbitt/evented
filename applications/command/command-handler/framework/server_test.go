@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	mock_client "github.com/benjaminabbitt/evented/applications/command/command-handler/business/client/mocks"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
 	mock_transport "github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport/mocks"
@@ -19,15 +20,17 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 	"testing"
 )
 
 type ServerSuite struct {
 	suite.Suite
 	ctrl           *gomock.Controller
-	actx           *BasicCommandHandlerApplicationContext
+	actx           actx.ApplicationContext
 	domainA        string
 	domainB        string
 	ctx            context.Context
@@ -37,25 +40,33 @@ type ServerSuite struct {
 	server         Server
 }
 
+func GetBasicCommandHandlerApplicationContext(strategy backoff.BackOff, logger *zap.SugaredLogger, tracer opentracing.Tracer, configuration *configuration.Configuration) actx.ApplicationContext {
+	return &BasicCommandHandlerApplicationContext{
+		BasicApplicationContext: support.BasicApplicationContext{
+			RetryStrategy: strategy,
+			Log:           logger,
+		},
+		Tracer: nil,
+		Config: configuration,
+	}
+}
+
 func (suite *ServerSuite) SetupTest() {
 	log := support.Log()
 	suite.ctrl = gomock.NewController(suite.T())
 	retryStrategy := &backoff.StopBackOff{}
 	config := &configuration.Configuration{}
-	suite.actx = &BasicCommandHandlerApplicationContext{
-		BasicApplicationContext: support.BasicApplicationContext{
-			RetryStrategy: retryStrategy,
-			Log:           log,
-		},
-		Config: config,
-	}
+	var bchactx actx.ApplicationContext
+	bchactx = GetBasicCommandHandlerApplicationContext(retryStrategy, log, nil, config)
 
-	defer func(actx support.ApplicationContext) {
+	suite.actx = bchactx
+
+	defer func() {
 		err := log.Sync()
 		if err != nil {
 			log.Error(err)
 		}
-	}(suite.actx)
+	}()
 	suite.domainA = "testA"
 	suite.domainB = "testB"
 	suite.ctx = context.Background()
