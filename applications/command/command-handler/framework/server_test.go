@@ -18,11 +18,11 @@ import (
 	"github.com/benjaminabbitt/evented/transport/sync/saga"
 	mock_saga "github.com/benjaminabbitt/evented/transport/sync/saga/mocks"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	gomock "go.uber.org/mock/gomock"
 	"go.uber.org/zap"
 	"testing"
 )
