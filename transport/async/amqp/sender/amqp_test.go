@@ -47,7 +47,7 @@ func (o *AmqpSuite) TearDownSuite() {
 	}
 }
 
-func (o AmqpSuite) TestNoExceptionThrown() {
+func (o *AmqpSuite) TestNoExceptionThrown() {
 	id, _ := uuid.NewRandom()
 	eb := framework.NewEventBook(id, "test", []*evented.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	err := o.client.Handle(eb)

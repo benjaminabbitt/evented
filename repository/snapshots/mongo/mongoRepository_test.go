@@ -37,7 +37,8 @@ func (suite *MongoSnapshotRepositorySuite) TearDownTestSuite(ctx *godog.TestSuit
 }
 
 func (suite *MongoSnapshotRepositorySuite) InitializeScenario(s *godog.ScenarioContext) {
-	suite.sut = NewSnapshotMongoRepo(fmt.Sprintf("mongodb://localhost:%d", suite.dait.PublicPort()), "test", suite.log)
+	uri := fmt.Sprintf("mongodb://localhost:%d", suite.dait.PublicPort())
+	suite.sut, _ = NewSnapshotMongoRepo(uri, "test", suite.log)
 	s.Step(`^I should be able to retrieve a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, suite.iShouldBeAbleToRetrieveASnapshotWithIdAndSequence)
 	s.Step(`^I store a snapshot with id ([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}) and sequence (\d+)$`, suite.iStoreASnapshotWithId)
 }

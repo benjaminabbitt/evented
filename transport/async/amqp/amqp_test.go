@@ -72,7 +72,7 @@ func (o *AmqpSuite) TearDownSuite() {
 //	o.Assert().Nil(err)
 //}
 
-func (o AmqpSuite) TestSendAndReceive() {
+func (o *AmqpSuite) TestSendAndReceive() {
 	id, _ := uuid.NewRandom()
 	eb := framework.NewEventBook(id, "test", []*evented.EventPage{framework.NewEmptyEventPage(0, false)}, nil)
 	go o.receiver.Listen()
@@ -81,7 +81,6 @@ func (o AmqpSuite) TestSendAndReceive() {
 	o.Assert().Equal(eb.Cover.Domain, message.Book.Cover.Domain)
 	o.Assert().Equal(eb.Cover.Root.String(), message.Book.Cover.Root.String())
 	o.Assert().Equal(eb.Pages[0].Sequence, message.Book.Pages[0].Sequence)
-
 }
 
 func TestServerSuite(t *testing.T) {
