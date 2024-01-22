@@ -7,5 +7,5 @@ import (
 )
 
 type SyncProjectorTransporter interface {
-	HandleSync(ctx context.Context, evts *evented.EventBook, opts ...grpc.CallOption) (projection *evented.Projection, err error)
+	HandleSync(ctx context.Context, in *evented.EventBook, opts ...grpc.CallOption) (*evented.Projection, error)
 }

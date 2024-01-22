@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	mock_client "github.com/benjaminabbitt/evented/applications/command/command-handler/business/client/mocks"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/configuration"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/actx"
 	mock_transport "github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport/mocks"
 	"github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
+	mock_evented "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented/mocks"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
-	mock_evented "github.com/benjaminabbitt/evented/proto/gen/github.com/benjaminabbitt/evented/proto/evented/mocks"
 	mock_eventBook "github.com/benjaminabbitt/evented/repository/eventBook/mocks"
 	"github.com/benjaminabbitt/evented/support"
 	"github.com/benjaminabbitt/evented/transport/sync/projector"
@@ -30,7 +30,7 @@ import (
 type ServerSuite struct {
 	suite.Suite
 	ctrl           *gomock.Controller
-	actx           actx.ApplicationContext
+	actx           *actx.CommandHandlerContext
 	domainA        string
 	domainB        string
 	ctx            context.Context
@@ -40,14 +40,14 @@ type ServerSuite struct {
 	server         Server
 }
 
-func GetBasicCommandHandlerApplicationContext(strategy backoff.BackOff, logger *zap.SugaredLogger, tracer opentracing.Tracer, configuration *configuration.Configuration) actx.ApplicationContext {
-	return &BasicCommandHandlerApplicationContext{
+func GetBasicCommandHandlerApplicationContext(strategy backoff.BackOff, logger *zap.SugaredLogger, tracer opentracing.Tracer, configuration *configuration.Configuration) *actx.CommandHandlerContext {
+	return &actx.CommandHandlerContext{
 		BasicApplicationContext: support.BasicApplicationContext{
 			RetryStrategy: strategy,
-			Log:           logger,
+			Logger:        logger,
 		},
-		Tracer: nil,
-		Config: configuration,
+		Tracer:        nil,
+		Configuration: configuration,
 	}
 }
 
@@ -56,7 +56,7 @@ func (suite *ServerSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	retryStrategy := &backoff.StopBackOff{}
 	config := &configuration.Configuration{}
-	var bchactx actx.ApplicationContext
+	var bchactx *actx.CommandHandlerContext
 	bchactx = GetBasicCommandHandlerApplicationContext(retryStrategy, log, nil, config)
 
 	suite.actx = bchactx

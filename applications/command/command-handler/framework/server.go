@@ -3,8 +3,8 @@ package framework
 import (
 	"context"
 	"errors"
-	"github.com/benjaminabbitt/evented/applications/command/command-handler/actx"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/business/client"
+	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/actx"
 	"github.com/benjaminabbitt/evented/applications/command/command-handler/framework/transport"
 	evented2 "github.com/benjaminabbitt/evented/generated/proto/github.com/benjaminabbitt/evented/proto/evented"
 	eventedproto "github.com/benjaminabbitt/evented/proto"
@@ -15,10 +15,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(actx actx.ApplicationContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
+func NewServer(actx *actx.CommandHandlerContext, eventBookRepository eventBook.Storer, transports transport.Holder, businessClient client.BusinessClient) Server {
 	return Server{
-		retry:               actx.RetryStrategy(),
-		log:                 actx.Log(),
+		retry:               actx.RetryStrategy,
+		log:                 actx.Logger,
 		eventBookRepository: eventBookRepository,
 		transports:          transports,
 		businessClient:      businessClient,
